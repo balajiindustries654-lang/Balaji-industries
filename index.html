@@ -39,7 +39,8 @@ button{background:#16834a;color:#fff;border:0;font-weight:700}.hide{display:none
 
   <input id="admin_from" type="date">
   <input id="admin_to" type="date">
-
+<button onclick="adminVehicleMatch()">🚚 ગાડી MATCH / MISMATCH જુઓ</button>
+<div id="admin_match_results"></div>
   <button onclick="adminSearch()">Search / Report જુઓ</button>
   <button onclick="adminSearch('today')">આજનો Report</button>
   <button onclick="adminSearch('month')">આ મહિનાનો Report</button>
@@ -326,7 +327,121 @@ async function compareVehicleWeight(vehicle, wayWeight){
 }
 
   
+async function adminVehicleMatch(){
+  const box = $("admin_match_results");
+  if(!box) return;
 
+  const search = ($("admin_search").value || "").trim().toUpperCase();
+
+  if(!search){
+    box.innerHTML = '<p class="muted">ગાડી નંબર અથવા RST નંબર લખો.</p>';
+    return;
+  }
+
+  box.innerHTML = '<p class="muted">MATCH / MISMATCH ચેક થઈ રહ્યું છે...</p>';
+
+  try{
+    // Chiththi data
+    const ch = await db
+      .from("chiththis")
+      .select("vehicle_number,weight_kg")
+      .eq("vehicle_number", search);
+
+    // Waybridge data - પહેલા vehicle number થી
+    let wb = await db
+      .from("waybridge_entries")
+      .select("rst_no,vehicle_number,total_weight_kg,net_weight_kg,slip_url,created_at")
+      .eq("vehicle_number", search)
+      .order("created_at",{ascending:false})
+      .limit(1);
+
+    // vehicle ન મળે તો RST થી શોધો
+    if(!wb.error && (!wb.data || !wb.data.length)){
+      wb = await db
+        .from("waybridge_entries")
+        .select("rst_no,vehicle_number,total_weight_kg,net_weight_kg,slip_url,created_at")
+        .eq("rst_no", search)
+        .order("created_at",{ascending:false})
+        .limit(1);
+    }
+
+    if(wb.error){
+      box.innerHTML =
+        '<p class="danger">Waybridge Error: '+esc(wb.error.message)+'</p>';
+      return;
+    }
+
+    if(!wb.data || !wb.data.length){
+      box.innerHTML =
+        '<p class="muted">આ ગાડી / RST નો Waybridge record મળ્યો નથી.</p>';
+      return;
+    }
+
+    const w = wb.data[0];
+    const vehicle = String(w.vehicle_number || "").toUpperCase();
+
+    // જો RST થી search કર્યું હોય તો સાચી ગાડીની chiththi ફરી લાવો
+    let chRows = ch.data || [];
+
+    if(vehicle !== search){
+      const c2 = await db
+        .from("chiththis")
+        .select("vehicle_number,weight_kg")
+        .eq("vehicle_number", vehicle);
+
+      if(c2.error){
+        box.innerHTML =
+          '<p class="danger">Chiththi Error: '+esc(c2.error.message)+'</p>';
+        return;
+      }
+
+      chRows = c2.data || [];
+    }else if(ch.error){
+      box.innerHTML =
+        '<p class="danger">Chiththi Error: '+esc(ch.error.message)+'</p>';
+      return;
+    }
+
+    const chTotal = chRows.reduce(
+      (sum,x)=>sum+(Number(x.weight_kg)||0),0
+    );
+
+    const wayWeight =
+      Number(w.net_weight_kg || w.total_weight_kg || 0);
+
+    const diff = wayWeight - chTotal;
+    const matched = Math.abs(diff) < 0.001;
+
+    const slip = w.slip_url
+      ? '<br><a href="'+esc(w.slip_url)+'" target="_blank">📷 કાંટાની પાવતી જુઓ</a>'
+      : '';
+
+    box.innerHTML = `
+      <div class="card"
+           style="box-shadow:none;border:1px solid #ddd;margin-top:14px">
+
+        <h3>🚚 ગાડી Weight Check</h3>
+
+        <b>RST નંબર:</b> ${esc(w.rst_no || "-")}<br>
+        <b>ગાડી નંબર:</b> ${esc(vehicle)}<br>
+        <b>કુલ ચિઠ્ઠીઓ:</b> ${chRows.length}<br>
+        <b>ચિઠ્ઠીઓનું કુલ વજન:</b> ${chTotal} KG<br>
+        <b>Waybridge NET Weight:</b> ${wayWeight} KG<br>
+        <b>Difference:</b> ${Math.abs(diff)} KG<br>
+
+        <h2 style="margin-bottom:5px">
+          ${matched ? "✅ MATCH" : "❌ MISMATCH"}
+        </h2>
+
+        ${slip}
+      </div>
+    `;
+
+  }catch(e){
+    box.innerHTML =
+      '<p class="danger">Error: '+esc(e.message || e)+'</p>';
+  }
+}
 async function adminSearch(mode=""){
   const box=$("admin_results");
   const summary=$("admin_summary");
