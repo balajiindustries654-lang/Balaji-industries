@@ -24,7 +24,29 @@ button{background:#16834a;color:#fff;border:0;font-weight:700}.hide{display:none
 <section id="app" class="hide">
 <div class="card"><b id="who"></b><button onclick="logout()">Logout</button></div>
 <div id="pending" class="card hide"><h2>Approval Pending</h2><p>Admin approval પછી app access મળશે.</p></div>
-<div id="admin" class="card hide"><h2>Admin Dashboard</h2><button onclick="loadPending()">Pending Users</button><div id="plist"></div></div>
+<div id="admin" class="card hide">
+  <h2>Admin Dashboard</h2>
+
+  <button onclick="loadPending()">👥 Pending Users</button>
+  <div id="plist"></div>
+
+  <hr>
+
+  <h3>🔍 તમામ ડેટા Search</h3>
+
+  <input id="admin_search"
+         placeholder="ગાડી નંબર / ખેડૂત / મોબાઇલ / ગામ / RST">
+
+  <input id="admin_from" type="date">
+  <input id="admin_to" type="date">
+
+  <button onclick="adminSearch()">Search / Report જુઓ</button>
+  <button onclick="adminSearch('today')">આજનો Report</button>
+  <button onclick="adminSearch('month')">આ મહિનાનો Report</button>
+
+  <div id="admin_summary"></div>
+  <div id="admin_results"></div>
+</div>
 <div id="worker" class="card hide"><h2>Majur Dashboard</h2>
 <h3>નવી ચિઠ્ઠી</h3>
 <label for="village_name"><b>ગામનું નામ</b></label>
@@ -302,7 +324,92 @@ async function compareVehicleWeight(vehicle, wayWeight){
  <h3 style="margin-bottom:0">${matched?'✅ MATCH':'❌ NOT MATCH'}</h3>
  </div>`;
 }
+async function adminSearch(mode=""){
+  const box=$("admin_results");
+  const summary=$("admin_summary");
 
+  box.innerHTML='<p class="muted">Data લોડ થઈ રહ્યો છે...</p>';
+  summary.innerHTML="";
+
+  let search=$("admin_search").value.trim().toUpperCase();
+  let from=$("admin_from").value;
+  let to=$("admin_to").value;
+
+  const now=new Date();
+
+  if(mode==="today"){
+    const d=now.toISOString().slice(0,10);
+    from=d;
+    to=d;
+  }
+
+  if(mode==="month"){
+    const y=now.getFullYear();
+    const m=String(now.getMonth()+1).padStart(2,"0");
+    from=`${y}-${m}-01`;
+    to=new Date(y,now.getMonth()+1,0).toISOString().slice(0,10);
+  }
+
+  let q=db.from("chiththis")
+    .select("village_name,vehicle_number,farmer_name,farmer_mobile,weight_kg,created_at")
+    .order("created_at",{ascending:false})
+    .limit(500);
+
+  if(from) q=q.gte("created_at",from+"T00:00:00");
+  if(to) q=q.lte("created_at",to+"T23:59:59");
+
+  const r=await q;
+
+  if(r.error){
+    box.innerHTML='<p class="danger">Error: '+esc(r.error.message)+'</p>';
+    return;
+  }
+
+  let rows=r.data||[];
+
+  if(search){
+    rows=rows.filter(x=>
+      String(x.vehicle_number||"").toUpperCase().includes(search) ||
+      String(x.farmer_name||"").toUpperCase().includes(search) ||
+      String(x.farmer_mobile||"").includes(search) ||
+      String(x.village_name||"").toUpperCase().includes(search)
+    );
+  }
+
+  const totalWeight=rows.reduce(
+    (s,x)=>s+(Number(x.weight_kg)||0),0
+  );
+
+  const vehicles=[...new Set(
+    rows.map(x=>x.vehicle_number).filter(Boolean)
+  )];
+
+  summary.innerHTML=`
+    <div class="card" style="box-shadow:none;border:1px solid #ddd">
+      <b>કુલ ચિઠ્ઠીઓ:</b> ${rows.length}<br>
+      <b>કુલ ગાડીઓ:</b> ${vehicles.length}<br>
+      <b>કુલ વજન:</b> ${totalWeight} KG
+    </div>
+  `;
+
+  if(!rows.length){
+    box.innerHTML='<p class="muted">કોઈ Data મળ્યો નથી.</p>';
+    return;
+  }
+
+  box.innerHTML=rows.map(x=>`
+    <div class="card"
+         style="box-shadow:none;border:1px solid #ddd;margin:10px 0;padding:14px">
+
+      <b>ગાડી:</b> ${esc(x.vehicle_number)}<br>
+      <b>ગામ:</b> ${esc(x.village_name)}<br>
+      <b>ખેડૂત:</b> ${esc(x.farmer_name)}<br>
+      <b>મોબાઇલ:</b> ${esc(x.farmer_mobile)}<br>
+      <b>વજન:</b> ${esc(x.weight_kg)} KG<br>
+      <small>${new Date(x.created_at).toLocaleString()}</small>
+    </div>
+  `).join("");
+}
 async function loadPending(){
  const r=await db.from("user_profiles").select("id,full_name,mobile,role,approved").eq("approved",false);
  if(r.error) return $("plist").innerText=r.error.message;
