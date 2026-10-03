@@ -70,17 +70,17 @@ button{background:#16834a;color:#fff;border:0;font-weight:700}.hide{display:none
          placeholder="કુલ વજન KG માં લખો">
 
   <label for="wb_slip"><b>કાંટાની પાવતી / Slip Photo</b></label>
-  <input id="wb_slip"
-         type="file"
-         accept="image/*"
-         capture="environment">
-
+  
   <p class="muted">Camera અથવા Galleryમાંથી કાંટાની પાવતી પસંદ કરો.</p>
 
   <button type="button" onclick="saveWaybridge()">
     Weight + Slip Save કરો
   </button>
-
+<input id="wb_slip"
+       type="file"
+       accept="image/*"
+       capture="environment"
+       onchange="autoReadSlip()">
   <p id="wb_msg" class="muted"></p>
   <div id="wb_compare"></div>
 </div>
@@ -315,4 +315,63 @@ async function approve(id){
  if(r.error) alert(r.error.message); else loadPending();
 }
 db.auth.getSession().then(r=>{if(r.data.session)boot()});
+  async function autoReadSlip() {
+  const file = $("wb_slip").files[0];
+  if (!file) return;
+
+  $("wb_msg").innerText = "પાવતી વાંચી રહ્યા છીએ...";
+
+  try {
+    const reader = new FileReader();
+
+    reader.onload = async function () {
+      try {
+        const image = reader.result;
+
+        const response = await fetch(
+          "https://tiugeimmfevelnudddhbr.supabase.co/functions/v1/super-responder",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ image: image })
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Auto Read failed");
+        }
+
+        if (data.rst) {
+          $("wb_rst").value = data.rst;
+        }
+
+        if (data.vehicle) {
+          $("wb_vehicle").value =
+            String(data.vehicle).replace(/\s+/g, "").toUpperCase();
+        }
+
+        if (data.net_weight) {
+          $("wb_weight").value = data.net_weight;
+        }
+
+        $("wb_msg").innerText =
+          "✅ પાવતી વાંચાઈ ગઈ. માહિતી ચેક કરીને Save કરો.";
+      } catch (err) {
+        console.error(err);
+        $("wb_msg").innerText =
+          "❌ પાવતી Auto Read થઈ નથી: " + err.message;
+      }
+    };
+
+    reader.readAsDataURL(file);
+
+  } catch (err) {
+    console.error(err);
+    $("wb_msg").innerText = "❌ Error: " + err.message;
+  }
+  }
 </script></main></body></html>
