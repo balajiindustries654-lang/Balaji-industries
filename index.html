@@ -324,6 +324,9 @@ async function compareVehicleWeight(vehicle, wayWeight){
  <h3 style="margin-bottom:0">${matched?'✅ MATCH':'❌ NOT MATCH'}</h3>
  </div>`;
 }
+
+  
+
 async function adminSearch(mode=""){
   const box=$("admin_results");
   const summary=$("admin_summary");
@@ -407,6 +410,7 @@ async function adminSearch(mode=""){
       <b>મોબાઇલ:</b> ${esc(x.farmer_mobile)}<br>
       <b>વજન:</b> ${esc(x.weight_kg)} KG<br>
       <small>${new Date(x.created_at).toLocaleString()}</small>
+
     </div>
   `).join("");
 }
