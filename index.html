@@ -45,22 +45,44 @@ button{background:#16834a;color:#fff;border:0;font-weight:700}.hide{display:none
 <button type="button" onclick="loadMyChiththis()">ચિઠ્ઠીઓ Refresh કરો</button>
 <div id="my_chiththis"><p class="muted">ચિઠ્ઠીઓ લોડ થઈ રહી છે...</p></div>
 </div>
-<div id="waybridge" class="card hide"><h2>Waybridge Dashboard</h2>
-<h3>ગાડીનું વજન</h3>
-<label for="wb_rst"><b>RST નંબર</b></label>
-<input id="wb_rst" inputmode="numeric" placeholder="RST નંબર Auto Read થશે">
-<label for="wb_vehicle"><b>ગાડી નંબર</b></label>
-<input id="wb_vehicle" placeholder="ઉદાહરણ: GJ 12 AB 4089" autocomplete="off" style="text-transform:uppercase">
-<label for="wb_weight"><b>NET Weight (KG)</b></label>
-<input id="wb_weight" type="number" inputmode="decimal" min="0" step="0.01" placeholder="કુલ વજન KG માં લખો">
-<label for="wb_slip"><b>કાંટાની પાવતી / Slip Photo</b></label>
-<input id="wb_slip" type="file" accept="image/*">
-<p class="muted">Camera અથવા Galleryમાંથી પાવતી પસંદ કરો.</p>
-<button type="button" onclick="autoReadSlip()">📷 પાવતી Auto Read કરો</button>
-<p id="ocr_msg" class="muted"></p>
-<button type="button" onclick="saveWaybridge()">Weight + Slip Save કરો</button>
-<p id="wb_msg" class="muted"></p>
-<div id="wb_compare"></div>
+<div id="waybridge" class="card hide">
+  <h2>Waybridge Dashboard</h2>
+
+  <h3>ગાડીનું વજન</h3>
+
+  <label for="wb_rst"><b>RST નંબર</b></label>
+  <input id="wb_rst"
+         inputmode="numeric"
+         placeholder="RST નંબર લખો">
+
+  <label for="wb_vehicle"><b>ગાડી નંબર</b></label>
+  <input id="wb_vehicle"
+         placeholder="ઉદાહરણ: GJ12FD4989"
+         autocomplete="off"
+         style="text-transform:uppercase">
+
+  <label for="wb_weight"><b>NET Weight (KG)</b></label>
+  <input id="wb_weight"
+         type="number"
+         inputmode="decimal"
+         min="0"
+         step="0.01"
+         placeholder="કુલ વજન KG માં લખો">
+
+  <label for="wb_slip"><b>કાંટાની પાવતી / Slip Photo</b></label>
+  <input id="wb_slip"
+         type="file"
+         accept="image/*"
+         capture="environment">
+
+  <p class="muted">Camera અથવા Galleryમાંથી કાંટાની પાવતી પસંદ કરો.</p>
+
+  <button type="button" onclick="saveWaybridge()">
+    Weight + Slip Save કરો
+  </button>
+
+  <p id="wb_msg" class="muted"></p>
+  <div id="wb_compare"></div>
 </div>
 <div id="farmer" class="card hide"><h2>Farmer Dashboard</h2><p>તમારી માહિતી અહીં દેખાશે.</p></div>
 </section>
