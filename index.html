@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="gu"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Balaji Industries</title>
+<style>
+body{font-family:system-ui;background:#f4f5f7;margin:0;color:#161616}main{max-width:720px;margin:auto;padding:18px}
+.card{background:#fff;padding:20px;border-radius:16px;margin:14px 0;box-shadow:0 2px 12px #0001}
+input,select,button{width:100%;padding:13px;margin:6px 0;box-sizing:border-box;border-radius:10px;border:1px solid #ccc;font-size:16px}
+button{background:#16834a;color:#fff;border:0;font-weight:700}.hide{display:none}.muted{color:#666}.danger{color:#b00020}
+</style></head><body><main>
+<h1>Balaji Industries</h1><p class="muted">Groundnut Management</p>
+
+<section id="auth" class="card">
+<h2>Login</h2>
+<input id="lm" inputmode="numeric" placeholder="Mobile Number">
+<input id="lp" type="password" placeholder="Password">
+<button onclick="login()">Login</button>
+<hr><h3>Sign Up</h3>
+<input id="sn" placeholder="Full Name">
+<input id="sm" inputmode="numeric" placeholder="Mobile Number">
+<input id="sp" type="password" placeholder="Password (minimum 6)">
+<button onclick="signup()">Create Account</button><p id="msg"></p>
+</section>
+
+<section id="app" class="hide">
+<div class="card"><b id="who"></b><button onclick="logout()">Logout</button></div>
+<div id="pending" class="card hide"><h2>Approval Pending</h2><p>Admin approval પછી app access મળશે.</p></div>
+<div id="admin" class="card hide"><h2>Admin Dashboard</h2><button onclick="loadPending()">Pending Users</button><div id="plist"></div></div>
+<div id="worker" class="card hide"><h2>Majur Dashboard</h2>
+<h3>નવી ચિઠ્ઠી</h3>
+<label for="village_name"><b>ગામનું નામ</b></label>
+<input id="village_name" placeholder="ગામનું નામ લખો" autocomplete="off">
+<label for="vehicle_number"><b>ગાડી નંબર</b></label>
+<input id="vehicle_number" placeholder="ઉદાહરણ: GJ 12 AB 4089" autocomplete="off" style="text-transform:uppercase">
+<label for="farmer_name"><b>ખેડૂતનું નામ</b></label>
+<input id="farmer_name" placeholder="ખેડૂતનું નામ લખો" autocomplete="off">
+<label for="farmer_mobile"><b>મોબાઇલ નંબર</b></label>
+<input id="farmer_mobile" inputmode="numeric" placeholder="ખેડૂતનો મોબાઇલ નંબર" autocomplete="off">
+<label for="farmer_weight"><b>વજન (KG)</b></label>
+<input id="farmer_weight" type="number" inputmode="decimal" min="0" step="0.01" placeholder="વજન KG માં લખો">
+<button type="button" onclick="saveChiththi()">ચિઠ્ઠી Save કરો</button>
+<p class="muted">એક જ ગાડીમાં બીજા ખેડૂત માટે Save પછી ગામ અને ગાડી નંબર એ જ રહેશે.</p>
+<p id="chiththi_msg" class="muted"></p>
+<hr>
+<h3>મારી Save થયેલી ચિઠ્ઠીઓ</h3>
+<button type="button" onclick="loadMyChiththis()">ચિઠ્ઠીઓ Refresh કરો</button>
+<div id="my_chiththis"><p class="muted">ચિઠ્ઠીઓ લોડ થઈ રહી છે...</p></div>
+</div>
+<div id="waybridge" class="card hide"><h2>Waybridge Dashboard</h2>
+<h3>ગાડીનું વજન</h3>
+<label for="wb_rst"><b>RST નંબર</b></label>
+<input id="wb_rst" inputmode="numeric" placeholder="RST નંબર Auto Read થશે">
+<label for="wb_vehicle"><b>ગાડી નંબર</b></label>
+<input id="wb_vehicle" placeholder="ઉદાહરણ: GJ 12 AB 4089" autocomplete="off" style="text-transform:uppercase">
+<label for="wb_weight"><b>NET Weight (KG)</b></label>
+<input id="wb_weight" type="number" inputmode="decimal" min="0" step="0.01" placeholder="કુલ વજન KG માં લખો">
+<label for="wb_slip"><b>કાંટાની પાવતી / Slip Photo</b></label>
+<input id="wb_slip" type="file" accept="image/*">
+<p class="muted">Camera અથવા Galleryમાંથી પાવતી પસંદ કરો.</p>
+<button type="button" onclick="autoReadSlip()">📷 પાવતી Auto Read કરો</button>
+<p id="ocr_msg" class="muted"></p>
+<button type="button" onclick="saveWaybridge()">Weight + Slip Save કરો</button>
+<p id="wb_msg" class="muted"></p>
+<div id="wb_compare"></div>
+</div>
+<div id="farmer" class="card hide"><h2>Farmer Dashboard</h2><p>તમારી માહિતી અહીં દેખાશે.</p></div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script>
+const db=supabase.createClient("https://tiugeimmfevelnuddhbr.supabase.co","sb_publishable_vFtxD2etw0CsoEPA2ouIFQ_PhO_s8qU");
+const $=x=>document.getElementById(x);
+function cleanMobile(v){ return (v||"").replace(/\D/g,""); }
+function internalEmail(m){ return "u"+cleanMobile(m)+"@users.balajiindustries.app"; }
+
+async function signup(){
+ const name=$("sn").value.trim(), mobile=cleanMobile($("sm").value), pass=$("sp").value;
+ if(mobile.length<10) return $("msg").innerText="સાચો mobile number નાખો.";
+ if(pass.length<6) return $("msg").innerText="Password ઓછામાં ઓછો 6 characters રાખો.";
+ const r=await db.auth.signUp({
+   email:internalEmail(mobile), password:pass,
+   options:{data:{full_name:name,mobile:mobile}}
+ });
+ $("msg").innerText=r.error?r.error.message:"Account created. Admin approval pending.";
+ if(!r.error && r.data.session) await db.auth.signOut();
+}
+
+async function login(){
+ const mobile=cleanMobile($("lm").value), pass=$("lp").value;
+ const r=await db.auth.signInWithPassword({email:internalEmail(mobile),password:pass});
+ $("msg").innerText=r.error?r.error.message:"";
+ if(!r.error) boot();
+}
+async function logout(){await db.auth.signOut();location.reload()}
+
+async function boot(){
+ const u=(await db.auth.getUser()).data.user;if(!u)return;
+ $("auth").classList.add("hide");$("app").classList.remove("hide");
+ const r=await db.from("user_profiles").select("*").eq("id",u.id).single();
+ if(r.error){ $("who").innerText=r.error.message; return; }
+ const p=r.data;$("who").innerText=(p.full_name||"User")+" — "+p.role;
+ if(!p.approved){$("pending").classList.remove("hide");return;}
+ const id=p.role==="worker"?"worker":p.role;
+ if($(id)) $(id).classList.remove("hide");
+ if(id==="worker") loadMyChiththis();
+}
+
+async function saveChiththi(){
+ const village=$("village_name").value.trim();
+ const vehicle=$("vehicle_number").value.trim().toUpperCase();
+ const farmer=$("farmer_name").value.trim();
+ const mobile=cleanMobile($("farmer_mobile").value);
+ const weight=parseFloat($("farmer_weight").value);
+ if(!village||!vehicle||!farmer||mobile.length<10||!Number.isFinite(weight)||weight<=0){
+   $("chiththi_msg").innerText="બધી માહિતી સાચી રીતે भरो."; return;
+ }
+ $("chiththi_msg").innerText="Save થઈ રહ્યું છે...";
+ const user=(await db.auth.getUser()).data.user;
+ if(!user){ $("chiththi_msg").innerText="Login ફરી કરો."; return; }
+ const r=await db.from("chiththis").insert({
+   village_name:village,
+   vehicle_number:vehicle,
+   farmer_name:farmer,
+   farmer_mobile:mobile,
+   weight_kg:weight,
+   created_by:user.id
+ });
+ if(r.error){ $("chiththi_msg").innerText="Save Error: "+r.error.message; return; }
+ $("chiththi_msg").innerText="ચિઠ્ઠી Save થઈ ગઈ. હવે આ જ ગાડીના બીજા ખેડૂતની માહિતી भरो.";
+ $("farmer_name").value="";
+ $("farmer_mobile").value="";
+ $("farmer_weight").value="";
+ $("farmer_name").focus();
+ await loadMyChiththis();
+}
+
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));}
+async function loadMyChiththis(){
+ const box=$("my_chiththis"); if(!box)return;
+ box.innerHTML='<p class="muted">ચિઠ્ઠીઓ લોડ થઈ રહી છે...</p>';
+ const user=(await db.auth.getUser()).data.user;
+ if(!user){box.innerHTML='<p class="danger">Login ફરી કરો.</p>';return;}
+ const r=await db.from("chiththis").select("village_name,vehicle_number,farmer_name,farmer_mobile,weight_kg,created_at").eq("created_by",user.id).order("created_at",{ascending:false}).limit(50);
+ if(r.error){box.innerHTML='<p class="danger">Load Error: '+esc(r.error.message)+'</p>';return;}
+ if(!r.data||!r.data.length){box.innerHTML='<p class="muted">હજુ કોઈ ચિઠ્ઠી Save નથી.</p>';return;}
+ box.innerHTML=r.data.map(x=>`<div class="card" style="box-shadow:none;border:1px solid #ddd;margin:10px 0;padding:14px"><b>${esc(x.village_name)}</b> — ${esc(x.vehicle_number)}<br>ખેડૂત: ${esc(x.farmer_name)}<br>મોબાઇલ: ${esc(x.farmer_mobile)}<br><b>વજન: ${esc(x.weight_kg)} KG</b></div>`).join("");
+}
+
+function cropSlip(img, x, y, w, h){
+ const scale=4;
+ const sw=img.naturalWidth*w, sh=img.naturalHeight*h;
+ const c=document.createElement("canvas");
+ c.width=Math.max(1,Math.round(sw*scale)); c.height=Math.max(1,Math.round(sh*scale));
+ const ctx=c.getContext("2d");
+ ctx.imageSmoothingEnabled=true;
+ ctx.drawImage(img,img.naturalWidth*x,img.naturalHeight*y,sw,sh,0,0,c.width,c.height);
+ const d=ctx.getImageData(0,0,c.width,c.height);
+ // Strong grayscale + local-friendly threshold for faint dot-matrix print.
+ for(let i=0;i<d.data.length;i+=4){
+   const g=.299*d.data[i]+.587*d.data[i+1]+.114*d.data[i+2];
+   const v=g<220?0:255;
+   d.data[i]=d.data[i+1]=d.data[i+2]=v;
+ }
+ ctx.putImageData(d,0,0); return c;
+}
+async function ocrCanvas(c, whitelist){
+ const opts={
+   logger:m=>{if(m.status==="recognizing text") $("ocr_msg").innerText="Auto Read: "+Math.round((m.progress||0)*100)+"%";},
+   tessedit_pageseg_mode:"6",
+   preserve_interword_spaces:"1"
+ };
+ if(whitelist) opts.tessedit_char_whitelist=whitelist;
+ const r=await Tesseract.recognize(c,"eng",opts);
+ return (r.data.text||"").toUpperCase().replace(/\s+/g," ").trim();
+}
+function normalizeVehicle(t){
+ let x=t.toUpperCase().replace(/[^A-Z0-9]/g,"");
+ // Common dot-matrix OCR corrections only in likely numeric positions.
+ const m=x.match(/([A-Z]{2})([0-9OIL]{1,2})([A-Z]{1,3})([0-9OIL]{4})/);
+ if(!m) return "";
+ const fix=n=>n.replace(/O/g,"0").replace(/[IL]/g,"1");
+ return m[1]+fix(m[2])+m[3]+fix(m[4]);
+}
+async function fileToDataURL(file){
+ return await new Promise((resolve,reject)=>{
+   const reader=new FileReader();
+   reader.onload=()=>resolve(reader.result);
+   reader.onerror=()=>reject(new Error("Photo read failed"));
+   reader.readAsDataURL(file);
+ });
+}
+async function autoReadSlip(){
+ const f=$("wb_slip").files[0];
+ if(!f){$("ocr_msg").innerText="પહેલા પાવતીનો ફોટો પસંદ કરો.";return;}
+ $("ocr_msg").innerText="Free OCR શરૂ થઈ રહ્યું છે...";
+ try{
+   const url=URL.createObjectURL(f);
+   const img=new Image();
+   await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=reject;img.src=url;});
+
+   // OCR runs fully in the browser: no paid API call.
+   const canvas=cropSlip(img,0,0,1,1);
+   const raw=await ocrCanvas(canvas,"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:-./ ");
+   URL.revokeObjectURL(url);
+   const text=raw.toUpperCase().replace(/\s+/g," ");
+
+   let rst="", vehicle="", net="";
+   let m=text.match(/RST\s*(?:NO|N0|NUMBER)?\s*[:#.-]?\s*([0-9OIL]{1,8})/);
+   if(m) rst=m[1].replace(/O/g,"0").replace(/[IL]/g,"1");
+
+   m=text.match(/(?:VEHICLE|VEH|TRUCK)\s*(?:NO|N0|NUMBER)?\s*[:#.-]?\s*([A-Z]{2}\s*[0-9OIL]{1,2}\s*[A-Z]{1,3}\s*[0-9OIL]{4})/);
+   if(m) vehicle=normalizeVehicle(m[1]);
+   if(!vehicle){
+     const candidates=text.match(/[A-Z]{2}\s*[0-9OIL]{1,2}\s*[A-Z]{1,3}\s*[0-9OIL]{3,4}/g)||[];
+     if(candidates.length) vehicle=normalizeVehicle(candidates[0]);
+   }
+
+   m=text.match(/(?:NET|NETT)\s*(?:WEIGHT|WT)?\s*[:#.= -]*\s*([0-9OIL]{3,7})\s*(?:KG|KGS)?/);
+   if(m) net=m[1].replace(/O/g,"0").replace(/[IL]/g,"1");
+
+   if(rst) $("wb_rst").value=rst;
+   if(vehicle) $("wb_vehicle").value=vehicle;
+   if(net) $("wb_weight").value=net;
+
+   const found=[rst,vehicle,net].filter(Boolean).length;
+   $("ocr_msg").innerText=found===3
+     ?"✅ Free OCR: RST No., Vehicle No. અને NET Weight વાંચાઈ ગયા. Save પહેલાં ચેક કરો."
+     :"⚠️ Free OCRએ "+found+"/3 માહિતી વાંચી. Photo સીધો અને clear રાખીને ફરી પ્રયાસ કરો; બાકી field manually ભરી શકો.";
+ }catch(e){
+   $("ocr_msg").innerText="Free OCR Error: "+(e?.message||e);
+ }
+}
+async function saveWaybridge(){
+ const rst=$("wb_rst").value.trim();
+ const vehicle=$("wb_vehicle").value.trim().toUpperCase();
+ const weight=parseFloat($("wb_weight").value);
+ if(!vehicle||!Number.isFinite(weight)||weight<=0){
+   $("wb_msg").innerText="ગાડી નંબર અને સાચું Total Weight નાખો."; return;
+ }
+ $("wb_msg").innerText="Save થઈ રહ્યું છે...";
+ const user=(await db.auth.getUser()).data.user;
+ if(!user){ $("wb_msg").innerText="Login ફરી કરો."; return; }
+ const file=$("wb_slip").files[0];
+ if(!file){ $("wb_msg").innerText="કાંટાની પાવતીનો ફોટો પસંદ કરો."; return; }
+ const safe=(file.name||"slip.jpg").replace(/[^a-zA-Z0-9._-]/g,"_");
+ const path=user.id+"/"+Date.now()+"_"+safe;
+ const up=await db.storage.from("Way bridge slips").upload(path,file,{upsert:false,contentType:file.type||"image/jpeg"});
+ if(up.error){ $("wb_msg").innerText="Photo Upload Error: "+up.error.message; return; }
+ const pub=db.storage.from("Way bridge slips").getPublicUrl(path);
+ const slipUrl=pub.data.publicUrl;
+ const r=await db.from("waybridge_entries").insert({
+   rst_no:rst||null,
+   vehicle_number:vehicle,
+   total_weight_kg:weight,
+   net_weight_kg:weight,
+   slip_url:slipUrl,
+   created_by:user.id
+ });
+ if(r.error){ $("wb_msg").innerText="Save Error: "+r.error.message; return; }
+ $("wb_msg").innerText="Weight અને Slip Photo સફળતાપૂર્વક Save થઈ ગયા.";
+ $("wb_slip").value="";
+ await compareVehicleWeight(vehicle, weight);
+}
+
+async function compareVehicleWeight(vehicle, wayWeight){
+ const box=$("wb_compare");
+ box.innerHTML='<p class="muted">ચિઠ્ઠીઓનું કુલ વજન ગણાઈ રહ્યું છે...</p>';
+ const r=await db.from("chiththis").select("weight_kg").eq("vehicle_number",vehicle);
+ if(r.error){ box.innerHTML='<p class="danger">Compare Error: '+esc(r.error.message)+'</p>'; return; }
+ const rows=r.data||[];
+ const chTotal=rows.reduce((sum,x)=>sum+(Number(x.weight_kg)||0),0);
+ const diff=Number(wayWeight)-chTotal;
+ const matched=Math.abs(diff)<0.001;
+ box.innerHTML=`<div class="card" style="box-shadow:none;border:1px solid #ddd;margin-top:16px;padding:14px">
+ <b>ચિઠ્ઠીઓ:</b> ${rows.length}<br>
+ <b>ચિઠ્ઠીઓનું કુલ વજન:</b> ${chTotal} KG<br>
+ <b>Waybridge Weight:</b> ${wayWeight} KG<br>
+ <b>Difference:</b> ${Math.abs(diff)} KG<br>
+ <h3 style="margin-bottom:0">${matched?'✅ MATCH':'❌ NOT MATCH'}</h3>
+ </div>`;
+}
+
+async function loadPending(){
+ const r=await db.from("user_profiles").select("id,full_name,mobile,role,approved").eq("approved",false);
+ if(r.error) return $("plist").innerText=r.error.message;
+ $("plist").innerHTML=(r.data||[]).map(x=>`<div class="card"><b>${x.full_name||"User"}</b><br>${x.mobile||""}
+ <select id="r${x.id}"><option value="worker">Majur</option><option value="farmer">Farmer</option><option value="waybridge">Waybridge</option></select>
+ <button onclick="approve('${x.id}')">Approve</button></div>`).join("")||"No pending users";
+}
+async function approve(id){
+ const role=$("r"+id).value;
+ const r=await db.from("user_profiles").update({role:role,approved:true}).eq("id",id);
+ if(r.error) alert(r.error.message); else loadPending();
+}
+db.auth.getSession().then(r=>{if(r.data.session)boot()});
+</script></main></body></html>
