@@ -688,91 +688,280 @@ async function adminVehicleMatch(){
   }
 }
 async function adminSearch(mode=""){
-  const box=$("admin_results");
-  const summary=$("admin_summary");
+  const box = $("admin_results");
+  const summary = $("admin_summary");
 
-  box.innerHTML='<p class="muted">Data લોડ થઈ રહ્યો છે...</p>';
-  summary.innerHTML="";
+  box.innerHTML = '<p class="muted">Data લોડ થઈ રહ્યો છે...</p>';
+  summary.innerHTML = "";
 
-  let search=$("admin_search").value.trim().toUpperCase();
-  let from=$("admin_from").value;
-  let to=$("admin_to").value;
+  let search = ($("admin_search").value || "").trim().toUpperCase();
+  let from = $("admin_from").value;
+  let to = $("admin_to").value;
 
-  const now=new Date();
+  const now = new Date();
 
-  if(mode==="today"){
-    const d=now.toISOString().slice(0,10);
-    from=d;
-    to=d;
+  if(mode === "today"){
+    const d = now.toISOString().slice(0,10);
+    from = d;
+    to = d;
   }
 
-  if(mode==="month"){
-    const y=now.getFullYear();
-    const m=String(now.getMonth()+1).padStart(2,"0");
-    from=`${y}-${m}-01`;
-    to=new Date(y,now.getMonth()+1,0).toISOString().slice(0,10);
+  if(mode === "month"){
+    const y = now.getFullYear();
+    const m = String(now.getMonth()+1).padStart(2,"0");
+    from = `${y}-${m}-01`;
+    to = new Date(y,now.getMonth()+1,0).toISOString().slice(0,10);
   }
 
-  let q=db.from("chiththis")
-    .select("village_name,vehicle_number,farmer_name,farmer_mobile,weight_kg,created_at")
-    .order("created_at",{ascending:false})
-    .limit(500);
+  try{
 
-  if(from) q=q.gte("created_at",from+"T00:00:00");
-  if(to) q=q.lte("created_at",to+"T23:59:59");
+    // બધી ચિઠ્ઠીઓ
+    let q = db.from("chiththis")
+      .select("id,chiththi_number,commodity_type,broker_name,village_name,vehicle_number,farmer_name,farmer_mobile,gross_weight_kg,bardan_kg,kardo_kg,weight_kg,chiththi_photo_url,created_at")
+      .order("created_at",{ascending:false})
+      .limit(500);
 
-  const r=await q;
+    if(from) q = q.gte("created_at",from+"T00:00:00");
+    if(to) q = q.lte("created_at",to+"T23:59:59");
+
+    const r = await q;
+
+    if(r.error){
+      box.innerHTML =
+        '<p class="danger">Chiththi Error: '+esc(r.error.message)+'</p>';
+      return;
+    }
+
+    let rows = r.data || [];
+
+    // Waybridge data - RST શોધવા માટે
+    const wb = await db.from("waybridge_entries")
+      .select("rst_no,vehicle_number,net_weight_kg,total_weight_kg,slip_url");
+
+    const wbRows = wb.error ? [] : (wb.data || []);
+
+    // Search
+    if(search){
+
+      // જો RST નંબરથી search હોય તો તેની ગાડી શોધો
+      const rstVehicles = wbRows
+        .filter(w =>
+          String(w.rst_no || "").toUpperCase().includes(search)
+        )
+        .map(w => String(w.vehicle_number || "").toUpperCase());
+
+      rows = rows.filter(x =>
+        String(x.chiththi_number || "").toUpperCase().includes(search) ||
+        String(x.vehicle_number || "").toUpperCase().includes(search) ||
+        String(x.farmer_name || "").toUpperCase().includes(search) ||
+        String(x.farmer_mobile || "").includes(search) ||
+        String(x.village_name || "").toUpperCase().includes(search) ||
+        String(x.broker_name || "").toUpperCase().includes(search) ||
+        String(x.commodity_type || "").toUpperCase().includes(search) ||
+        rstVehicles.includes(
+          String(x.vehicle_number || "").toUpperCase()
+        )
+      );
+    }
+
+    const totalWeight = rows.reduce(
+      (sum,x)=>sum+(Number(x.weight_kg)||0),0
+    );
+
+    const vehicles = [...new Set(
+      rows.map(x=>x.vehicle_number).filter(Boolean)
+    )];
+
+    summary.innerHTML = `
+      <div class="card"
+           style="box-shadow:none;border:1px solid #ddd">
+        <b>કુલ ચિઠ્ઠીઓ:</b> ${rows.length}<br>
+        <b>કુલ ગાડીઓ:</b> ${vehicles.length}<br>
+        <b>કુલ Final વજન:</b> ${totalWeight.toFixed(2)} KG
+      </div>
+    `;
+
+    if(!rows.length){
+      box.innerHTML =
+        '<p class="muted">કોઈ Data મળ્યો નથી.</p>';
+      return;
+    }
+
+    box.innerHTML = rows.map(x=>{
+
+      const vehicle = String(x.vehicle_number || "").toUpperCase();
+
+      const way = wbRows.find(w =>
+        String(w.vehicle_number || "").toUpperCase() === vehicle
+      );
+
+      const rst = way ? (way.rst_no || "-") : "-";
+
+      const photo = x.chiththi_photo_url
+        ? `<br><a href="${esc(x.chiththi_photo_url)}"
+                 target="_blank">📷 ચિઠ્ઠીનો ફોટો જુઓ</a>`
+        : "";
+
+      const wbSlip = way && way.slip_url
+        ? `<br><a href="${esc(way.slip_url)}"
+                 target="_blank">📷 Waybridge Slip જુઓ</a>`
+        : "";
+
+      return `
+        <div class="card"
+             style="box-shadow:none;border:1px solid #ddd;
+                    margin:10px 0;padding:14px">
+
+          <b>ચિઠ્ઠી નંબર:</b>
+          ${esc(x.chiththi_number || "-")}<br>
+
+          <b>RST નંબર:</b>
+          ${esc(rst)}<br>
+
+          <b>માલ:</b>
+          ${esc(x.commodity_type || "-")}<br>
+
+          <b>દલાલ:</b>
+          ${esc(x.broker_name || "-")}<br>
+
+          <b>ગાડી:</b>
+          ${esc(x.vehicle_number || "-")}<br>
+
+          <b>ગામ:</b>
+          ${esc(x.village_name || "-")}<br>
+
+          <b>ખેડૂત:</b>
+          ${esc(x.farmer_name || "-")}<br>
+
+          <b>મોબાઇલ:</b>
+          ${esc(x.farmer_mobile || "-")}<br>
+
+          <b>મૂળ વજન:</b>
+          ${Number(x.gross_weight_kg || 0).toFixed(2)} KG<br>
+
+          <b>બારદાન બાદ:</b>
+          ${Number(x.bardan_kg || 0).toFixed(2)} KG<br>
+
+          <b>કરડો બાદ:</b>
+          ${Number(x.kardo_kg || 0).toFixed(2)} KG<br>
+
+          <b>Final / Net વજન:</b>
+          <strong>${Number(x.weight_kg || 0).toFixed(2)} KG</strong><br>
+
+          ${photo}
+          ${wbSlip}
+
+          <br><br>
+
+          <button type="button"
+            onclick="adminEditChiththi('${x.id}')">
+            ✏️ Edit ચિઠ્ઠી
+          </button>
+
+          <br>
+          <small>
+            ${new Date(x.created_at).toLocaleString()}
+          </small>
+
+        </div>
+      `;
+    }).join("");
+
+  }catch(e){
+    box.innerHTML =
+      '<p class="danger">Error: '+esc(e.message || e)+'</p>';
+  }
+}
+
+
+async function adminEditChiththi(id){
+
+  const r = await db.from("chiththis")
+    .select("*")
+    .eq("id",id)
+    .single();
 
   if(r.error){
-    box.innerHTML='<p class="danger">Error: '+esc(r.error.message)+'</p>';
+    alert("Error: "+r.error.message);
     return;
   }
 
-  let rows=r.data||[];
+  const x = r.data;
 
-  if(search){
-    rows=rows.filter(x=>
-      String(x.vehicle_number||"").toUpperCase().includes(search) ||
-      String(x.farmer_name||"").toUpperCase().includes(search) ||
-      String(x.farmer_mobile||"").includes(search) ||
-      String(x.village_name||"").toUpperCase().includes(search)
-    );
-  }
-
-  const totalWeight=rows.reduce(
-    (s,x)=>s+(Number(x.weight_kg)||0),0
+  const farmer = prompt(
+    "ખેડૂતનું નામ:",
+    x.farmer_name || ""
   );
+  if(farmer === null) return;
 
-  const vehicles=[...new Set(
-    rows.map(x=>x.vehicle_number).filter(Boolean)
-  )];
+  const mobile = prompt(
+    "મોબાઇલ નંબર:",
+    x.farmer_mobile || ""
+  );
+  if(mobile === null) return;
 
-  summary.innerHTML=`
-    <div class="card" style="box-shadow:none;border:1px solid #ddd">
-      <b>કુલ ચિઠ્ઠીઓ:</b> ${rows.length}<br>
-      <b>કુલ ગાડીઓ:</b> ${vehicles.length}<br>
-      <b>કુલ વજન:</b> ${totalWeight} KG
-    </div>
-  `;
+  const village = prompt(
+    "ગામ:",
+    x.village_name || ""
+  );
+  if(village === null) return;
 
-  if(!rows.length){
-    box.innerHTML='<p class="muted">કોઈ Data મળ્યો નથી.</p>';
+  const vehicle = prompt(
+    "ગાડી નંબર:",
+    x.vehicle_number || ""
+  );
+  if(vehicle === null) return;
+
+  const grossInput = prompt(
+    "મૂળ વજન KG:",
+    x.gross_weight_kg || 0
+  );
+  if(grossInput === null) return;
+
+  const bardanInput = prompt(
+    "બારદાન બાદ KG:",
+    x.bardan_kg || 0
+  );
+  if(bardanInput === null) return;
+
+  const kardoInput = prompt(
+    "કરડો બાદ KG:",
+    x.kardo_kg || 0
+  );
+  if(kardoInput === null) return;
+
+  const gross = Number(grossInput) || 0;
+  const bardan = Number(bardanInput) || 0;
+  const kardo = Number(kardoInput) || 0;
+
+  const net = gross - bardan - kardo;
+
+  if(net < 0){
+    alert("Final વજન 0 થી ઓછું ન હોઈ શકે.");
     return;
   }
 
-  box.innerHTML=rows.map(x=>`
-    <div class="card"
-         style="box-shadow:none;border:1px solid #ddd;margin:10px 0;padding:14px">
+  const up = await db.from("chiththis")
+    .update({
+      farmer_name: farmer.trim(),
+      farmer_mobile: mobile.trim(),
+      village_name: village.trim(),
+      vehicle_number: vehicle.trim().toUpperCase(),
+      gross_weight_kg: gross,
+      bardan_kg: bardan,
+      kardo_kg: kardo,
+      weight_kg: net
+    })
+    .eq("id",id);
 
-      <b>ગાડી:</b> ${esc(x.vehicle_number)}<br>
-      <b>ગામ:</b> ${esc(x.village_name)}<br>
-      <b>ખેડૂત:</b> ${esc(x.farmer_name)}<br>
-      <b>મોબાઇલ:</b> ${esc(x.farmer_mobile)}<br>
-      <b>વજન:</b> ${esc(x.weight_kg)} KG<br>
-      <small>${new Date(x.created_at).toLocaleString()}</small>
+  if(up.error){
+    alert("Update Error: "+up.error.message);
+    return;
+  }
 
-    </div>
-  `).join("");
+  alert("ચિઠ્ઠી સફળતાપૂર્વક Update થઈ ગઈ.");
+
+  await adminSearch();
 }
   function downloadApp(){
   window.location.href = "https://balajiindustries654-lang.github.io/Balaji-industries/";
