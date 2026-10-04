@@ -65,11 +65,94 @@ button{background:#16834a;color:#fff;border:0;font-weight:700}.hide{display:none
     <option value="Other">Other</option>
   </select>
 
-  <label><b>દલાલનું નામ</b></label>
-  <input id="broker_name" placeholder="દલાલનું નામ લખો">
+<label><b>દલાલનું નામ</b></label>
+<select id="broker_select" onchange="toggleBrokerOther()">
+  <option value="">દલાલ પસંદ કરો</option>
+  <option value="Nitin Gandhi Mandvi">Nitin Gandhi Mandvi</option>
+  <option value="Chintan Chhaya Trader">Chintan Chhaya Trader</option>
+  <option value="Satara">Satara</option>
+  <option value="Bhavesh Ramjiyani">Bhavesh Ramjiyani</option>
+  <option value="Jignesh Pokar">Jignesh Pokar</option>
+  <option value="Other">Other</option>
+</select>
 
-  <label><b>ગામનું નામ</b></label>
-  <input id="village_name" placeholder="ગામનું નામ લખો" autocomplete="off">
+<input id="broker_other"
+       placeholder="બીજા દલાલનું નામ લખો"
+       style="display:none;margin-top:8px">
+
+<input type="hidden" id="broker_name">
+
+
+<label><b>ગામનું નામ</b></label>
+<input id="village_name"
+       list="village_list"
+       placeholder="ગામ Search કરો અથવા નામ લખો"
+       autocomplete="off">
+
+<datalist id="village_list">
+  <option value="માંડવી (તાલુકા મથક / શહેર)">
+  <option value="અબડા">
+  <option value="અસંબિયા મોટા">
+  <option value="અસંબિયા નાના">
+  <option value="આણંદપર">
+  <option value="ઉમરાપર">
+  <option value="ગોડસરા">
+  <option value="ગધસિશા">
+  <option value="ગંઢવી">
+  <option value="ગોધરા">
+  <option value="ગુણોદા">
+  <option value="ગોકુલપર">
+  <option value="ચાસરા">
+  <option value="તોફિયા">
+  <option value="તલવાણા">
+  <option value="ત્રયા">
+  <option value="ત્રંબૌ">
+  <option value="દેવપર">
+  <option value="દરિયાસ્થાન">
+  <option value="દાવરી">
+  <option value="દૂજપર">
+  <option value="ધોકડા">
+  <option value="નાગલપર (મોટી)">
+  <option value="નાગલપર (નાની)">
+  <option value="નાગરેચા">
+  <option value="નાની રાયણ">
+  <option value="મોટી રાયણ">
+  <option value="પોરીસરા">
+  <option value="પિપરી">
+  <option value="બિદડા">
+  <option value="બાયઠ">
+  <option value="બગડા">
+  <option value="ભાડા">
+  <option value="ભોજાય">
+  <option value="ભાડિયા">
+  <option value="ભારાપર">
+  <option value="ભાટિયા">
+  <option value="મસ્કા">
+  <option value="માંડવી (ગ્રામ્ય)">
+  <option value="માંજલ">
+  <option value="મોડકુબા">
+  <option value="મોટી મઉ">
+  <option value="નાની મઉ">
+  <option value="મોટી ખાખર">
+  <option value="નાની ખાખર">
+  <option value="રતડીયા">
+  <option value="રતનપર">
+  <option value="રાપર (ગઢવાળી)">
+  <option value="રામપર (વેકરા)">
+  <option value="રુકમાવતી">
+  <option value="લાયજા મોટા">
+  <option value="લાયજા નાના">
+  <option value="લુડવા">
+  <option value="લુહારપર">
+  <option value="વિજયાસર">
+  <option value="વિંઝાણ">
+  <option value="વેકરા">
+  <option value="શિરાચા">
+  <option value="શીર્વા">
+  <option value="સાભરાઈ">
+  <option value="શેરડી">
+  <option value="હેડતા">
+</datalist>
 
   <label><b>ગાડી નંબર</b></label>
   <input id="vehicle_number" placeholder="ઉદાહરણ: GJ12FD4989" autocomplete="off">
@@ -209,7 +292,25 @@ function calculateNetWeight(){
   const net = weight - bardan - kardo;
   $("net_weight").value = net >= 0 ? net.toFixed(2) : "0.00";
 }
+function toggleBrokerOther(){
+  const selected = $("broker_select").value;
+  const otherBox = $("broker_other");
 
+  if(selected === "Other"){
+    otherBox.style.display = "block";
+    otherBox.value = "";
+    $("broker_name").value = "";
+    otherBox.focus();
+
+    otherBox.oninput = function(){
+      $("broker_name").value = this.value.trim();
+    };
+  }else{
+    otherBox.style.display = "none";
+    otherBox.value = "";
+    $("broker_name").value = selected;
+  }
+}
 async function saveChiththi(){
   const chiththiNumber = $("chiththi_number").value.trim();
   const commodity = $("commodity_type").value;
@@ -312,6 +413,9 @@ async function saveChiththi(){
     $("chiththi_number").value = "";
     $("commodity_type").value = "";
     $("broker_name").value = "";
+    $("broker_select").value = "";
+$("broker_other").value = "";
+$("broker_other").style.display = "none";
     $("farmer_name").value = "";
     $("farmer_mobile").value = "";
     $("farmer_weight").value = "";
