@@ -556,10 +556,10 @@ async function saveWaybridge(){
 async function compareVehicleWeight(vehicle, wayWeight){
  const box=$("wb_compare");
  box.innerHTML='<p class="muted">ચિઠ્ઠીઓનું કુલ વજન ગણાઈ રહ્યું છે...</p>';
- const r=await db.from("chiththis").select("weight_kg").eq("vehicle_number",vehicle);
+ const r=await db.from("chiththis")..select("gross_weight_kg").eq("vehicle_number",vehicle);
  if(r.error){ box.innerHTML='<p class="danger">Compare Error: '+esc(r.error.message)+'</p>'; return; }
  const rows=r.data||[];
- const chTotal=rows.reduce((sum,x)=>sum+(Number(x.weight_kg)||0),0);
+ const chTotal=rows.reduce((sum,x)=>sum+(Number(x.gross_weight_kg)||0),0);
  const diff=Number(wayWeight)-chTotal;
  const matched=Math.abs(diff)<0.001;
  box.innerHTML=`<div class="card" style="box-shadow:none;border:1px solid #ddd;margin-top:16px;padding:14px">
@@ -589,7 +589,7 @@ async function adminVehicleMatch(){
     // Chiththi data
     const ch = await db
       .from("chiththis")
-      .select("vehicle_number,weight_kg")
+      .select("vehicle_number,gross_weight_kg")
       .eq("vehicle_number", search);
 
     // Waybridge data - પહેલા vehicle number થી
@@ -631,7 +631,7 @@ async function adminVehicleMatch(){
     if(vehicle !== search){
       const c2 = await db
         .from("chiththis")
-        .select("vehicle_number,weight_kg")
+        .select("vehicle_number,gross_weight_kg")
         .eq("vehicle_number", vehicle);
 
       if(c2.error){
@@ -648,7 +648,7 @@ async function adminVehicleMatch(){
     }
 
     const chTotal = chRows.reduce(
-      (sum,x)=>sum+(Number(x.weight_kg)||0),0
+      (sum,x)=>sum+(Number(x.gross_weight_kg)||0),0
     );
 
     const wayWeight =
