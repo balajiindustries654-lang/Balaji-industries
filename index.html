@@ -1420,21 +1420,79 @@ target="_blank">📷 Waybridge Slip જુઓ</a><br>`
 }
 
 async function deleteChiththi(id){
-  const ok = confirm("આ ચિઠ્ઠી ખરેખર Delete કરવી છે?");
-  if(!ok) return;
 
-  const r = await db
-    .from("chiththis")
-    .delete()
-    .eq("id", id);
+  const popup = document.createElement("div");
+  popup.style.cssText = `
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.55);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:99999;
+    padding:20px;
+  `;
 
-  if(r.error){
-    alert("Delete Error: " + r.error.message);
-    return;
-  }
+  popup.innerHTML = `
+    <div style="
+      background:white;
+      width:100%;
+      max-width:360px;
+      padding:25px;
+      border-radius:18px;
+      text-align:center;
+      box-shadow:0 10px 30px rgba(0,0,0,.3);
+    ">
+      <div style="font-size:42px;">🗑️</div>
 
-  alert("ચિઠ્ઠી સફળતાપૂર્વક Delete થઈ ગઈ.");
-  await adminSearch();
+      <h3 style="margin:10px 0;">
+        ચિઠ્ઠી Delete કરવી છે?
+      </h3>
+
+      <p style="color:#666;">
+        Delete કર્યા પછી આ entry પાછી નહીં આવે.
+      </p>
+
+      <div style="display:flex;gap:10px;margin-top:20px;">
+        <button id="deleteCancel"
+          style="background:#6c757d;">
+          Cancel
+        </button>
+
+        <button id="deleteYes"
+          style="background:#dc3545;">
+          Delete
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(popup);
+
+  document.getElementById("deleteCancel").onclick = () => {
+    popup.remove();
+  };
+
+  document.getElementById("deleteYes").onclick = async () => {
+
+    const btn = document.getElementById("deleteYes");
+    btn.disabled = true;
+    btn.innerText = "Deleting...";
+
+    const r = await db
+      .from("chiththis")
+      .delete()
+      .eq("id", id);
+
+    if(r.error){
+      popup.remove();
+      alert("Delete Error: " + r.error.message);
+      return;
+    }
+
+    popup.remove();
+    await adminSearch();
+  };
 }
 async function adminVehicleMatch(){
 
