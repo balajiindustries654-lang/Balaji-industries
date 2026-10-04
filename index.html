@@ -49,6 +49,24 @@ button{background:#16834a;color:#fff;border:0;font-weight:700}.hide{display:none
 <button onclick="loadPending()">👥 Pending Users</button>
 <div id="plist"></div>
 
+  <div style="margin:15px 0;padding:15px;border:1px solid #ddd;border-radius:12px;">
+  <h3>🔑 User Password Change</h3>
+
+  <input id="pass_mobile"
+         inputmode="numeric"
+         placeholder="User Mobile Number">
+
+  <input id="pass_new"
+         type="password"
+         placeholder="New Password (minimum 6)">
+
+  <button type="button" onclick="adminChangePassword()">
+    Password Change
+  </button>
+
+  <p id="pass_msg"></p>
+  </div>
+
 <hr>
 
 <h3>🔍 તમામ ડેટા Search</h3>
@@ -450,6 +468,60 @@ async function forgotPassword(){
     "Password બદલવા માટે Admin નો સંપર્ક કરો.";
   $("msg").style.display = "block";
 }
+  async function adminChangePassword(){
+  const mobile = cleanMobile($("pass_mobile").value);
+  const newPassword = $("pass_new").value;
+
+  if(!mobile || !newPassword){
+    $("pass_msg").innerText = "Mobile Number અને New Password બંને નાખો.";
+    return;
+  }
+
+  if(newPassword.length < 6){
+    $("pass_msg").innerText = "Password ઓછામાં ઓછો 6 અક્ષરનો હોવો જોઈએ.";
+    return;
+  }
+
+  $("pass_msg").innerText = "Password બદલાઈ રહ્યો છે...";
+
+  try{
+    const session = (await db.auth.getSession()).data.session;
+
+    if(!session){
+      $("pass_msg").innerText = "પહેલા Admin Login કરો.";
+      return;
+    }
+
+    const res = await fetch(
+      "https://tiugeimmfevelnudddhbr.supabase.co/functions/v1/admin-change-password",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + session.access_token
+        },
+        body: JSON.stringify({
+          mobile: mobile,
+          newPassword: newPassword
+        })
+      }
+    );
+
+    const data = await res.json();
+
+    if(!res.ok){
+      $("pass_msg").innerText = data.error || "Password Change Error";
+      return;
+    }
+
+    $("pass_msg").innerText = "✅ Password સફળતાપૂર્વક બદલાઈ ગયો.";
+    $("pass_mobile").value = "";
+    $("pass_new").value = "";
+
+  }catch(e){
+    $("pass_msg").innerText = "Error: " + e.message;
+  }
+  }
 async function logout(){
 await db.auth.signOut();
 location.reload();
