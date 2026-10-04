@@ -1408,14 +1408,34 @@ target="_blank">📷 Waybridge Slip જુઓ</a><br>`
 <button onclick="editChiththi('${x.id}')">
 ✏️ Edit
 </button>
-
+<button type="button"
+  onclick="deleteChiththi('${x.id}')"
+  style="margin-top:8px;background:#dc3545;">
+  🗑️ Delete
+</button>
 </div>
 `;
 
 }).join("");
 }
 
+async function deleteChiththi(id){
+  const ok = confirm("આ ચિઠ્ઠી ખરેખર Delete કરવી છે?");
+  if(!ok) return;
 
+  const r = await db
+    .from("chiththis")
+    .delete()
+    .eq("id", id);
+
+  if(r.error){
+    alert("Delete Error: " + r.error.message);
+    return;
+  }
+
+  alert("ચિઠ્ઠી સફળતાપૂર્વક Delete થઈ ગઈ.");
+  await adminSearch();
+}
 async function adminVehicleMatch(){
 
 const box=$("admin_match_results");
