@@ -437,7 +437,27 @@ $("msg").innerText=r.error?r.error.message:"";
 
 if(!r.error) boot();
 }
+async function forgotPassword(){
+  const mobile = cleanMobile($("lm").value);
 
+  if(!mobile){
+    alert("પહેલા તમારો Mobile Number નાખો.");
+    return;
+  }
+
+  const email = internalEmail(mobile);
+
+  const { error } = await db.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + window.location.pathname
+  });
+
+  if(error){
+    alert("Password Reset Error: " + error.message);
+    return;
+  }
+
+  alert("Password reset link મોકલવામાં આવી છે.");
+}
 async function logout(){
 await db.auth.signOut();
 location.reload();
