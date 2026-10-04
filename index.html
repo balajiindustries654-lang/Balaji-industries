@@ -48,25 +48,75 @@ button{background:#16834a;color:#fff;border:0;font-weight:700}.hide{display:none
   <div id="admin_summary"></div>
   <div id="admin_results"></div>
 </div>
-<div id="worker" class="card hide"><h2>Majur Dashboard</h2>
-<h3>નવી ચિઠ્ઠી</h3>
-<label for="village_name"><b>ગામનું નામ</b></label>
-<input id="village_name" placeholder="ગામનું નામ લખો" autocomplete="off">
-<label for="vehicle_number"><b>ગાડી નંબર</b></label>
-<input id="vehicle_number" placeholder="ઉદાહરણ: GJ 12 AB 4089" autocomplete="off" style="text-transform:uppercase">
-<label for="farmer_name"><b>ખેડૂતનું નામ</b></label>
-<input id="farmer_name" placeholder="ખેડૂતનું નામ લખો" autocomplete="off">
-<label for="farmer_mobile"><b>મોબાઇલ નંબર</b></label>
-<input id="farmer_mobile" inputmode="numeric" placeholder="ખેડૂતનો મોબાઇલ નંબર" autocomplete="off">
-<label for="farmer_weight"><b>વજન (KG)</b></label>
-<input id="farmer_weight" type="number" inputmode="decimal" min="0" step="0.01" placeholder="વજન KG માં લખો">
-<button type="button" onclick="saveChiththi()">ચિઠ્ઠી Save કરો</button>
-<p class="muted">એક જ ગાડીમાં બીજા ખેડૂત માટે Save પછી ગામ અને ગાડી નંબર એ જ રહેશે.</p>
-<p id="chiththi_msg" class="muted"></p>
-<hr>
-<h3>મારી Save થયેલી ચિઠ્ઠીઓ</h3>
-<button type="button" onclick="loadMyChiththis()">ચિઠ્ઠીઓ Refresh કરો</button>
-<div id="my_chiththis"><p class="muted">ચિઠ્ઠીઓ લોડ થઈ રહી છે...</p></div>
+<div id="worker" class="card hide">
+  <h2>Majur Dashboard</h2>
+  <h3>નવી ચિઠ્ઠી</h3>
+
+  <label><b>ચિઠ્ઠી નંબર *</b></label>
+  <input id="chiththi_number" placeholder="ચિઠ્ઠી નંબર લખો">
+
+  <label><b>માલનું ખાતું *</b></label>
+  <select id="commodity_type">
+    <option value="">માલ પસંદ કરો</option>
+    <option value="Magfadi">મગફળી</option>
+    <option value="Aeranda">એરંડા</option>
+    <option value="Gau">ઘઉં</option>
+    <option value="Govar">ગવાર</option>
+    <option value="Other">Other</option>
+  </select>
+
+  <label><b>દલાલનું નામ</b></label>
+  <input id="broker_name" placeholder="દલાલનું નામ લખો">
+
+  <label><b>ગામનું નામ</b></label>
+  <input id="village_name" placeholder="ગામનું નામ લખો" autocomplete="off">
+
+  <label><b>ગાડી નંબર</b></label>
+  <input id="vehicle_number" placeholder="ઉદાહરણ: GJ12FD4989" autocomplete="off">
+
+  <label><b>ખેડૂતનું નામ</b></label>
+  <input id="farmer_name" placeholder="ખેડૂતનું નામ લખો" autocomplete="off">
+
+  <label><b>મોબાઇલ નંબર</b></label>
+  <input id="farmer_mobile" inputmode="numeric" placeholder="ખેડૂતનો મોબાઇલ નંબર">
+
+  <label><b>ખેડૂતનું વજન (KG) *</b></label>
+  <input id="farmer_weight" type="number" inputmode="decimal"
+         min="0" step="0.01" placeholder="વજન"
+         oninput="calculateNetWeight()">
+
+  <label><b>બારદાન બાદ (KG)</b></label>
+  <input id="bardan_kg" type="number" inputmode="decimal"
+         min="0" step="0.01" placeholder="ન હોય તો ખાલી રાખો"
+         oninput="calculateNetWeight()">
+
+  <label><b>કરડો બાદ (KG)</b></label>
+  <input id="kardo_kg" type="number" inputmode="decimal"
+         min="0" step="0.01" placeholder="ન હોય તો ખાલી રાખો"
+         oninput="calculateNetWeight()">
+
+  <label><b>Final / Net વજન</b></label>
+  <input id="net_weight" type="number" readonly placeholder="Automatic આવશે">
+
+  <label><b>ખેડૂતની ચિઠ્ઠીનો ફોટો *</b></label>
+  <input id="chiththi_photo" type="file" accept="image/*">
+
+  <button type="button" onclick="saveChiththi()">ચિઠ્ઠી Save કરો</button>
+
+  <p class="muted">
+    * ચિઠ્ઠી નંબર, માલ, વજન અને ચિઠ્ઠીનો ફોટો જરૂરી છે.
+    બારદાન/કરડો ન હોય તો ખાલી રાખી શકાય.
+  </p>
+
+  <p id="chiththi_msg" class="muted"></p>
+
+  <hr>
+
+  <h3>મારી Save થયેલી ચિઠ્ઠીઓ</h3>
+  <button type="button" onclick="loadMyChiththis()">ચિઠ્ઠીઓ Refresh કરો</button>
+  <div id="my_chiththis">
+    <p class="muted">ચિઠ્ઠીઓ લોડ થઈ રહી છે...</p>
+  </div>
 </div>
 <div id="waybridge" class="card hide">
   <h2>Waybridge Dashboard</h2>
@@ -151,33 +201,133 @@ async function boot(){
  if(id==="worker") loadMyChiththis();
 }
 
+function calculateNetWeight(){
+  const weight = parseFloat($("farmer_weight").value) || 0;
+  const bardan = parseFloat($("bardan_kg").value) || 0;
+  const kardo = parseFloat($("kardo_kg").value) || 0;
+
+  const net = weight - bardan - kardo;
+  $("net_weight").value = net >= 0 ? net.toFixed(2) : "0.00";
+}
+
 async function saveChiththi(){
- const village=$("village_name").value.trim();
- const vehicle=$("vehicle_number").value.trim().toUpperCase();
- const farmer=$("farmer_name").value.trim();
- const mobile=cleanMobile($("farmer_mobile").value);
- const weight=parseFloat($("farmer_weight").value);
- if(!village||!vehicle||!farmer||mobile.length<10||!Number.isFinite(weight)||weight<=0){
-   $("chiththi_msg").innerText="બધી માહિતી સાચી રીતે भरो."; return;
- }
- $("chiththi_msg").innerText="Save થઈ રહ્યું છે...";
- const user=(await db.auth.getUser()).data.user;
- if(!user){ $("chiththi_msg").innerText="Login ફરી કરો."; return; }
- const r=await db.from("chiththis").insert({
-   village_name:village,
-   vehicle_number:vehicle,
-   farmer_name:farmer,
-   farmer_mobile:mobile,
-   weight_kg:weight,
-   created_by:user.id
- });
- if(r.error){ $("chiththi_msg").innerText="Save Error: "+r.error.message; return; }
- $("chiththi_msg").innerText="ચિઠ્ઠી Save થઈ ગઈ. હવે આ જ ગાડીના બીજા ખેડૂતની માહિતી भरो.";
- $("farmer_name").value="";
- $("farmer_mobile").value="";
- $("farmer_weight").value="";
- $("farmer_name").focus();
- await loadMyChiththis();
+  const chiththiNumber = $("chiththi_number").value.trim();
+  const commodity = $("commodity_type").value;
+  const broker = $("broker_name").value.trim();
+  const village = $("village_name").value.trim();
+  const vehicle = $("vehicle_number").value.trim().toUpperCase();
+  const farmer = $("farmer_name").value.trim();
+  const mobile = cleanMobile($("farmer_mobile").value);
+
+  const weight = parseFloat($("farmer_weight").value);
+  const bardan = parseFloat($("bardan_kg").value) || 0;
+  const kardo = parseFloat($("kardo_kg").value) || 0;
+  const netWeight = weight - bardan - kardo;
+
+  const photo = $("chiththi_photo").files[0];
+
+  if(
+    !chiththiNumber ||
+    !commodity ||
+    !village ||
+    !vehicle ||
+    !farmer ||
+    mobile.length < 10 ||
+    !Number.isFinite(weight) ||
+    weight <= 0
+  ){
+    $("chiththi_msg").innerText = "બધી જરૂરી માહિતી સાચી રીતે ભરો.";
+    return;
+  }
+
+  if(netWeight <= 0){
+    $("chiththi_msg").innerText = "Final વજન 0 કરતાં વધારે હોવું જોઈએ.";
+    return;
+  }
+
+  if(!photo){
+    $("chiththi_msg").innerText = "ચિઠ્ઠીનો ફોટો ફરજિયાત છે.";
+    return;
+  }
+
+  $("chiththi_msg").innerText = "ચિઠ્ઠી Save થઈ રહી છે...";
+
+  const user = (await db.auth.getUser()).data.user;
+
+  if(!user){
+    $("chiththi_msg").innerText = "Login ફરી કરો.";
+    return;
+  }
+
+  try{
+    const safeName = photo.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const path =
+      user.id + "/chiththis/" + Date.now() + "_" + safeName;
+
+    const upload = await db.storage
+      .from("Way bridge slips")
+      .upload(path, photo, {
+        cacheControl: "3600",
+        upsert: false
+      });
+
+    if(upload.error){
+      $("chiththi_msg").innerText =
+        "Photo Upload Error: " + upload.error.message;
+      return;
+    }
+
+    const publicData = db.storage
+      .from("Way bridge slips")
+      .getPublicUrl(path);
+
+    const photoUrl = publicData.data.publicUrl;
+
+    const r = await db.from("chiththis").insert({
+      chiththi_number: chiththiNumber,
+      commodity_type: commodity,
+      broker_name: broker || null,
+      village_name: village,
+      vehicle_number: vehicle,
+      farmer_name: farmer,
+      farmer_mobile: mobile,
+      gross_weight_kg: weight,
+      bardan_kg: bardan,
+      kardo_kg: kardo,
+      weight_kg: netWeight,
+      chiththi_photo_url: photoUrl,
+      created_by: user.id
+    });
+
+    if(r.error){
+      $("chiththi_msg").innerText =
+        "Save Error: " + r.error.message;
+      return;
+    }
+
+    $("chiththi_msg").innerText =
+      "ચિઠ્ઠી Save થઈ ગઈ. Final વજન: " +
+      netWeight.toFixed(2) + " KG";
+
+    $("chiththi_number").value = "";
+    $("commodity_type").value = "";
+    $("broker_name").value = "";
+    $("farmer_name").value = "";
+    $("farmer_mobile").value = "";
+    $("farmer_weight").value = "";
+    $("bardan_kg").value = "";
+    $("kardo_kg").value = "";
+    $("net_weight").value = "";
+    $("chiththi_photo").value = "";
+
+    $("farmer_name").focus();
+
+    await loadMyChiththis();
+
+  }catch(e){
+    $("chiththi_msg").innerText =
+      "Error: " + e.message;
+  }
 }
 
 function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));}
