@@ -556,7 +556,7 @@ async function saveWaybridge(){
 async function compareVehicleWeight(vehicle, wayWeight){
  const box=$("wb_compare");
  box.innerHTML='<p class="muted">ચિઠ્ઠીઓનું કુલ વજન ગણાઈ રહ્યું છે...</p>';
- const r=await db.from("chiththis")..select("gross_weight_kg").eq("vehicle_number",vehicle);
+ const r=await db.from("chiththis").select("gross_weight_kg").eq("vehicle_number",vehicle);
  if(r.error){ box.innerHTML='<p class="danger">Compare Error: '+esc(r.error.message)+'</p>'; return; }
  const rows=r.data||[];
  const chTotal=rows.reduce((sum,x)=>sum+(Number(x.gross_weight_kg)||0),0);
