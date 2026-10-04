@@ -21,7 +21,7 @@ button{background:#16834a;color:#fff;border:0;font-weight:700}.hide{display:none
 <input id="lp" type="password" placeholder="Password">
 <button onclick="login()">Login</button>
 <button type="button" onclick="forgotPassword()" style="background:#fff;color:#16834a;border:1px solid #16834a;">🔑 Forgot Password?</button>
-  <p id="msg"></p>
+  <p id="msg" style="display:none;background:#e8f5e9;color:#16834a;padding:12px;border-radius:10px;font-weight:700;text-align:center;"></p>
 <hr>
 <h3>Sign Up</h3>
 <input id="sn" placeholder="Full Name">
@@ -448,6 +448,7 @@ async function forgotPassword(){
 
   $("msg").innerText =
     "Password બદલવા માટે Admin નો સંપર્ક કરો.";
+  $("msg").style.display = "block";
 }
 async function logout(){
 await db.auth.signOut();
