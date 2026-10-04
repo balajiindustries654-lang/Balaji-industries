@@ -301,7 +301,12 @@ style="width:auto;padding:9px 12px">
 <p id="me_hint" class="muted">
 Enter vehicle and material details.
 </p>
-
+<label><b>Entry Type *</b></label>
+<select id="me_entry_type">
+<option value="">Select Loading / Unloading</option>
+<option value="loading">Loading</option>
+<option value="unloading">Unloading</option>
+</select>
 <label><b id="me_vehicle_label">Vehicle Number *</b></label>
 <input id="me_vehicle"
 placeholder="Example: GJ12FD4989"
@@ -533,6 +538,7 @@ hi?"English":"हिंदी";
 
 async function saveMaalEntry(){
 
+  const entryType=$("me_entry_type").value;
 const vehicle=$("me_vehicle").value.trim().toUpperCase();
 const bags=parseInt($("me_bags").value,10);
 const material=$("me_material").value;
@@ -542,6 +548,7 @@ const file=$("me_slip").files[0];
 const msg=$("me_msg");
 
 if(
+  !entryType ||
 !vehicle ||
 !Number.isInteger(bags) ||
 bags<=0 ||
@@ -588,15 +595,18 @@ const pub=db.storage
 .from("Way bridge slips")
 .getPublicUrl(path);
 
-const r=await db.from("maal_entries").insert({
-vehicle_number:vehicle,
-bags:bags,
-material_type:material,
-entry_date:entryDate,
-owner_name:owner||null,
-slip_url:pub.data.publicUrl,
-created_by:user.id
+
+  const r=await db.from("maal_entries").insert({
+  entry_type: entryType,
+  vehicle_number:vehicle,
+  bags:bags,
+  material_type:material,
+  entry_date:entryDate,
+  owner_name:owner||null,
+  slip_url:pub.data.publicUrl,
+  created_by:user.id
 });
+
 
 if(r.error){
 msg.innerText="Save Error: "+r.error.message;
