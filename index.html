@@ -7,977 +7,1710 @@ body{font-family:system-ui;background:#f4f5f7;margin:0;color:#161616}main{max-wi
 input,select,button{width:100%;padding:13px;margin:6px 0;box-sizing:border-box;border-radius:10px;border:1px solid #ccc;font-size:16px}
 button{background:#16834a;color:#fff;border:0;font-weight:700}.hide{display:none}.muted{color:#666}.danger{color:#b00020}
 </style></head><body><main>
-<h1>Balaji Industries</h1><p class="muted">Groundnut Management</p>
+
+<h1>Balaji Industries</h1>
+<p class="muted">Groundnut Management</p>
 
 <section id="auth" class="card">
 <h2>Login</h2>
 <input id="lm" inputmode="numeric" placeholder="Mobile Number">
 <input id="lp" type="password" placeholder="Password">
 <button onclick="login()">Login</button>
-<hr><h3>Sign Up</h3>
+
+<hr>
+<h3>Sign Up</h3>
 <input id="sn" placeholder="Full Name">
 <input id="sm" inputmode="numeric" placeholder="Mobile Number">
 <input id="sp" type="password" placeholder="Password (minimum 6)">
-<button onclick="signup()">Create Account</button><p id="msg"></p>
+<button onclick="signup()">Create Account</button>
+<p id="msg"></p>
 </section>
 
 <section id="app" class="hide">
-<div class="card"><b id="who"></b><button onclick="logout()">Logout</button></div>
-<div id="pending" class="card hide"><h2>Approval Pending</h2><p>Admin approval પછી app access મળશે.</p></div>
+
+<div class="card">
+<b id="who"></b>
+<button onclick="logout()">Logout</button>
+</div>
+
+<div id="pending" class="card hide">
+<h2>Approval Pending</h2>
+<p>Admin approval પછી app access મળશે.</p>
+</div>
+
 <div id="admin" class="card hide">
-  <h2>Admin Dashboard</h2>
+<h2>Admin Dashboard</h2>
 
-  <button onclick="loadPending()">👥 Pending Users</button>
-  <div id="plist"></div>
+<button onclick="loadPending()">👥 Pending Users</button>
+<div id="plist"></div>
 
-  <hr>
+<hr>
 
-  <h3>🔍 તમામ ડેટા Search</h3>
+<h3>🔍 તમામ ડેટા Search</h3>
 
-  <input id="admin_search"
-         placeholder="ગાડી નંબર / ખેડૂત / મોબાઇલ / ગામ / RST">
+<input id="admin_search"
+placeholder="ગાડી નંબર / ખેડૂત / મોબાઇલ / ગામ / RST">
 
-  <input id="admin_from" type="date">
-  <input id="admin_to" type="date">
+<input id="admin_from" type="date">
+<input id="admin_to" type="date">
+
 <button onclick="adminVehicleMatch()">🚚 ગાડી MATCH / MISMATCH જુઓ</button>
 <div id="admin_match_results"></div>
-  <button onclick="adminSearch()">Search / Report જુઓ</button>
-  <button onclick="adminSearch('today')">આજનો Report</button>
-  <button onclick="adminSearch('month')">આ મહિનાનો Report</button>
 
-  <div id="admin_summary"></div>
-  <div id="admin_results"></div>
+<button onclick="adminSearch()">Search / Report જુઓ</button>
+<button onclick="adminSearch('today')">આજનો Report</button>
+<button onclick="adminSearch('month')">આ મહિનાનો Report</button>
+
+<div id="admin_summary"></div>
+<div id="admin_results"></div>
+
+<hr>
+
+<h3>📦 Maal Entry Records</h3>
+<button type="button" onclick="adminLoadMaalEntries()">Maal Entries જુઓ</button>
+<div id="admin_maal_results"></div>
 </div>
+
 <div id="worker" class="card hide">
-  <h2>Majur Dashboard</h2>
-  <h3>નવી ચિઠ્ઠી</h3>
+<h2>Majur Dashboard</h2>
+<h3>નવી ચિઠ્ઠી</h3>
 
-  <label><b>ચિઠ્ઠી નંબર *</b></label>
-  <input id="chiththi_number" placeholder="ચિઠ્ઠી નંબર લખો">
+<label><b>ચિઠ્ઠી નંબર *</b></label>
+<input id="chiththi_number" placeholder="ચિઠ્ઠી નંબર લખો">
 
-  <label><b>માલનું ખાતું *</b></label>
-  <select id="commodity_type">
-    <option value="">માલ પસંદ કરો</option>
-    <option value="Magfadi">મગફળી</option>
-    <option value="Aeranda">એરંડા</option>
-    <option value="Gau">ઘઉં</option>
-    <option value="Govar">ગવાર</option>
-    <option value="Other">Other</option>
-  </select>
+<label><b>માલનું ખાતું *</b></label>
+<select id="commodity_type">
+<option value="">માલ પસંદ કરો</option>
+<option value="Magfadi">મગફળી</option>
+<option value="Aeranda">એરંડા</option>
+<option value="Gau">ઘઉં</option>
+<option value="Govar">ગવાર</option>
+<option value="Other">Other</option>
+</select>
 
 <label><b>દલાલનું નામ</b></label>
 <select id="broker_select" onchange="toggleBrokerOther()">
-  <option value="">દલાલ પસંદ કરો</option>
-  <option value="Nitin Gandhi Mandvi">Nitin Gandhi Mandvi</option>
-  <option value="Chintan Chhaya Trader">Chintan Chhaya Trader</option>
-  <option value="Satara">Satara</option>
-  <option value="Bhavesh Ramjiyani">Bhavesh Ramjiyani</option>
-  <option value="Jignesh Pokar">Jignesh Pokar</option>
-  <option value="Other">Other</option>
+<option value="">દલાલ પસંદ કરો</option>
+<option value="Nitin Gandhi Mandvi">Nitin Gandhi Mandvi</option>
+<option value="Chintan Chhaya Trader">Chintan Chhaya Trader</option>
+<option value="Satara">Satara</option>
+<option value="Bhavesh Ramjiyani">Bhavesh Ramjiyani</option>
+<option value="Jignesh Pokar">Jignesh Pokar</option>
+<option value="Other">Other</option>
 </select>
 
 <input id="broker_other"
-       placeholder="બીજા દલાલનું નામ લખો"
-       style="display:none;margin-top:8px">
+placeholder="બીજા દલાલનું નામ લખો"
+style="display:none;margin-top:8px">
 
 <input type="hidden" id="broker_name">
 
-
 <label><b>ગામનું નામ</b></label>
 <input id="village_name"
-       list="village_list"
-       placeholder="ગામ Gujarati અથવા English માં Search કરો"
-       autocomplete="off">
+list="village_list"
+placeholder="ગામ Gujarati અથવા English માં Search કરો"
+autocomplete="off">
 
 <datalist id="village_list">
-  <option value="માંડવી (Mandvi)">
-  <option value="અબડા (Abada)">
-  <option value="અસંબિયા મોટા (Asambiya Mota)">
-  <option value="અસંબિયા નાના (Asambiya Nana)">
-  <option value="આણંદપર (Anandpar)">
-  <option value="ઉમરાપર (Umarapar)">
-  <option value="ગોડસરા (Godsara)">
-  <option value="ગઢસીસા (Gadhsisa)">
-  <option value="ગાંધવી (Gandhvi)">
-  <option value="ગોધરા (Godhra)">
-  <option value="ગુણોદા (Gunoda)">
-  <option value="ગોકુલપર (Gokulpar)">
-  <option value="ચાસરા (Chasra)">
-  <option value="તોફિયા (Tofiya)">
-  <option value="તલવાણા (Talvana)">
-  <option value="નાગલપર મોટી (Nagalpar Moti)">
-  <option value="નાગલપર નાની (Nagalpar Nani)">
-  <option value="નાગરેચા (Nagarecha)">
-  <option value="નાની રાયણ (Nani Rayan)">
-  <option value="મોટી રાયણ (Moti Rayan)">
-  <option value="પોરિસરા (Porisara)">
-  <option value="પિપરિ (Pipari)">
-  <option value="બિદડા (Bidada)">
-  <option value="બાયઠ (Bayath)">
-  <option value="બગડા (Bagda)">
-  <option value="ભાડા (Bhada)">
-  <option value="ભોજાય (Bhojay)">
-  <option value="ભાડિયા (Bhadiya)">
-  <option value="ભારાપર (Bharapar)">
-  <option value="મસ્કા (Maska)">
-  <option value="માંડવી ગામ (Mandvi Gam)">
-  <option value="માંજલ (Manjal)">
-  <option value="મોડકુબા (Modkuba)">
-  <option value="મોટી મઉ (Moti Mau)">
-  <option value="નાની મઉ (Nani Mau)">
-  <option value="મોટી ખાખર (Moti Khakhar)">
-  <option value="નાની ખાખર (Nani Khakhar)">
-  <option value="રતેડિયા (Ratediya)">
-  <option value="રતનપર (Ratanpar)">
-  <option value="રાપર ગઢવાળી (Rapar Gadhvali)">
-  <option value="રામપર વેકરા (Rampar Vekra)">
-  <option value="રૂકમાવતી (Rukmavati)">
-  <option value="લાયજા મોટા (Layja Mota)">
-  <option value="લાયજા નાના (Layja Nana)">
-  <option value="લુડવા (Ludva)">
-  <option value="લુહારપર (Luharpar)">
-  <option value="વિજયાસર (Vijayasar)">
-  <option value="વિંઝાણ (Vinzan)">
-  <option value="વેકરા (Vekra)">
-  <option value="શિરાચા (Shiracha)">
-  <option value="શીવા (Shirva)">
-  <option value="સાભરાઈ (Sabharai)">
-  <option value="શેરડી (Sherdi)">
-  <option value="હેડતા (Hedta)">
+<option value="માંડવી (Mandvi)">
+<option value="અબડા (Abada)">
+<option value="અસંબિયા મોટા (Asambiya Mota)">
+<option value="અસંબિયા નાના (Asambiya Nana)">
+<option value="આણંદપર (Anandpar)">
+<option value="ઉમરાપર (Umarapar)">
+<option value="ગોડસરા (Godsara)">
+<option value="ગઢસીસા (Gadhsisa)">
+<option value="ગાંધવી (Gandhvi)">
+<option value="ગોધરા (Godhra)">
+<option value="ગુણોદા (Gunoda)">
+<option value="ગોકુલપર (Gokulpar)">
+<option value="ચાસરા (Chasra)">
+<option value="તોફિયા (Tofiya)">
+<option value="તલવાણા (Talvana)">
+<option value="નાગલપર મોટી (Nagalpar Moti)">
+<option value="નાગલપર નાની (Nagalpar Nani)">
+<option value="નાગરેચા (Nagarecha)">
+<option value="નાની રાયણ (Nani Rayan)">
+<option value="મોટી રાયણ (Moti Rayan)">
+<option value="પોરિસરા (Porisara)">
+<option value="પિપરિ (Pipari)">
+<option value="બિદડા (Bidada)">
+<option value="બાયઠ (Bayath)">
+<option value="બગડા (Bagda)">
+<option value="ભાડા (Bhada)">
+<option value="ભોજાય (Bhojay)">
+<option value="ભાડિયા (Bhadiya)">
+<option value="ભારાપર (Bharapar)">
+<option value="મસ્કા (Maska)">
+<option value="માંડવી ગામ (Mandvi Gam)">
+<option value="માંજલ (Manjal)">
+<option value="મોડકુબા (Modkuba)">
+<option value="મોટી મઉ (Moti Mau)">
+<option value="નાની મઉ (Nani Mau)">
+<option value="મોટી ખાખર (Moti Khakhar)">
+<option value="નાની ખાખર (Nani Khakhar)">
+<option value="રતેડિયા (Ratediya)">
+<option value="રતનપર (Ratanpar)">
+<option value="રાપર ગઢવાળી (Rapar Gadhvali)">
+<option value="રામપર વેકરા (Rampar Vekra)">
+<option value="રૂકમાવતી (Rukmavati)">
+<option value="લાયજા મોટા (Layja Mota)">
+<option value="લાયજા નાના (Layja Nana)">
+<option value="લુડવા (Ludva)">
+<option value="લુહારપર (Luharpar)">
+<option value="વિજયાસર (Vijayasar)">
+<option value="વિંઝાણ (Vinzan)">
+<option value="વેકરા (Vekra)">
+<option value="શિરાચા (Shiracha)">
+<option value="શીવા (Shirva)">
+<option value="સાભરાઈ (Sabharai)">
+<option value="શેરડી (Sherdi)">
+<option value="હેડતા (Hedta)">
 </datalist>
-  <label><b>ગાડી નંબર</b></label>
-  <input id="vehicle_number" placeholder="ઉદાહરણ: GJ12FD4989" autocomplete="off">
 
-  <label><b>ખેડૂતનું નામ</b></label>
-  <input id="farmer_name" placeholder="ખેડૂતનું નામ લખો" autocomplete="off">
+<label><b>ગાડી નંબર</b></label>
+<input id="vehicle_number"
+placeholder="ઉદાહરણ: GJ12FD4989"
+autocomplete="off">
 
-  <label><b>મોબાઇલ નંબર</b></label>
-  <input id="farmer_mobile" inputmode="numeric" placeholder="ખેડૂતનો મોબાઇલ નંબર">
+<label><b>ખેડૂતનું નામ</b></label>
+<input id="farmer_name"
+placeholder="ખેડૂતનું નામ લખો"
+autocomplete="off">
 
-  <label><b>ખેડૂતનું વજન (KG) *</b></label>
-  <input id="farmer_weight" type="number" inputmode="decimal"
-         min="0" step="0.01" placeholder="વજન"
-         oninput="calculateNetWeight()">
+<label><b>મોબાઇલ નંબર</b></label>
+<input id="farmer_mobile"
+inputmode="numeric"
+placeholder="ખેડૂતનો મોબાઇલ નંબર">
 
-  <label><b>બારદાન બાદ (KG)</b></label>
-  <input id="bardan_kg" type="number" inputmode="decimal"
-         min="0" step="0.01" placeholder="ન હોય તો ખાલી રાખો"
-         oninput="calculateNetWeight()">
+<label><b>ખેડૂતનું વજન (KG) *</b></label>
+<input id="farmer_weight"
+type="number"
+inputmode="decimal"
+min="0"
+step="0.01"
+placeholder="વજન"
+oninput="calculateNetWeight()">
 
-  <label><b>કરડો બાદ (KG)</b></label>
-  <input id="kardo_kg" type="number" inputmode="decimal"
-         min="0" step="0.01" placeholder="ન હોય તો ખાલી રાખો"
-         oninput="calculateNetWeight()">
+<label><b>બારદાન બાદ (KG)</b></label>
+<input id="bardan_kg"
+type="number"
+inputmode="decimal"
+min="0"
+step="0.01"
+placeholder="ન હોય તો ખાલી રાખો"
+oninput="calculateNetWeight()">
 
-  <label><b>Final / Net વજન</b></label>
-  <input id="net_weight" type="number" readonly placeholder="Automatic આવશે">
+<label><b>કરડો બાદ (KG)</b></label>
+<input id="kardo_kg"
+type="number"
+inputmode="decimal"
+min="0"
+step="0.01"
+placeholder="ન હોય તો ખાલી રાખો"
+oninput="calculateNetWeight()">
 
-  <label><b>ખેડૂતની ચિઠ્ઠીનો ફોટો *</b></label>
-  <input id="chiththi_photo" type="file" accept="image/*">
+<label><b>Final / Net વજન</b></label>
+<input id="net_weight"
+type="number"
+readonly
+placeholder="Automatic આવશે">
 
-  <button type="button" onclick="saveChiththi()">ચિઠ્ઠી Save કરો</button>
+<label><b>ખેડૂતની ચિઠ્ઠીનો ફોટો *</b></label>
+<input id="chiththi_photo"
+type="file"
+accept="image/*">
 
-  <p class="muted">
-    * ચિઠ્ઠી નંબર, માલ, વજન અને ચિઠ્ઠીનો ફોટો જરૂરી છે.
-    બારદાન/કરડો ન હોય તો ખાલી રાખી શકાય.
-  </p>
+<button type="button" onclick="saveChiththi()">
+ચિઠ્ઠી Save કરો
+</button>
 
-  <p id="chiththi_msg" class="muted"></p>
+<p class="muted">
+* ચિઠ્ઠી નંબર, માલ, વજન અને ચિઠ્ઠીનો ફોટો જરૂરી છે.
+બારદાન/કરડો ન હોય તો ખાલી રાખી શકાય.
+</p>
 
-  <hr>
+<p id="chiththi_msg" class="muted"></p>
 
-  <h3>મારી Save થયેલી ચિઠ્ઠીઓ</h3>
-  <button type="button" onclick="loadMyChiththis()">ચિઠ્ઠીઓ Refresh કરો</button>
-  <div id="my_chiththis">
-    <p class="muted">ચિઠ્ઠીઓ લોડ થઈ રહી છે...</p>
-  </div>
+<hr>
+
+<h3>મારી Save થયેલી ચિઠ્ઠીઓ</h3>
+<button type="button" onclick="loadMyChiththis()">
+ચિઠ્ઠીઓ Refresh કરો
+</button>
+
+<div id="my_chiththis">
+<p class="muted">ચિઠ્ઠીઓ લોડ થઈ રહી છે...</p>
 </div>
+</div>
+
 <div id="waybridge" class="card hide">
-  <h2>Waybridge Dashboard</h2>
+<h2>Waybridge Dashboard</h2>
 
-  <h3>ગાડીનું વજન</h3>
+<h3>ગાડીનું વજન</h3>
 
-  <label for="wb_rst"><b>RST નંબર</b></label>
-  <input id="wb_rst"
-         inputmode="numeric"
-         placeholder="RST નંબર લખો">
+<label for="wb_rst"><b>RST નંબર</b></label>
+<input id="wb_rst"
+inputmode="numeric"
+placeholder="RST નંબર લખો">
 
-  <label for="wb_vehicle"><b>ગાડી નંબર</b></label>
-  <input id="wb_vehicle"
-         placeholder="ઉદાહરણ: GJ12FD4989"
-         autocomplete="off"
-         style="text-transform:uppercase">
+<label for="wb_vehicle"><b>ગાડી નંબર</b></label>
+<input id="wb_vehicle"
+placeholder="ઉદાહરણ: GJ12FD4989"
+autocomplete="off"
+style="text-transform:uppercase">
 
-  <label for="wb_weight"><b>NET Weight (KG)</b></label>
-  <input id="wb_weight"
-         type="number"
-         inputmode="decimal"
-         min="0"
-         step="0.01"
-         placeholder="કુલ વજન KG માં લખો">
+<label for="wb_weight"><b>NET Weight (KG)</b></label>
+<input id="wb_weight"
+type="number"
+inputmode="decimal"
+min="0"
+step="0.01"
+placeholder="કુલ વજન KG માં લખો">
 
-  <label for="wb_slip"><b>કાંટાની પાવતી / Slip Photo</b></label>
-  
-  <p class="muted">Camera અથવા Galleryમાંથી કાંટાની પાવતી પસંદ કરો.</p>
+<label for="wb_slip"><b>કાંટાની પાવતી / Slip Photo</b></label>
+<p class="muted">Camera અથવા Galleryમાંથી કાંટાની પાવતી પસંદ કરો.</p>
 
-  <button type="button" onclick="saveWaybridge()">
-    Weight + Slip Save કરો
-  </button>
+<button type="button" onclick="saveWaybridge()">
+Weight + Slip Save કરો
+</button>
+
 <input id="wb_slip"
-       type="file"
-       accept="image/*"
-      
-       onchange="autoReadSlip()">
-  <p id="ocr_msg" class="muted"></p>
-  <p id="wb_msg" class="muted"></p>
-  <div id="wb_compare"></div>
+type="file"
+accept="image/*"
+onchange="autoReadSlip()">
+
+<p id="ocr_msg" class="muted"></p>
+<p id="wb_msg" class="muted"></p>
+<div id="wb_compare"></div>
 </div>
-<div id="farmer" class="card hide"><h2>Farmer Dashboard</h2><p>તમારી માહિતી અહીં દેખાશે.</p></div>
+
+<!-- NEW MAAL ENTRY DASHBOARD -->
+<div id="maal_entry" class="card hide">
+
+<div style="display:flex;gap:8px;align-items:center;justify-content:space-between">
+<h2 id="me_title" style="margin:0">Maal Entry Dashboard</h2>
+<button type="button"
+onclick="toggleMaalLanguage()"
+id="me_lang_btn"
+style="width:auto;padding:9px 12px">
+हिंदी
+</button>
+</div>
+
+<p id="me_hint" class="muted">
+Enter vehicle and material details.
+</p>
+
+<label><b id="me_vehicle_label">Vehicle Number *</b></label>
+<input id="me_vehicle"
+placeholder="Example: GJ12FD4989"
+autocomplete="off"
+style="text-transform:uppercase">
+
+<label><b id="me_bags_label">Bags *</b></label>
+<input id="me_bags"
+type="number"
+inputmode="numeric"
+min="1"
+step="1"
+placeholder="Number of bags">
+
+<label><b id="me_material_label">Material *</b></label>
+<select id="me_material">
+<option value="">Select Material</option>
+<option value="Magfadi">Magfadi / मूंगफली</option>
+<option value="Aeranda">Aeranda / अरंडी</option>
+<option value="Gau">Gau / गेहूं</option>
+<option value="Govar">Govar / ग्वार</option>
+</select>
+
+<label><b id="me_date_label">Date *</b></label>
+<input id="me_date" type="date">
+
+<label>
+<b id="me_owner_label">
+Owner / Supplier Name (Optional)
+</b>
+</label>
+<input id="me_owner"
+placeholder="Name is not compulsory"
+autocomplete="off">
+
+<label><b id="me_slip_label">Waybridge Slip Photo *</b></label>
+<input id="me_slip"
+type="file"
+accept="image/*">
+
+<button type="button"
+id="me_save_btn"
+onclick="saveMaalEntry()">
+Save Entry
+</button>
+
+<p id="me_msg" class="muted"></p>
+
+<hr>
+
+<h3 id="me_saved_title">My Saved Entries</h3>
+<button type="button"
+id="me_refresh_btn"
+onclick="loadMyMaalEntries()">
+Refresh
+</button>
+
+<div id="my_maal_entries"></div>
+</div>
+
+<div id="farmer" class="card hide">
+<h2>Farmer Dashboard</h2>
+<p>તમારી માહિતી અહીં દેખાશે.</p>
+</div>
+
 </section>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
 <script>
-const db=supabase.createClient("https://tiugeimmfevelnuddhbr.supabase.co","sb_publishable_vFtxD2etw0CsoEPA2ouIFQ_PhO_s8qU");
+
+const db=supabase.createClient(
+"https://tiugeimmfevelnuddhbr.supabase.co",
+"sb_publishable_vFtxD2etw0CsoEPA2ouIFQ_PhO_s8qU"
+);
+
 const $=x=>document.getElementById(x);
-function cleanMobile(v){ return (v||"").replace(/\D/g,""); }
-function internalEmail(m){ return "u"+cleanMobile(m)+"@users.balajiindustries.app"; }
+
+function cleanMobile(v){
+return (v||"").replace(/\D/g,"");
+}
+
+function internalEmail(m){
+return "u"+cleanMobile(m)+"@users.balajiindustries.app";
+}
 
 async function signup(){
- const name=$("sn").value.trim(), mobile=cleanMobile($("sm").value), pass=$("sp").value;
- if(mobile.length<10) return $("msg").innerText="સાચો mobile number નાખો.";
- if(pass.length<6) return $("msg").innerText="Password ઓછામાં ઓછો 6 characters રાખો.";
- const r=await db.auth.signUp({
-   email:internalEmail(mobile), password:pass,
-   options:{data:{full_name:name,mobile:mobile}}
- });
- $("msg").innerText=r.error?r.error.message:"Account created. Admin approval pending.";
- if(!r.error && r.data.session) await db.auth.signOut();
+const name=$("sn").value.trim();
+const mobile=cleanMobile($("sm").value);
+const pass=$("sp").value;
+
+if(mobile.length<10)
+return $("msg").innerText="સાચો mobile number નાખો.";
+
+if(pass.length<6)
+return $("msg").innerText="Password ઓછામાં ઓછો 6 characters રાખો.";
+
+const r=await db.auth.signUp({
+email:internalEmail(mobile),
+password:pass,
+options:{data:{full_name:name,mobile:mobile}}
+});
+
+$("msg").innerText=r.error
+?r.error.message
+:"Account created. Admin approval pending.";
+
+if(!r.error && r.data.session)
+await db.auth.signOut();
 }
 
 async function login(){
- const mobile=cleanMobile($("lm").value), pass=$("lp").value;
- const r=await db.auth.signInWithPassword({email:internalEmail(mobile),password:pass});
- $("msg").innerText=r.error?r.error.message:"";
- if(!r.error) boot();
+const mobile=cleanMobile($("lm").value);
+const pass=$("lp").value;
+
+const r=await db.auth.signInWithPassword({
+email:internalEmail(mobile),
+password:pass
+});
+
+$("msg").innerText=r.error?r.error.message:"";
+
+if(!r.error) boot();
 }
-async function logout(){await db.auth.signOut();location.reload()}
+
+async function logout(){
+await db.auth.signOut();
+location.reload();
+}
 
 async function boot(){
- const u=(await db.auth.getUser()).data.user;if(!u)return;
- $("auth").classList.add("hide");$("app").classList.remove("hide");
- const r=await db.from("user_profiles").select("*").eq("id",u.id).single();
- if(r.error){ $("who").innerText=r.error.message; return; }
- const p=r.data;$("who").innerText=(p.full_name||"User")+" — "+p.role;
- if(!p.approved){$("pending").classList.remove("hide");return;}
- const id=p.role==="worker"?"worker":p.role;
- if($(id)) $(id).classList.remove("hide");
- if(id==="worker") loadMyChiththis();
+const u=(await db.auth.getUser()).data.user;
+if(!u)return;
+
+$("auth").classList.add("hide");
+$("app").classList.remove("hide");
+
+const r=await db.from("user_profiles")
+.select("*")
+.eq("id",u.id)
+.single();
+
+if(r.error){
+$("who").innerText=r.error.message;
+return;
+}
+
+const p=r.data;
+
+$("who").innerText=(p.full_name||"User")+" — "+p.role;
+
+if(!p.approved){
+$("pending").classList.remove("hide");
+return;
+}
+
+const id=p.role==="worker"?"worker":p.role;
+
+if($(id))
+$(id).classList.remove("hide");
+
+if(id==="worker")
+loadMyChiththis();
+
+if(id==="maal_entry"){
+setMaalDefaultDate();
+loadMyMaalEntries();
+}
+}
+
+let maalLang="en";
+
+function setMaalDefaultDate(){
+const d=$("me_date");
+
+if(d && !d.value){
+const now=new Date();
+const local=new Date(
+now.getTime()-now.getTimezoneOffset()*60000
+);
+d.value=local.toISOString().slice(0,10);
+}
+}
+
+function toggleMaalLanguage(){
+maalLang=maalLang==="en"?"hi":"en";
+const hi=maalLang==="hi";
+
+$("me_title").innerText=
+hi?"माल एंट्री डैशबोर्ड":"Maal Entry Dashboard";
+
+$("me_hint").innerText=
+hi?"गाड़ी और माल की जानकारी भरें।":
+"Enter vehicle and material details.";
+
+$("me_vehicle_label").innerText=
+hi?"गाड़ी नंबर *":"Vehicle Number *";
+
+$("me_bags_label").innerText=
+hi?"बैग की संख्या *":"Bags *";
+
+$("me_material_label").innerText=
+hi?"माल *":"Material *";
+
+$("me_date_label").innerText=
+hi?"तारीख *":"Date *";
+
+$("me_owner_label").innerText=
+hi?"मालिक / सप्लायर का नाम (वैकल्पिक)":
+"Owner / Supplier Name (Optional)";
+
+$("me_slip_label").innerText=
+hi?"वेब्रिज पर्ची का फोटो *":
+"Waybridge Slip Photo *";
+
+$("me_save_btn").innerText=
+hi?"एंट्री सेव करें":"Save Entry";
+
+$("me_saved_title").innerText=
+hi?"मेरी सेव की हुई एंट्री":"My Saved Entries";
+
+$("me_refresh_btn").innerText=
+hi?"रिफ्रेश":"Refresh";
+
+$("me_lang_btn").innerText=
+hi?"English":"हिंदी";
+}
+
+async function saveMaalEntry(){
+
+const vehicle=$("me_vehicle").value.trim().toUpperCase();
+const bags=parseInt($("me_bags").value,10);
+const material=$("me_material").value;
+const entryDate=$("me_date").value;
+const owner=$("me_owner").value.trim();
+const file=$("me_slip").files[0];
+const msg=$("me_msg");
+
+if(
+!vehicle ||
+!Number.isInteger(bags) ||
+bags<=0 ||
+!material ||
+!entryDate ||
+!file
+){
+msg.innerText=maalLang==="hi"
+?"गाड़ी नंबर, बैग, माल, तारीख और पर्ची का फोटो जरूरी है।"
+:"Vehicle number, bags, material, date and slip photo are required.";
+return;
+}
+
+msg.innerText=maalLang==="hi"
+?"एंट्री सेव हो रही है..."
+:"Saving entry...";
+
+const user=(await db.auth.getUser()).data.user;
+
+if(!user){
+msg.innerText="Login again.";
+return;
+}
+
+const safe=(file.name||"slip.jpg")
+.replace(/[^a-zA-Z0-9._-]/g,"_");
+
+const path=
+user.id+"/maal_entries/"+Date.now()+"_"+safe;
+
+const up=await db.storage
+.from("Way bridge slips")
+.upload(path,file,{
+upsert:false,
+contentType:file.type||"image/jpeg"
+});
+
+if(up.error){
+msg.innerText="Photo Upload Error: "+up.error.message;
+return;
+}
+
+const pub=db.storage
+.from("Way bridge slips")
+.getPublicUrl(path);
+
+const r=await db.from("maal_entries").insert({
+vehicle_number:vehicle,
+bags:bags,
+material_type:material,
+entry_date:entryDate,
+owner_name:owner||null,
+slip_url:pub.data.publicUrl,
+created_by:user.id
+});
+
+if(r.error){
+msg.innerText="Save Error: "+r.error.message;
+return;
+}
+
+msg.innerText=maalLang==="hi"
+?"एंट्री सफलतापूर्वक सेव हो गई।"
+:"Entry saved successfully.";
+
+$("me_vehicle").value="";
+$("me_bags").value="";
+$("me_material").value="";
+$("me_owner").value="";
+$("me_slip").value="";
+
+setMaalDefaultDate();
+
+await loadMyMaalEntries();
+}
+
+async function loadMyMaalEntries(){
+
+const box=$("my_maal_entries");
+if(!box)return;
+
+box.innerHTML='<p class="muted">Loading...</p>';
+
+const user=(await db.auth.getUser()).data.user;
+
+if(!user){
+box.innerHTML='<p class="danger">Login again.</p>';
+return;
+}
+
+const r=await db.from("maal_entries")
+.select("vehicle_number,bags,material_type,entry_date,owner_name,slip_url,created_at")
+.eq("created_by",user.id)
+.order("created_at",{ascending:false})
+.limit(50);
+
+if(r.error){
+box.innerHTML=
+'<p class="danger">Load Error: '+
+esc(r.error.message)+
+'</p>';
+return;
+}
+
+if(!r.data || !r.data.length){
+box.innerHTML=
+'<p class="muted">No saved entries.</p>';
+return;
+}
+
+box.innerHTML=r.data.map(x=>`
+<div class="card"
+style="box-shadow:none;border:1px solid #ddd;margin:10px 0;padding:14px">
+
+<b>${esc(x.vehicle_number)}</b><br>
+Material: ${esc(x.material_type)}<br>
+Bags: ${esc(x.bags)}<br>
+Date: ${esc(x.entry_date)}<br>
+Owner: ${esc(x.owner_name||"-")}
+
+${x.slip_url
+?`<br><a href="${esc(x.slip_url)}" target="_blank">📷 View Slip</a>`
+:""}
+
+</div>
+`).join("");
 }
 
 function calculateNetWeight(){
-  const weight = parseFloat($("farmer_weight").value) || 0;
-  const bardan = parseFloat($("bardan_kg").value) || 0;
-  const kardo = parseFloat($("kardo_kg").value) || 0;
 
-  const net = weight - bardan - kardo;
-  $("net_weight").value = net >= 0 ? net.toFixed(2) : "0.00";
+const weight=
+parseFloat($("farmer_weight").value)||0;
+
+const bardan=
+parseFloat($("bardan_kg").value)||0;
+
+const kardo=
+parseFloat($("kardo_kg").value)||0;
+
+const net=weight-bardan-kardo;
+
+$("net_weight").value=
+net>=0?net.toFixed(2):"0.00";
 }
+
 function toggleBrokerOther(){
-  const selected = $("broker_select").value;
-  const otherBox = $("broker_other");
 
-  if(selected === "Other"){
-    otherBox.style.display = "block";
-    otherBox.value = "";
-    $("broker_name").value = "";
-    otherBox.focus();
+const selected=$("broker_select").value;
+const otherBox=$("broker_other");
 
-    otherBox.oninput = function(){
-      $("broker_name").value = this.value.trim();
-    };
-  }else{
-    otherBox.style.display = "none";
-    otherBox.value = "";
-    $("broker_name").value = selected;
-  }
+if(selected==="Other"){
+
+otherBox.style.display="block";
+otherBox.value="";
+$("broker_name").value="";
+otherBox.focus();
+
+otherBox.oninput=function(){
+$("broker_name").value=this.value.trim();
+};
+
+}else{
+
+otherBox.style.display="none";
+otherBox.value="";
+$("broker_name").value=selected;
+
 }
+}
+
 async function saveChiththi(){
-  const chiththiNumber = $("chiththi_number").value.trim();
-  const commodity = $("commodity_type").value;
-  const broker = $("broker_name").value.trim();
-  const village = $("village_name").value.trim();
-  const vehicle = $("vehicle_number").value.trim().toUpperCase();
-  const farmer = $("farmer_name").value.trim();
-  const mobile = cleanMobile($("farmer_mobile").value);
 
-  const weight = parseFloat($("farmer_weight").value);
-  const bardan = parseFloat($("bardan_kg").value) || 0;
-  const kardo = parseFloat($("kardo_kg").value) || 0;
-  const netWeight = weight - bardan - kardo;
+const chiththiNumber=
+$("chiththi_number").value.trim();
 
-  const photo = $("chiththi_photo").files[0];
+const commodity=
+$("commodity_type").value;
 
-  if(
-    !chiththiNumber ||
-    !commodity ||
-    !village ||
-    !vehicle ||
-    !farmer ||
-    mobile.length < 10 ||
-    !Number.isFinite(weight) ||
-    weight <= 0
-  ){
-    $("chiththi_msg").innerText = "બધી જરૂરી માહિતી સાચી રીતે ભરો.";
-    return;
-  }
+const broker=
+$("broker_name").value.trim();
 
-  if(netWeight <= 0){
-    $("chiththi_msg").innerText = "Final વજન 0 કરતાં વધારે હોવું જોઈએ.";
-    return;
-  }
+const village=
+$("village_name").value.trim();
 
-  if(!photo){
-    $("chiththi_msg").innerText = "ચિઠ્ઠીનો ફોટો ફરજિયાત છે.";
-    return;
-  }
+const vehicle=
+$("vehicle_number").value.trim().toUpperCase();
 
-  $("chiththi_msg").innerText = "ચિઠ્ઠી Save થઈ રહી છે...";
+const farmer=
+$("farmer_name").value.trim();
 
-  const user = (await db.auth.getUser()).data.user;
+const mobile=
+cleanMobile($("farmer_mobile").value);
 
-  if(!user){
-    $("chiththi_msg").innerText = "Login ફરી કરો.";
-    return;
-  }
+const weight=
+parseFloat($("farmer_weight").value);
 
-  try{
-    const safeName = photo.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-    const path =
-      user.id + "/chiththis/" + Date.now() + "_" + safeName;
+const bardan=
+parseFloat($("bardan_kg").value)||0;
 
-    const upload = await db.storage
-      .from("Way bridge slips")
-      .upload(path, photo, {
-        cacheControl: "3600",
-        upsert: false
-      });
+const kardo=
+parseFloat($("kardo_kg").value)||0;
 
-    if(upload.error){
-      $("chiththi_msg").innerText =
-        "Photo Upload Error: " + upload.error.message;
-      return;
-    }
+const netWeight=
+weight-bardan-kardo;
 
-    const publicData = db.storage
-      .from("Way bridge slips")
-      .getPublicUrl(path);
+const photo=
+$("chiththi_photo").files[0];
 
-    const photoUrl = publicData.data.publicUrl;
-
-    const r = await db.from("chiththis").insert({
-      chiththi_number: chiththiNumber,
-      commodity_type: commodity,
-      broker_name: broker || null,
-      village_name: village,
-      vehicle_number: vehicle,
-      farmer_name: farmer,
-      farmer_mobile: mobile,
-      gross_weight_kg: weight,
-      bardan_kg: bardan,
-      kardo_kg: kardo,
-      weight_kg: netWeight,
-      chiththi_photo_url: photoUrl,
-      created_by: user.id
-    });
-
-    if(r.error){
-      $("chiththi_msg").innerText =
-        "Save Error: " + r.error.message;
-      return;
-    }
-
-    $("chiththi_msg").innerText =
-      "ચિઠ્ઠી Save થઈ ગઈ. Final વજન: " +
-      netWeight.toFixed(2) + " KG";
-
-    $("chiththi_number").value = "";
-    $("commodity_type").value = "";
-    $("broker_name").value = "";
-    $("broker_select").value = "";
-$("broker_other").value = "";
-$("broker_other").style.display = "none";
-    $("farmer_name").value = "";
-    $("farmer_mobile").value = "";
-    $("farmer_weight").value = "";
-    $("bardan_kg").value = "";
-    $("kardo_kg").value = "";
-    $("net_weight").value = "";
-    $("chiththi_photo").value = "";
-
-    $("farmer_name").focus();
-
-    await loadMyChiththis();
-
-  }catch(e){
-    $("chiththi_msg").innerText =
-      "Error: " + e.message;
-  }
+if(
+!chiththiNumber ||
+!commodity ||
+!village ||
+!vehicle ||
+!farmer ||
+mobile.length<10 ||
+!Number.isFinite(weight) ||
+weight<=0
+){
+$("chiththi_msg").innerText=
+"બધી જરૂરી માહિતી સાચી રીતે ભરો.";
+return;
 }
 
-function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));}
+if(netWeight<=0){
+$("chiththi_msg").innerText=
+"Final વજન 0 કરતાં વધારે હોવું જોઈએ.";
+return;
+}
+
+if(!photo){
+$("chiththi_msg").innerText=
+"ચિઠ્ઠીનો ફોટો ફરજિયાત છે.";
+return;
+}
+
+$("chiththi_msg").innerText=
+"ચિઠ્ઠી Save થઈ રહી છે...";
+
+const user=
+(await db.auth.getUser()).data.user;
+
+if(!user){
+$("chiththi_msg").innerText=
+"Login ફરી કરો.";
+return;
+}
+
+try{
+
+const safeName=
+photo.name.replace(
+/[^a-zA-Z0-9._-]/g,
+"_"
+);
+
+const path=
+user.id+
+"/chiththis/"+
+Date.now()+
+"_"+
+safeName;
+
+const upload=
+await db.storage
+.from("Way bridge slips")
+.upload(path,photo,{
+cacheControl:"3600",
+upsert:false
+});
+
+if(upload.error){
+$("chiththi_msg").innerText=
+"Photo Upload Error: "+
+upload.error.message;
+return;
+}
+
+const publicData=
+db.storage
+.from("Way bridge slips")
+.getPublicUrl(path);
+
+const photoUrl=
+publicData.data.publicUrl;
+
+const r=
+await db.from("chiththis").insert({
+
+chiththi_number:chiththiNumber,
+commodity_type:commodity,
+broker_name:broker||null,
+village_name:village,
+vehicle_number:vehicle,
+farmer_name:farmer,
+farmer_mobile:mobile,
+gross_weight_kg:weight,
+bardan_kg:bardan,
+kardo_kg:kardo,
+weight_kg:netWeight,
+chiththi_photo_url:photoUrl,
+created_by:user.id
+
+});
+
+if(r.error){
+$("chiththi_msg").innerText=
+"Save Error: "+
+r.error.message;
+return;
+}
+
+$("chiththi_msg").innerText=
+"ચિઠ્ઠી Save થઈ ગઈ. Final વજન: "+
+netWeight.toFixed(2)+
+" KG";
+
+$("chiththi_number").value="";
+$("commodity_type").value="";
+$("broker_name").value="";
+$("broker_select").value="";
+$("broker_other").value="";
+$("broker_other").style.display="none";
+$("farmer_name").value="";
+$("farmer_mobile").value="";
+$("farmer_weight").value="";
+$("bardan_kg").value="";
+$("kardo_kg").value="";
+$("net_weight").value="";
+$("chiththi_photo").value="";
+
+$("farmer_name").focus();
+
+await loadMyChiththis();
+
+}catch(e){
+
+$("chiththi_msg").innerText=
+"Error: "+e.message;
+
+}
+}
+
+function esc(v){
+return String(v??"").replace(
+/[&<>"']/g,
+c=>({
+"&":"&amp;",
+"<":"&lt;",
+">":"&gt;",
+"\"":"&quot;",
+"'":"&#39;"
+}[c])
+);
+}
+
 async function loadMyChiththis(){
- const box=$("my_chiththis"); if(!box)return;
- box.innerHTML='<p class="muted">ચિઠ્ઠીઓ લોડ થઈ રહી છે...</p>';
- const user=(await db.auth.getUser()).data.user;
- if(!user){box.innerHTML='<p class="danger">Login ફરી કરો.</p>';return;}
- const r=await db.from("chiththis").select("village_name,vehicle_number,farmer_name,farmer_mobile,weight_kg,created_at").eq("created_by",user.id).order("created_at",{ascending:false}).limit(50);
- if(r.error){box.innerHTML='<p class="danger">Load Error: '+esc(r.error.message)+'</p>';return;}
- if(!r.data||!r.data.length){box.innerHTML='<p class="muted">હજુ કોઈ ચિઠ્ઠી Save નથી.</p>';return;}
- box.innerHTML=r.data.map(x=>`<div class="card" style="box-shadow:none;border:1px solid #ddd;margin:10px 0;padding:14px"><b>${esc(x.village_name)}</b> — ${esc(x.vehicle_number)}<br>ખેડૂત: ${esc(x.farmer_name)}<br>મોબાઇલ: ${esc(x.farmer_mobile)}<br><b>વજન: ${esc(x.weight_kg)} KG</b></div>`).join("");
+
+const box=$("my_chiththis");
+if(!box)return;
+
+box.innerHTML=
+'<p class="muted">ચિઠ્ઠીઓ લોડ થઈ રહી છે...</p>';
+
+const user=
+(await db.auth.getUser()).data.user;
+
+if(!user){
+box.innerHTML=
+'<p class="danger">Login ફરી કરો.</p>';
+return;
 }
 
-function cropSlip(img, x, y, w, h){
- const scale=4;
- const sw=img.naturalWidth*w, sh=img.naturalHeight*h;
- const c=document.createElement("canvas");
- c.width=Math.max(1,Math.round(sw*scale)); c.height=Math.max(1,Math.round(sh*scale));
- const ctx=c.getContext("2d");
- ctx.imageSmoothingEnabled=true;
- ctx.drawImage(img,img.naturalWidth*x,img.naturalHeight*y,sw,sh,0,0,c.width,c.height);
- const d=ctx.getImageData(0,0,c.width,c.height);
- // Strong grayscale + local-friendly threshold for faint dot-matrix print.
- for(let i=0;i<d.data.length;i+=4){
-   const g=.299*d.data[i]+.587*d.data[i+1]+.114*d.data[i+2];
-   const v=g<220?0:255;
-   d.data[i]=d.data[i+1]=d.data[i+2]=v;
- }
- ctx.putImageData(d,0,0); return c;
+const r=
+await db.from("chiththis")
+.select("village_name,vehicle_number,farmer_name,farmer_mobile,weight_kg,created_at")
+.eq("created_by",user.id)
+.order("created_at",{ascending:false})
+.limit(50);
+
+if(r.error){
+box.innerHTML=
+'<p class="danger">Load Error: '+
+esc(r.error.message)+
+'</p>';
+return;
 }
-async function ocrCanvas(c, whitelist){
- const opts={
-   logger:m=>{if(m.status==="recognizing text") $("ocr_msg").innerText="Auto Read: "+Math.round((m.progress||0)*100)+"%";},
-   tessedit_pageseg_mode:"6",
-   preserve_interword_spaces:"1"
- };
- if(whitelist) opts.tessedit_char_whitelist=whitelist;
- const r=await Tesseract.recognize(c,"eng",opts);
- return (r.data.text||"").toUpperCase().replace(/\s+/g," ").trim();
+
+if(!r.data || !r.data.length){
+box.innerHTML=
+'<p class="muted">હજુ કોઈ ચિઠ્ઠી Save નથી.</p>';
+return;
 }
-function normalizeVehicle(t){
- let x=t.toUpperCase().replace(/[^A-Z0-9]/g,"");
- // Common dot-matrix OCR corrections only in likely numeric positions.
- const m=x.match(/([A-Z]{2})([0-9OIL]{1,2})([A-Z]{1,3})([0-9OIL]{4})/);
- if(!m) return "";
- const fix=n=>n.replace(/O/g,"0").replace(/[IL]/g,"1");
- return m[1]+fix(m[2])+m[3]+fix(m[4]);
+
+box.innerHTML=
+r.data.map(x=>`
+<div class="card"
+style="box-shadow:none;border:1px solid #ddd;margin:10px 0;padding:14px">
+
+<b>${esc(x.village_name)}</b>
+—
+${esc(x.vehicle_number)}
+<br>
+
+ખેડૂત:
+${esc(x.farmer_name)}
+<br>
+
+મોબાઇલ:
+${esc(x.farmer_mobile)}
+<br>
+
+<b>
+વજન:
+${esc(x.weight_kg)} KG
+</b>
+
+</div>
+`).join("");
 }
-async function fileToDataURL(file){
- return await new Promise((resolve,reject)=>{
-   const reader=new FileReader();
-   reader.onload=()=>resolve(reader.result);
-   reader.onerror=()=>reject(new Error("Photo read failed"));
-   reader.readAsDataURL(file);
- });
+  async function saveWaybridge(){
+
+const rst=$("wb_rst").value.trim();
+const vehicle=$("wb_vehicle").value.trim().toUpperCase();
+const weight=parseFloat($("wb_weight").value);
+const slip=$("wb_slip").files[0];
+
+if(!vehicle || !Number.isFinite(weight) || weight<=0){
+$("wb_msg").innerText="ગાડી નંબર અને સાચું NET Weight લખો.";
+return;
 }
+
+if(!slip){
+$("wb_msg").innerText="કાંટાની પાવતી / Slip Photo પસંદ કરો.";
+return;
+}
+
+$("wb_msg").innerText="Save થઈ રહ્યું છે...";
+
+const user=(await db.auth.getUser()).data.user;
+
+if(!user){
+$("wb_msg").innerText="Login ફરી કરો.";
+return;
+}
+
+const safeName=(slip.name||"slip.jpg")
+.replace(/[^a-zA-Z0-9._-]/g,"_");
+
+const path=
+user.id+
+"/waybridge/"+
+Date.now()+
+"_"+
+safeName;
+
+const upload=await db.storage
+.from("Way bridge slips")
+.upload(path,slip,{
+cacheControl:"3600",
+upsert:false
+});
+
+if(upload.error){
+$("wb_msg").innerText=
+"Photo Upload Error: "+upload.error.message;
+return;
+}
+
+const publicData=db.storage
+.from("Way bridge slips")
+.getPublicUrl(path);
+
+const slipUrl=publicData.data.publicUrl;
+
+const r=await db.from("waybridge_entries").insert({
+rst_no:rst||null,
+vehicle_number:vehicle,
+total_weight_kg:weight,
+net_weight_kg:weight,
+slip_url:slipUrl,
+created_by:user.id
+});
+
+if(r.error){
+$("wb_msg").innerText=
+"Save Error: "+r.error.message;
+return;
+}
+
+$("wb_msg").innerText=
+"Waybridge Weight સફળતાપૂર્વક Save થયું.";
+
+await compareVehicleWeight(vehicle,weight);
+}
+
+
+async function compareVehicleWeight(vehicle,wayWeight){
+
+const box=$("wb_compare");
+
+box.innerHTML=
+'<p class="muted">ચિઠ્ઠીઓનું કુલ વજન ગણાઈ રહ્યું છે...</p>';
+
+const r=await db.from("chiththis")
+.select("gross_weight_kg")
+.eq("vehicle_number",vehicle);
+
+if(r.error){
+box.innerHTML=
+'<p class="danger">'+esc(r.error.message)+'</p>';
+return;
+}
+
+const rows=r.data||[];
+
+const chTotal=rows.reduce(
+(sum,x)=>sum+(Number(x.gross_weight_kg)||0),
+0
+);
+
+const diff=Number(wayWeight)-chTotal;
+const abs=Math.abs(diff);
+
+const match=abs<0.01;
+
+box.innerHTML=`
+<div class="card"
+style="box-shadow:none;border:1px solid #ddd">
+
+<h3>${match?"✅ MATCH":"❌ NOT MATCH"}</h3>
+
+ગાડી:
+<b>${esc(vehicle)}</b><br>
+
+ચિઠ્ઠીઓ:
+<b>${rows.length}</b><br>
+
+ચિઠ્ઠી કુલ વજન:
+<b>${chTotal.toFixed(2)} KG</b><br>
+
+Waybridge Weight:
+<b>${Number(wayWeight).toFixed(2)} KG</b><br>
+
+Difference:
+<b>${abs.toFixed(2)} KG</b>
+
+</div>
+`;
+}
+
+
 async function autoReadSlip(){
- const f=$("wb_slip").files[0];
- if(!f){$("ocr_msg").innerText="પહેલા પાવતીનો ફોટો પસંદ કરો.";return;}
- $("ocr_msg").innerText="Free OCR શરૂ થઈ રહ્યું છે...";
- try{
-   const url=URL.createObjectURL(f);
-   const img=new Image();
-   await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=reject;img.src=url;});
-
-   // OCR runs fully in the browser: no paid API call.
-   const canvas=cropSlip(img,0,0,1,1);
-   const raw=await ocrCanvas(canvas,"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:-./ ");
-   URL.revokeObjectURL(url);
-   const text=raw.toUpperCase().replace(/\s+/g," ");
-
-   let rst="", vehicle="", net="";
-   let m=text.match(/RST\s*(?:NO|N0|NUMBER)?\s*[:#.-]?\s*([0-9OIL]{1,8})/);
-   if(m) rst=m[1].replace(/O/g,"0").replace(/[IL]/g,"1");
-
-   m=text.match(/(?:VEHICLE|VEH|TRUCK)\s*(?:NO|N0|NUMBER)?\s*[:#.-]?\s*([A-Z]{2}\s*[0-9OIL]{1,2}\s*[A-Z]{1,3}\s*[0-9OIL]{4})/);
-   if(m) vehicle=normalizeVehicle(m[1]);
-   if(!vehicle){
-     const candidates=text.match(/[A-Z]{2}\s*[0-9OIL]{1,2}\s*[A-Z]{1,3}\s*[0-9OIL]{3,4}/g)||[];
-     if(candidates.length) vehicle=normalizeVehicle(candidates[0]);
-   }
-
-   m=text.match(/(?:NET|NETT)\s*(?:WEIGHT|WT)?\s*[:#.= -]*\s*([0-9OIL]{3,7})\s*(?:KG|KGS)?/);
-   if(m) net=m[1].replace(/O/g,"0").replace(/[IL]/g,"1");
-
-   if(rst) $("wb_rst").value=rst;
-   if(vehicle) $("wb_vehicle").value=vehicle;
-   if(net) $("wb_weight").value=net;
-
-   const found=[rst,vehicle,net].filter(Boolean).length;
-   $("ocr_msg").innerText=found===3
-     ?"✅ Free OCR: RST No., Vehicle No. અને NET Weight વાંચાઈ ગયા. Save પહેલાં ચેક કરો."
-     :"⚠️ Free OCRએ "+found+"/3 માહિતી વાંચી. Photo સીધો અને clear રાખીને ફરી પ્રયાસ કરો; બાકી field manually ભરી શકો.";
- }catch(e){
-   $("ocr_msg").innerText="Free OCR Error: "+(e?.message||e);
- }
-}
-async function saveWaybridge(){
- const rst=$("wb_rst").value.trim();
- const vehicle=$("wb_vehicle").value.trim().toUpperCase();
- const weight=parseFloat($("wb_weight").value);
- if(!vehicle||!Number.isFinite(weight)||weight<=0){
-   $("wb_msg").innerText="ગાડી નંબર અને સાચું Total Weight નાખો."; return;
- }
- $("wb_msg").innerText="Save થઈ રહ્યું છે...";
- const user=(await db.auth.getUser()).data.user;
- if(!user){ $("wb_msg").innerText="Login ફરી કરો."; return; }
- const file=$("wb_slip").files[0];
- if(!file){ $("wb_msg").innerText="કાંટાની પાવતીનો ફોટો પસંદ કરો."; return; }
- const safe=(file.name||"slip.jpg").replace(/[^a-zA-Z0-9._-]/g,"_");
- const path=user.id+"/"+Date.now()+"_"+safe;
- const up=await db.storage.from("Way bridge slips").upload(path,file,{upsert:false,contentType:file.type||"image/jpeg"});
- if(up.error){ $("wb_msg").innerText="Photo Upload Error: "+up.error.message; return; }
- const pub=db.storage.from("Way bridge slips").getPublicUrl(path);
- const slipUrl=pub.data.publicUrl;
- const r=await db.from("waybridge_entries").insert({
-   rst_no:rst||null,
-   vehicle_number:vehicle,
-   total_weight_kg:weight,
-   net_weight_kg:weight,
-   slip_url:slipUrl,
-   created_by:user.id
- });
- if(r.error){ $("wb_msg").innerText="Save Error: "+r.error.message; return; }
- $("wb_msg").innerText="Weight અને Slip Photo સફળતાપૂર્વક Save થઈ ગયા.";
- $("wb_slip").value="";
- await compareVehicleWeight(vehicle, weight);
-}
-
-async function compareVehicleWeight(vehicle, wayWeight){
- const box=$("wb_compare");
- box.innerHTML='<p class="muted">ચિઠ્ઠીઓનું કુલ વજન ગણાઈ રહ્યું છે...</p>';
- const r=await db.from("chiththis").select("gross_weight_kg").eq("vehicle_number",vehicle);
- if(r.error){ box.innerHTML='<p class="danger">Compare Error: '+esc(r.error.message)+'</p>'; return; }
- const rows=r.data||[];
- const chTotal=rows.reduce((sum,x)=>sum+(Number(x.gross_weight_kg)||0),0);
- const diff=Number(wayWeight)-chTotal;
- const matched=Math.abs(diff)<0.001;
- box.innerHTML=`<div class="card" style="box-shadow:none;border:1px solid #ddd;margin-top:16px;padding:14px">
- <b>ચિઠ્ઠીઓ:</b> ${rows.length}<br>
- <b>ચિઠ્ઠીઓનું કુલ વજન:</b> ${chTotal} KG<br>
- <b>Waybridge Weight:</b> ${wayWeight} KG<br>
- <b>Difference:</b> ${Math.abs(diff)} KG<br>
- <h3 style="margin-bottom:0">${matched?'✅ MATCH':'❌ NOT MATCH'}</h3>
- </div>`;
-}
-
-  
-async function adminVehicleMatch(){
-  const box = $("admin_match_results");
-  if(!box) return;
-
-  const search = ($("admin_search").value || "").trim().toUpperCase();
-
-  if(!search){
-    box.innerHTML = '<p class="muted">ગાડી નંબર અથવા RST નંબર લખો.</p>';
-    return;
-  }
-
-  box.innerHTML = '<p class="muted">MATCH / MISMATCH ચેક થઈ રહ્યું છે...</p>';
-
-  try{
-    // Chiththi data
-    const ch = await db
-      .from("chiththis")
-      .select("vehicle_number,gross_weight_kg")
-      .eq("vehicle_number", search);
-
-    // Waybridge data - પહેલા vehicle number થી
-    let wb = await db
-      .from("waybridge_entries")
-      .select("rst_no,vehicle_number,total_weight_kg,net_weight_kg,slip_url,created_at")
-      .eq("vehicle_number", search)
-      .order("created_at",{ascending:false})
-      .limit(1);
-
-    // vehicle ન મળે તો RST થી શોધો
-    if(!wb.error && (!wb.data || !wb.data.length)){
-      wb = await db
-        .from("waybridge_entries")
-        .select("rst_no,vehicle_number,total_weight_kg,net_weight_kg,slip_url,created_at")
-        .eq("rst_no", search)
-        .order("created_at",{ascending:false})
-        .limit(1);
-    }
-
-    if(wb.error){
-      box.innerHTML =
-        '<p class="danger">Waybridge Error: '+esc(wb.error.message)+'</p>';
-      return;
-    }
-
-    if(!wb.data || !wb.data.length){
-      box.innerHTML =
-        '<p class="muted">આ ગાડી / RST નો Waybridge record મળ્યો નથી.</p>';
-      return;
-    }
-
-    const w = wb.data[0];
-    const vehicle = String(w.vehicle_number || "").toUpperCase();
-
-    // જો RST થી search કર્યું હોય તો સાચી ગાડીની chiththi ફરી લાવો
-    let chRows = ch.data || [];
-
-    if(vehicle !== search){
-      const c2 = await db
-        .from("chiththis")
-        .select("vehicle_number,gross_weight_kg")
-        .eq("vehicle_number", vehicle);
-
-      if(c2.error){
-        box.innerHTML =
-          '<p class="danger">Chiththi Error: '+esc(c2.error.message)+'</p>';
-        return;
-      }
-
-      chRows = c2.data || [];
-    }else if(ch.error){
-      box.innerHTML =
-        '<p class="danger">Chiththi Error: '+esc(ch.error.message)+'</p>';
-      return;
-    }
-
-    const chTotal = chRows.reduce(
-      (sum,x)=>sum+(Number(x.gross_weight_kg)||0),0
-    );
-
-    const wayWeight =
-      Number(w.net_weight_kg || w.total_weight_kg || 0);
-
-    const diff = wayWeight - chTotal;
-    const matched = Math.abs(diff) < 0.001;
-
-    const slip = w.slip_url
-      ? '<br><a href="'+esc(w.slip_url)+'" target="_blank">📷 કાંટાની પાવતી જુઓ</a>'
-      : '';
-
-    box.innerHTML = `
-      <div class="card"
-           style="box-shadow:none;border:1px solid #ddd;margin-top:14px">
-
-        <h3>🚚 ગાડી Weight Check</h3>
-
-        <b>RST નંબર:</b> ${esc(w.rst_no || "-")}<br>
-        <b>ગાડી નંબર:</b> ${esc(vehicle)}<br>
-        <b>કુલ ચિઠ્ઠીઓ:</b> ${chRows.length}<br>
-        <b>ચિઠ્ઠીઓનું કુલ વજન:</b> ${chTotal} KG<br>
-        <b>Waybridge NET Weight:</b> ${wayWeight} KG<br>
-        <b>Difference:</b> ${Math.abs(diff)} KG<br>
-
-        <h2 style="margin-bottom:5px">
-          ${matched ? "✅ MATCH" : "❌ MISMATCH"}
-        </h2>
-
-        ${slip}
-      </div>
-    `;
-
-  }catch(e){
-    box.innerHTML =
-      '<p class="danger">Error: '+esc(e.message || e)+'</p>';
-  }
-}
-async function adminSearch(mode=""){
-  const box = $("admin_results");
-  const summary = $("admin_summary");
-
-  box.innerHTML = '<p class="muted">Data લોડ થઈ રહ્યો છે...</p>';
-  summary.innerHTML = "";
-
-  let search = ($("admin_search").value || "").trim().toUpperCase();
-  let from = $("admin_from").value;
-  let to = $("admin_to").value;
-
-  const now = new Date();
-
-  if(mode === "today"){
-    const d = now.toISOString().slice(0,10);
-    from = d;
-    to = d;
-  }
-
-  if(mode === "month"){
-    const y = now.getFullYear();
-    const m = String(now.getMonth()+1).padStart(2,"0");
-    from = `${y}-${m}-01`;
-    to = new Date(y,now.getMonth()+1,0).toISOString().slice(0,10);
-  }
-
-  try{
-
-    // બધી ચિઠ્ઠીઓ
-    let q = db.from("chiththis")
-      .select("id,chiththi_number,commodity_type,broker_name,village_name,vehicle_number,farmer_name,farmer_mobile,gross_weight_kg,bardan_kg,kardo_kg,weight_kg,chiththi_photo_url,created_at")
-      .order("created_at",{ascending:false})
-      .limit(500);
-
-    if(from) q = q.gte("created_at",from+"T00:00:00");
-    if(to) q = q.lte("created_at",to+"T23:59:59");
-
-    const r = await q;
-
-    if(r.error){
-      box.innerHTML =
-        '<p class="danger">Chiththi Error: '+esc(r.error.message)+'</p>';
-      return;
-    }
-
-    let rows = r.data || [];
-
-    // Waybridge data - RST શોધવા માટે
-    const wb = await db.from("waybridge_entries")
-      .select("rst_no,vehicle_number,net_weight_kg,total_weight_kg,slip_url");
-
-    const wbRows = wb.error ? [] : (wb.data || []);
-
-    // Search
-    if(search){
-
-      // જો RST નંબરથી search હોય તો તેની ગાડી શોધો
-      const rstVehicles = wbRows
-        .filter(w =>
-          String(w.rst_no || "").toUpperCase().includes(search)
-        )
-        .map(w => String(w.vehicle_number || "").toUpperCase());
-
-      rows = rows.filter(x =>
-        String(x.chiththi_number || "").toUpperCase().includes(search) ||
-        String(x.vehicle_number || "").toUpperCase().includes(search) ||
-        String(x.farmer_name || "").toUpperCase().includes(search) ||
-        String(x.farmer_mobile || "").includes(search) ||
-        String(x.village_name || "").toUpperCase().includes(search) ||
-        String(x.broker_name || "").toUpperCase().includes(search) ||
-        String(x.commodity_type || "").toUpperCase().includes(search) ||
-        rstVehicles.includes(
-          String(x.vehicle_number || "").toUpperCase()
-        )
-      );
-    }
-
-    const totalWeight = rows.reduce(
-      (sum,x)=>sum+(Number(x.weight_kg)||0),0
-    );
-
-    const vehicles = [...new Set(
-      rows.map(x=>x.vehicle_number).filter(Boolean)
-    )];
-
-    summary.innerHTML = `
-      <div class="card"
-           style="box-shadow:none;border:1px solid #ddd">
-        <b>કુલ ચિઠ્ઠીઓ:</b> ${rows.length}<br>
-        <b>કુલ ગાડીઓ:</b> ${vehicles.length}<br>
-        <b>કુલ Final વજન:</b> ${totalWeight.toFixed(2)} KG
-      </div>
-    `;
-
-    if(!rows.length){
-      box.innerHTML =
-        '<p class="muted">કોઈ Data મળ્યો નથી.</p>';
-      return;
-    }
-
-    box.innerHTML = rows.map(x=>{
-
-      const vehicle = String(x.vehicle_number || "").toUpperCase();
-
-      const way = wbRows.find(w =>
-        String(w.vehicle_number || "").toUpperCase() === vehicle
-      );
-
-      const rst = way ? (way.rst_no || "-") : "-";
-
-      const photo = x.chiththi_photo_url
-        ? `<br><a href="${esc(x.chiththi_photo_url)}"
-                 target="_blank">📷 ચિઠ્ઠીનો ફોટો જુઓ</a>`
-        : "";
-
-      const wbSlip = way && way.slip_url
-        ? `<br><a href="${esc(way.slip_url)}"
-                 target="_blank">📷 Waybridge Slip જુઓ</a>`
-        : "";
-
-      return `
-        <div class="card"
-             style="box-shadow:none;border:1px solid #ddd;
-                    margin:10px 0;padding:14px">
-
-          <b>ચિઠ્ઠી નંબર:</b>
-          ${esc(x.chiththi_number || "-")}<br>
-
-          <b>RST નંબર:</b>
-          ${esc(rst)}<br>
-
-          <b>માલ:</b>
-          ${esc(x.commodity_type || "-")}<br>
-
-          <b>દલાલ:</b>
-          ${esc(x.broker_name || "-")}<br>
-
-          <b>ગાડી:</b>
-          ${esc(x.vehicle_number || "-")}<br>
-
-          <b>ગામ:</b>
-          ${esc(x.village_name || "-")}<br>
-
-          <b>ખેડૂત:</b>
-          ${esc(x.farmer_name || "-")}<br>
-
-          <b>મોબાઇલ:</b>
-          ${esc(x.farmer_mobile || "-")}<br>
-
-          <b>મૂળ વજન:</b>
-          ${Number(x.gross_weight_kg || 0).toFixed(2)} KG<br>
-
-          <b>બારદાન બાદ:</b>
-          ${Number(x.bardan_kg || 0).toFixed(2)} KG<br>
-
-          <b>કરડો બાદ:</b>
-          ${Number(x.kardo_kg || 0).toFixed(2)} KG<br>
-
-          <b>Final / Net વજન:</b>
-          <strong>${Number(x.weight_kg || 0).toFixed(2)} KG</strong><br>
-
-          ${photo}
-          ${wbSlip}
-
-          <br><br>
-
-          <button type="button"
-            onclick="adminEditChiththi('${x.id}')">
-            ✏️ Edit ચિઠ્ઠી
-          </button>
-
-          <br>
-          <small>
-            ${new Date(x.created_at).toLocaleString()}
-          </small>
-
-        </div>
-      `;
-    }).join("");
-
-  }catch(e){
-    box.innerHTML =
-      '<p class="danger">Error: '+esc(e.message || e)+'</p>';
-  }
+$("ocr_msg").innerText=
+"Slip પસંદ થઈ ગઈ છે. RST, ગાડી નંબર અને NET Weight manually ચેક કરીને Save કરો.";
 }
 
 
-async function adminEditChiththi(id){
-
-  const r = await db.from("chiththis")
-    .select("*")
-    .eq("id",id)
-    .single();
-
-  if(r.error){
-    alert("Error: "+r.error.message);
-    return;
-  }
-
-  const x = r.data;
-
-  const farmer = prompt(
-    "ખેડૂતનું નામ:",
-    x.farmer_name || ""
-  );
-  if(farmer === null) return;
-
-  const mobile = prompt(
-    "મોબાઇલ નંબર:",
-    x.farmer_mobile || ""
-  );
-  if(mobile === null) return;
-
-  const village = prompt(
-    "ગામ:",
-    x.village_name || ""
-  );
-  if(village === null) return;
-
-  const vehicle = prompt(
-    "ગાડી નંબર:",
-    x.vehicle_number || ""
-  );
-  if(vehicle === null) return;
-
-  const grossInput = prompt(
-    "મૂળ વજન KG:",
-    x.gross_weight_kg || 0
-  );
-  if(grossInput === null) return;
-
-  const bardanInput = prompt(
-    "બારદાન બાદ KG:",
-    x.bardan_kg || 0
-  );
-  if(bardanInput === null) return;
-
-  const kardoInput = prompt(
-    "કરડો બાદ KG:",
-    x.kardo_kg || 0
-  );
-  if(kardoInput === null) return;
-
-  const gross = Number(grossInput) || 0;
-  const bardan = Number(bardanInput) || 0;
-  const kardo = Number(kardoInput) || 0;
-
-  const net = gross - bardan - kardo;
-
-  if(net < 0){
-    alert("Final વજન 0 થી ઓછું ન હોઈ શકે.");
-    return;
-  }
-
-  const up = await db.from("chiththis")
-    .update({
-      farmer_name: farmer.trim(),
-      farmer_mobile: mobile.trim(),
-      village_name: village.trim(),
-      vehicle_number: vehicle.trim().toUpperCase(),
-      gross_weight_kg: gross,
-      bardan_kg: bardan,
-      kardo_kg: kardo,
-      weight_kg: net
-    })
-    .eq("id",id);
-
-  if(up.error){
-    alert("Update Error: "+up.error.message);
-    return;
-  }
-
-  alert("ચિઠ્ઠી સફળતાપૂર્વક Update થઈ ગઈ.");
-
-  await adminSearch();
-}
-  function downloadApp(){
-  window.location.href = "https://balajiindustries654-lang.github.io/Balaji-industries/";
-  }
 async function loadPending(){
- const r=await db.from("user_profiles").select("id,full_name,mobile,role,approved").eq("approved",false);
- if(r.error) return $("plist").innerText=r.error.message;
- $("plist").innerHTML=(r.data||[]).map(x=>`<div class="card"><b>${x.full_name||"User"}</b><br>${x.mobile||""}
- <select id="r${x.id}"><option value="worker">Majur</option><option value="farmer">Farmer</option><option value="waybridge">Waybridge</option></select>
- <button onclick="approve('${x.id}')">Approve</button></div>`).join("")||"No pending users";
+
+const box=$("plist");
+
+box.innerHTML=
+'<p class="muted">Pending users લોડ થઈ રહ્યા છે...</p>';
+
+const r=await db.from("user_profiles")
+.select("*")
+.eq("approved",false);
+
+if(r.error){
+box.innerHTML=
+'<p class="danger">'+esc(r.error.message)+'</p>';
+return;
 }
-async function approve(id){
- const role=$("r"+id).value;
- const r=await db.from("user_profiles").update({role:role,approved:true}).eq("id",id);
- if(r.error) alert(r.error.message); else loadPending();
+
+if(!r.data || !r.data.length){
+box.innerHTML=
+'<p class="muted">કોઈ Pending User નથી.</p>';
+return;
 }
-db.auth.getSession().then(r=>{if(r.data.session)boot()});
-  
-</script></main></body></html>
+
+box.innerHTML=r.data.map(x=>`
+
+<div class="card"
+style="box-shadow:none;border:1px solid #ddd">
+
+<b>${esc(x.full_name||"User")}</b><br>
+
+Mobile:
+${esc(x.mobile||"-")}<br>
+
+Role:
+${esc(x.role||"-")}
+
+<br><br>
+
+<select id="role_${x.id}">
+<option value="farmer">Farmer</option>
+<option value="worker">Majur</option>
+<option value="waybridge">Waybridge</option>
+<option value="maal_entry">Maal Entry</option>
+</select>
+
+<button onclick="approveUser('${x.id}')">
+Approve
+</button>
+
+</div>
+
+`).join("");
+}
+
+
+async function approveUser(id){
+
+const role=$("role_"+id).value;
+
+const r=await db.from("user_profiles")
+.update({
+approved:true,
+role:role
+})
+.eq("id",id);
+
+if(r.error){
+alert("Approve Error: "+r.error.message);
+return;
+}
+
+alert("User Approved");
+await loadPending();
+}
+
+
+function getDateRange(mode){
+
+let from=$("admin_from").value;
+let to=$("admin_to").value;
+
+const now=new Date();
+
+if(mode==="today"){
+
+const local=new Date(
+now.getTime()-now.getTimezoneOffset()*60000
+);
+
+const d=local.toISOString().slice(0,10);
+
+from=d;
+to=d;
+}
+
+if(mode==="month"){
+
+const y=now.getFullYear();
+const m=String(now.getMonth()+1).padStart(2,"0");
+
+from=`${y}-${m}-01`;
+
+const last=new Date(y,now.getMonth()+1,0);
+
+to=
+`${last.getFullYear()}-`+
+`${String(last.getMonth()+1).padStart(2,"0")}-`+
+`${String(last.getDate()).padStart(2,"0")}`;
+}
+
+return {from,to};
+}
+
+
+async function adminSearch(mode=""){
+
+const box=$("admin_results");
+const summary=$("admin_summary");
+
+box.innerHTML=
+'<p class="muted">Data લોડ થઈ રહ્યો છે...</p>';
+
+summary.innerHTML="";
+
+let search=
+($("admin_search").value||"")
+.trim()
+.toUpperCase();
+
+const range=getDateRange(mode);
+
+let q=db.from("chiththis")
+.select("*")
+.order("created_at",{ascending:false});
+
+if(range.from){
+q=q.gte(
+"created_at",
+range.from+"T00:00:00"
+);
+}
+
+if(range.to){
+q=q.lte(
+"created_at",
+range.to+"T23:59:59"
+);
+}
+
+const r=await q;
+
+if(r.error){
+box.innerHTML=
+'<p class="danger">'+esc(r.error.message)+'</p>';
+return;
+}
+
+let rows=r.data||[];
+
+let wbMap={};
+
+const wb=await db.from("waybridge_entries")
+.select("rst_no,vehicle_number,net_weight_kg,slip_url,created_at")
+.order("created_at",{ascending:false});
+
+if(!wb.error){
+
+(wb.data||[]).forEach(x=>{
+
+const v=(x.vehicle_number||"").toUpperCase();
+
+if(v && !wbMap[v])
+wbMap[v]=x;
+
+});
+}
+
+if(search){
+
+rows=rows.filter(x=>{
+
+const vehicle=(x.vehicle_number||"").toUpperCase();
+
+const wbRow=wbMap[vehicle];
+
+const all=[
+x.chiththi_number,
+x.commodity_type,
+x.broker_name,
+x.village_name,
+x.vehicle_number,
+x.farmer_name,
+x.farmer_mobile,
+wbRow?.rst_no
+]
+.map(v=>String(v||"").toUpperCase())
+.join(" ");
+
+return all.includes(search);
+
+});
+}
+
+const totalWeight=rows.reduce(
+(s,x)=>s+(Number(x.weight_kg)||0),
+0
+);
+
+const vehicles=
+new Set(
+rows
+.map(x=>x.vehicle_number)
+.filter(Boolean)
+);
+
+summary.innerHTML=`
+<div class="card"
+style="box-shadow:none;border:1px solid #ddd">
+
+<b>કુલ ચિઠ્ઠીઓ:</b>
+${rows.length}<br>
+
+<b>કુલ ગાડીઓ:</b>
+${vehicles.size}<br>
+
+<b>કુલ Final વજન:</b>
+${totalWeight.toFixed(2)} KG
+
+</div>
+`;
+
+if(!rows.length){
+box.innerHTML=
+'<p class="muted">કોઈ Data મળ્યો નથી.</p>';
+return;
+}
+
+box.innerHTML=rows.map(x=>{
+
+const vehicle=(x.vehicle_number||"").toUpperCase();
+
+const w=wbMap[vehicle];
+
+return `
+<div class="card"
+style="box-shadow:none;border:1px solid #ddd">
+
+<b>ચિઠ્ઠી:
+${esc(x.chiththi_number||"-")}</b><br>
+
+માલ:
+${esc(x.commodity_type||"-")}<br>
+
+દલાલ:
+${esc(x.broker_name||"-")}<br>
+
+ગામ:
+${esc(x.village_name||"-")}<br>
+
+ગાડી:
+<b>${esc(x.vehicle_number||"-")}</b><br>
+
+ખેડૂત:
+${esc(x.farmer_name||"-")}<br>
+
+મોબાઇલ:
+${esc(x.farmer_mobile||"-")}<br>
+
+ખેડૂત વજન:
+${esc(x.gross_weight_kg||0)} KG<br>
+
+બારદાન:
+${esc(x.bardan_kg||0)} KG<br>
+
+કરડો:
+${esc(x.kardo_kg||0)} KG<br>
+
+<b>Final વજન:
+${esc(x.weight_kg||0)} KG</b><br>
+
+RST:
+${esc(w?.rst_no||"-")}<br>
+
+${x.chiththi_photo_url
+?`<a href="${esc(x.chiththi_photo_url)}"
+target="_blank">📷 ચિઠ્ઠી જુઓ</a><br>`
+:""}
+
+${w?.slip_url
+?`<a href="${esc(w.slip_url)}"
+target="_blank">📷 Waybridge Slip જુઓ</a><br>`
+:""}
+
+<br>
+
+<button onclick="editChiththi('${x.id}')">
+✏️ Edit
+</button>
+
+</div>
+`;
+
+}).join("");
+}
+
+
+async function adminVehicleMatch(){
+
+const box=$("admin_match_results");
+
+box.innerHTML=
+'<p class="muted">ગાડીઓ Check થઈ રહી છે...</p>';
+
+const ch=await db.from("chiththis")
+.select("vehicle_number,gross_weight_kg");
+
+if(ch.error){
+box.innerHTML=
+'<p class="danger">'+esc(ch.error.message)+'</p>';
+return;
+}
+
+const wb=await db.from("waybridge_entries")
+.select("vehicle_number,net_weight_kg,rst_no,slip_url,created_at")
+.order("created_at",{ascending:false});
+
+if(wb.error){
+box.innerHTML=
+'<p class="danger">'+esc(wb.error.message)+'</p>';
+return;
+}
+
+const totals={};
+const counts={};
+
+(ch.data||[]).forEach(x=>{
+
+const v=(x.vehicle_number||"")
+.trim()
+.toUpperCase();
+
+if(!v)return;
+
+totals[v]=(totals[v]||0)+
+(Number(x.gross_weight_kg)||0);
+
+counts[v]=(counts[v]||0)+1;
+
+});
+
+const latest={};
+
+(wb.data||[]).forEach(x=>{
+
+const v=(x.vehicle_number||"")
+.trim()
+.toUpperCase();
+
+if(v && !latest[v])
+latest[v]=x;
+
+});
+
+const vehicles=
+Object.keys(latest);
+
+if(!vehicles.length){
+box.innerHTML=
+'<p class="muted">Waybridge data નથી.</p>';
+return;
+}
+
+box.innerHTML=vehicles.map(v=>{
+
+const w=latest[v];
+
+const chTotal=totals[v]||0;
+
+const wayWeight=
+Number(w.net_weight_kg)||0;
+
+const diff=
+wayWeight-chTotal;
+
+const match=
+Math.abs(diff)<0.01;
+
+return `
+<div class="card"
+style="box-shadow:none;border:1px solid #ddd">
+
+<h3>
+${match?"✅ MATCH":"❌ MISMATCH"}
+</h3>
+
+<b>${esc(v)}</b><br>
+
+RST:
+${esc(w.rst_no||"-")}<br>
+
+ચિઠ્ઠીઓ:
+${counts[v]||0}<br>
+
+ચિઠ્ઠી કુલ:
+${chTotal.toFixed(2)} KG<br>
+
+Waybridge:
+${wayWeight.toFixed(2)} KG<br>
+
+<b>
+Difference:
+${Math.abs(diff).toFixed(2)} KG
+</b>
+
+${w.slip_url
+?`<br><a href="${esc(w.slip_url)}"
+target="_blank">📷 Slip જુઓ</a>`
+:""}
+
+</div>
+`;
+
+}).join("");
+}
+
+
+async function editChiththi(id){
+
+const r=await db.from("chiththis")
+.select("*")
+.eq("id",id)
+.single();
+
+if(r.error){
+alert("Load Error: "+r.error.message);
+return;
+}
+
+const x=r.data;
+
+const chiththi=
+prompt(
+"ચિઠ્ઠી નંબર:",
+x.chiththi_number||""
+);
+
+if(chiththi===null)return;
+
+const village=
+prompt(
+"ગામ:",
+x.village_name||""
+);
+
+if(village===null)return;
+
+const vehicle=
+prompt(
+"ગાડી નંબર:",
+x.vehicle_number||""
+);
+
+if(vehicle===null)return;
+
+const farmer=
+prompt(
+"ખેડૂતનું નામ:",
+x.farmer_name||""
+);
+
+if(farmer===null)return;
+
+const mobile=
+prompt(
+"મોબાઇલ નંબર:",
+x.farmer_mobile||""
+);
+
+if(mobile===null)return;
+
+const grossInput=
+prompt(
+"ખેડૂત વજન KG:",
+x.gross_weight_kg||0
+);
+
+if(grossInput===null)return;
+
+const bardanInput=
+prompt(
+"બારદાન બાદ KG:",
+x.bardan_kg||0
+);
+
+if(bardanInput===null)return;
+
+const kardoInput=
+prompt(
+"કરડો બાદ KG:",
+x.kardo_kg||0
+);
+
+if(kardoInput===null)return;
+
+const gross=parseFloat(grossInput)||0;
+const bardan=parseFloat(bardanInput)||0;
+const kardo=parseFloat(kardoInput)||0;
+
+const net=
+gross-bardan-kardo;
+
+if(net<=0){
+alert("Final વજન 0 કરતાં વધારે હોવું જોઈએ.");
+return;
+}
+
+const up=await db.from("chiththis")
+.update({
+chiththi_number:chiththi.trim(),
+village_name:village.trim(),
+vehicle_number:vehicle.trim().toUpperCase(),
+farmer_name:farmer.trim(),
+farmer_mobile:cleanMobile(mobile),
+gross_weight_kg:gross,
+bardan_kg:bardan,
+kardo_kg:kardo,
+weight_kg:net
+})
+.eq("id",id);
+
+if(up.error){
+alert("Update Error: "+up.error.message);
+return;
+}
+
+alert("ચિઠ્ઠી સફળતાપૂર્વક Update થઈ ગઈ.");
+
+await adminSearch();
+}
+
+
+async function adminLoadMaalEntries(){
+
+const box=$("admin_maal_results");
+
+box.innerHTML=
+'<p class="muted">Maal Entries લોડ થઈ રહી છે...</p>';
+
+const r=await db.from("maal_entries")
+.select("*")
+.order("created_at",{ascending:false})
+.limit(200);
+
+if(r.error){
+box.innerHTML=
+'<p class="danger">Load Error: '+
+esc(r.error.message)+
+'</p>';
+return;
+}
+
+if(!r.data || !r.data.length){
+box.innerHTML=
+'<p class="muted">હજુ કોઈ Maal Entry નથી.</p>';
+return;
+}
+
+box.innerHTML=r.data.map(x=>`
+
+<div class="card"
+style="box-shadow:none;border:1px solid #ddd">
+
+<b>${esc(x.vehicle_number||"-")}</b><br>
+
+Material:
+${esc(x.material_type||"-")}<br>
+
+Bags:
+${esc(x.bags||0)}<br>
+
+Date:
+${esc(x.entry_date||"-")}<br>
+
+Owner / Supplier:
+${esc(x.owner_name||"-")}
+
+${x.slip_url
+?`<br><a href="${esc(x.slip_url)}"
+target="_blank">📷 View Slip</a>`
+:""}
+
+</div>
+
+`).join("");
+}
+
+
+function downloadApp(){
+window.location.href=
+"https://balajiindustries654-lang.github.io/Balaji-industries/";
+}
+
+
+db.auth.onAuthStateChange(
+(event,session)=>{
+if(session?.user)boot();
+}
+);
+
+boot();
+
+</script>
+</main>
+</body>
+</html>
