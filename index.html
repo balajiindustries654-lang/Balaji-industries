@@ -679,6 +679,9 @@ async function adminSearch(mode=""){
     </div>
   `).join("");
 }
+  function downloadApp(){
+  window.location.href = "https://balajiindustries654-lang.github.io/Balaji-industries/";
+  }
 async function loadPending(){
  const r=await db.from("user_profiles").select("id,full_name,mobile,role,approved").eq("approved",false);
  if(r.error) return $("plist").innerText=r.error.message;
