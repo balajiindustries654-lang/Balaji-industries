@@ -851,6 +851,15 @@ const pub=db.storage
 });
 
 
+  await sendToGoogleSheet({
+  type: "Maal Entry",
+  date: entryDate,
+  vehicle_number: vehicle,
+  owner_name: owner || "",
+  material: material,
+  bags: bags,
+  slip_url: pub.data.publicUrl
+});
 if(r.error){
 msg.innerText="Save Error: "+r.error.message;
 return;
