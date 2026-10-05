@@ -1299,6 +1299,13 @@ $("wb_msg").innerText=
 return;
 }
 
+    await sendToGoogleSheet({
+  type: "Waybridge",
+  rst_no: rst,
+  vehicle_number: vehicle,
+  net_weight: weight,
+  slip_url: slipUrl
+});
 $("wb_msg").innerText=
 "Waybridge Weight સફળતાપૂર્વક Save થયું.";
 
