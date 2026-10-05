@@ -405,6 +405,47 @@ textarea{
   </div>
 
 </div>
+  /* ===== TODAY STATS CARDS ===== */
+.stats-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:12px;
+  margin:16px 0;
+}
+
+.stat-glass{
+  background:rgba(255,255,255,.18) !important;
+  border:1px solid rgba(255,255,255,.30);
+  border-radius:18px;
+  padding:15px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  box-shadow:0 6px 18px rgba(0,0,0,.12);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+}
+
+.stat-icon{
+  font-size:28px;
+}
+
+.stat-label{
+  font-size:14px;
+  color:#fff;
+}
+
+.stat-value{
+  font-size:22px;
+  font-weight:800;
+  color:#fff;
+}
+
+@media(max-width:600px){
+  .stats-grid{
+    grid-template-columns:repeat(2,1fr);
+  }
+}
 </style></head><body><main>
   <!-- ===== Balaji Splash Screen ===== -->
 <div id="splashScreen">
