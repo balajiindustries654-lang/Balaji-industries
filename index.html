@@ -2927,6 +2927,43 @@ setTimeout(() => {
     status.innerText = "Live Data Error: " + err.message;
   }
 }
+  function updateDashboardStats(chiththis, waybridge, maalEntries) {
+  const today = new Date().toDateString();
+
+  const todayChiththis = (chiththis || []).filter(x =>
+    x.created_at && new Date(x.created_at).toDateString() === today
+  );
+
+  const todayWaybridge = (waybridge || []).filter(x =>
+    x.created_at && new Date(x.created_at).toDateString() === today
+  );
+
+  const vehicles = new Set(
+    todayWaybridge
+      .map(x => (x.vehicle_number || "").trim().toUpperCase())
+      .filter(Boolean)
+  );
+
+  const farmers = new Set(
+    todayChiththis
+      .map(x => (x.farmer_name || "").trim())
+      .filter(Boolean)
+  );
+
+  const totalWeight = todayWaybridge.reduce((sum, x) => {
+    return sum + (parseFloat(x.net_weight_kg || x.total_weight_kg) || 0);
+  }, 0);
+
+  const entryBox = document.getElementById("stat_entries");
+  const weightBox = document.getElementById("stat_weight");
+  const vehicleBox = document.getElementById("stat_vehicles");
+  const farmerBox = document.getElementById("stat_farmers");
+
+  if (entryBox) entryBox.innerText = todayChiththis.length;
+  if (weightBox) weightBox.innerText = totalWeight.toLocaleString() + " KG";
+  if (vehicleBox) vehicleBox.innerText = vehicles.size;
+  if (farmerBox) farmerBox.innerText = farmers.size;
+  }
 
 setInterval(() => {
   const adminBox = document.getElementById("admin");
