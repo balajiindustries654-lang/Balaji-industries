@@ -497,8 +497,9 @@ async function forgotPassword(){
       {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer " + session.access_token
+        "Content-Type": "application/json",
+"apikey": "sb_publishable_vFtxD2etw0CsoEPA2ouIFQ_PhO_s8qU",
+"Authorization": "Bearer " + session.access_token  
         },
         body: JSON.stringify({
           mobile: mobile,
