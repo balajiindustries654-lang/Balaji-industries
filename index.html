@@ -408,12 +408,29 @@ type="number"
 readonly
 placeholder="Automatic આવશે">
 
-<label><b>ખેડૂતની ચિઠ્ઠીનો ફોટો *</b></label>
+<label><b>ખેડૂતની ચિઠ્ઠીનો ફોટો</b></label>
+
+<button type="button"
+        onclick="document.getElementById('chiththi_camera').click()">
+  📷 Cameraથી ફોટો લો
+</button>
+
+<input id="chiththi_camera"
+       type="file"
+       accept="image/*"
+       capture="environment"
+       style="display:none"
+       onchange="copyChiththiPhoto(this)">
+
+<button type="button"
+        onclick="document.getElementById('chiththi_photo').click()">
+  🖼️ Galleryમાંથી ફોટો પસંદ કરો
+</button>
+
 <input id="chiththi_photo"
-  type="file"
-  accept="image/*"
-
-
+       type="file"
+       accept="image/*"
+       style="display:none">
 <button type="button" onclick="saveChiththi()">
 ચિઠ્ઠી Save કરો
 </button>
@@ -1039,6 +1056,15 @@ function majurVehicleChange(){
     input.value = select.value;
   }
 }
+  function copyChiththiPhoto(input){
+  const mainInput = document.getElementById("chiththi_photo");
+
+  if(input.files && input.files.length > 0){
+    const dt = new DataTransfer();
+    dt.items.add(input.files[0]);
+    mainInput.files = dt.files;
+  }
+  }
 async function saveChiththi(){
 
 const chiththiNumber=
