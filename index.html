@@ -53,6 +53,27 @@ table th {
     margin-top: 6px;
   }
 }
+  .dash-welcome{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:18px;
+  margin:12px 0 20px;
+  border-radius:16px;
+  background:rgba(255,255,255,.92);
+  box-shadow:0 4px 15px rgba(0,0,0,.10);
+}
+
+.dash-icon{
+  width:52px;
+  height:52px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:14px;
+  background:#e8f2ff;
+  font-size:28px;
+}
 </style></head><body><main>
 <div style="text-align:center;margin-bottom:15px;">
   <img src="balaji-logo.png"
@@ -92,6 +113,13 @@ table th {
 
 <div id="admin" class="card hide">
 <h2>Admin Dashboard</h2>
+  <div class="dash-welcome">
+  <div class="dash-icon">🏭</div>
+  <div>
+    <h2 style="margin:0;">Welcome, Admin</h2>
+    <div class="muted">Balaji Industries Management</div>
+  </div>
+  </div>
 
 <button onclick="loadPending()">👥 Pending Users</button>
 <div id="plist"></div>
