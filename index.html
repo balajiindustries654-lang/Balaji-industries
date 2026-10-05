@@ -103,6 +103,17 @@ Majur, Waybridge અને Maal Entry નો data Excel માટે જુઓ.
 <button type="button" onclick="exportAllDataToCSV()">
 📥 Excel File Download
 </button>
+  <hr>
+
+<h3>🔴 Live Data</h3>
+<p class="muted">Latest entries — Auto Refresh</p>
+
+<button type="button" onclick="loadLiveData()">
+  🔄 Refresh Live Data
+</button>
+
+<div id="live_data_status" class="muted"></div>
+<div id="live_data_results"></div>
 </div>
 
 <div id="worker" class="card hide">
@@ -2006,6 +2017,118 @@ setTimeout(() => {
     alert("Excel Export Error: " + err.message);
   }
         }
+  async function loadLiveData() {
+  const status = document.getElementById("live_data_status");
+  const box = document.getElementById("live_data_results");
+
+  if (!status || !box) return;
+
+  status.innerText = "Loading live data...";
+
+  try {
+    const [chRes, wbRes, maalRes] = await Promise.all([
+      db.from("chiththis")
+        .select("*")
+        .order("created_at", {ascending:false})
+        .limit(20),
+
+      db.from("waybridge_entries")
+        .select("*")
+        .order("created_at", {ascending:false})
+        .limit(20),
+
+      db.from("maal_entries")
+        .select("*")
+        .order("created_at", {ascending:false})
+        .limit(20)
+    ]);
+
+    if (chRes.error) throw chRes.error;
+    if (wbRes.error) throw wbRes.error;
+    if (maalRes.error) throw maalRes.error;
+
+    let all = [];
+
+    (chRes.data || []).forEach(x => {
+      all.push({
+        date: x.created_at,
+        type: "Majur",
+        number: x.chiththi_number || "",
+        vehicle: x.vehicle_number || "",
+        name: x.farmer_name || "",
+        weight: x.weight_kg || ""
+      });
+    });
+
+    (wbRes.data || []).forEach(x => {
+      all.push({
+        date: x.created_at,
+        type: "Waybridge",
+        number: x.rst_no || "",
+        vehicle: x.vehicle_number || "",
+        name: "",
+        weight: x.net_weight_kg || x.total_weight_kg || ""
+      });
+    });
+
+    (maalRes.data || []).forEach(x => {
+      all.push({
+        date: x.created_at || x.entry_date,
+        type: "Maal Entry",
+        number: "",
+        vehicle: x.vehicle_number || "",
+        name: x.owner_name || "",
+        weight: ""
+      });
+    });
+
+    all.sort((a,b) => new Date(b.date) - new Date(a.date));
+    all = all.slice(0,30);
+
+    let html = `
+      <div style="overflow-x:auto;">
+      <table style="width:100%; border-collapse:collapse;">
+        <tr>
+          <th>Type</th>
+          <th>Chiththi/RST</th>
+          <th>Vehicle</th>
+          <th>Farmer/Owner</th>
+          <th>Weight KG</th>
+          <th>Date</th>
+        </tr>
+    `;
+
+    all.forEach(x => {
+      html += `
+        <tr>
+          <td>${x.type}</td>
+          <td>${x.number}</td>
+          <td>${x.vehicle}</td>
+          <td>${x.name}</td>
+          <td>${x.weight}</td>
+          <td>${x.date ? new Date(x.date).toLocaleString() : ""}</td>
+        </tr>
+      `;
+    });
+
+    html += `</table></div>`;
+
+    box.innerHTML = html;
+    status.innerText =
+      "LIVE • Auto refresh every 10 seconds • " +
+      new Date().toLocaleTimeString();
+
+  } catch(err) {
+    status.innerText = "Live Data Error: " + err.message;
+  }
+}
+
+setInterval(() => {
+  const adminBox = document.getElementById("admin");
+  if (adminBox && !adminBox.classList.contains("hide")) {
+    loadLiveData();
+  }
+}, 10000);
 boot();
 
 </script>
