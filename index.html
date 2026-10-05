@@ -422,46 +422,82 @@ placeholder="Automatic આવશે">
 </div>
 
 <div id="waybridge" class="card hide">
-<h2>Waybridge Dashboard</h2>
+  <h2>Waybridge Dashboard</h2>
+  <h3>ગાડીનું વજન</h3>
 
-<h3>ગાડીનું વજન</h3>
+  <label for="wb_name"><b>Name</b></label>
+  <input id="wb_name"
+         placeholder="નામ લખો"
+         autocomplete="off">
 
-<label for="wb_rst"><b>RST નંબર</b></label>
-<input id="wb_rst"
-inputmode="numeric"
-placeholder="RST નંબર લખો">
+  <label for="wb_mobile"><b>Mobile Number</b></label>
+  <input id="wb_mobile"
+         type="tel"
+         inputmode="numeric"
+         maxlength="10"
+         placeholder="મોબાઇલ નંબર લખો">
 
-<label for="wb_vehicle"><b>ગાડી નંબર</b></label>
-<input id="wb_vehicle"
-placeholder="ઉદાહરણ: GJ12FD4989"
-autocomplete="off"
-style="text-transform:uppercase">
+  <label for="wb_rst"><b>RST નંબર</b></label>
+  <input id="wb_rst"
+         type="number"
+         inputmode="numeric"
+         min="1"
+         placeholder="RST નંબર">
 
-<label for="wb_weight"><b>NET Weight (KG)</b></label>
-<input id="wb_weight"
-type="number"
-inputmode="decimal"
-min="0"
-step="0.01"
-placeholder="કુલ વજન KG માં લખો">
+  <p class="muted">
+    છેલ્લે Save કરેલા RST પછીનો નંબર આપમેળે આવશે.
+    તમે RST જાતે બદલી પણ શકો છો.
+  </p>
 
-<label for="wb_slip"><b>કાંટાની પાવતી / Slip Photo</b></label>
-<p class="muted">Camera અથવા Galleryમાંથી કાંટાની પાવતી પસંદ કરો.</p>
+  <label for="wb_vehicle_select"><b>ગાડી નંબર</b></label>
 
-<button type="button" onclick="saveWaybridge()">
-Weight + Slip Save કરો
-</button>
+  <select id="wb_vehicle_select"
+          onchange="waybridgeVehicleChange()">
 
-<input id="wb_slip"
-type="file"
-accept="image/*"
-onchange="autoReadSlip()">
+    <option value="OTHER">OTHER</option>
+    <option value="GJ12CT5828">GJ12CT5828</option>
+    <option value="GJ12CT7996">GJ12CT7996</option>
+    <option value="GJ12CV6533">GJ12CV6533</option>
+    <option value="GJ12CT6533">GJ12CT6533</option>
+    <option value="GJ03W8824">GJ03W8824</option>
+    <option value="GJ13V6515">GJ13V6515</option>
+    <option value="GJ08AU0854">GJ08AU0854</option>
+    <option value="GJ12AT6598">GJ12AT6598</option>
+    <option value="GJ12BX4089">GJ12BX4089</option>
+    <option value="GJ09AV6063">GJ09AV6063</option>
+  </select>
 
-<p id="ocr_msg" class="muted"></p>
-<p id="wb_msg" class="muted"></p>
-<div id="wb_compare"></div>
+  <input id="wb_vehicle"
+         placeholder="OTHER ગાડી નંબર લખો"
+         autocomplete="off"
+         style="text-transform:uppercase">
+
+  <label for="wb_weight"><b>NET Weight (KG)</b></label>
+  <input id="wb_weight"
+         type="number"
+         inputmode="decimal"
+         min="0"
+         step="0.01"
+         placeholder="NET Weight KG માં લખો">
+
+  <label for="wb_slip"><b>કાંટાની પાવતી / Slip Photo</b></label>
+
+  <input id="wb_slip"
+         type="file"
+         accept="image/*">
+
+  <p class="muted">
+    Camera અથવા Galleryમાંથી ફોટો પસંદ કરી શકો છો.
+    Photo ફરજિયાત નથી.
+  </p>
+
+  <button type="button" onclick="saveWaybridge()">
+    Waybridge Entry Save કરો
+  </button>
+
+  <p id="wb_msg" class="muted"></p>
+  <div id="wb_compare"></div>
 </div>
-
 <!-- NEW MAAL ENTRY DASHBOARD -->
 <div id="maal_entry" class="card hide">
 
@@ -1238,87 +1274,358 @@ ${esc(x.weight_kg)} KG
 </div>
 `).join("");
 }
-  async function saveWaybridge(){
+  function waybridgeVehicleChange(){
 
-const rst=$("wb_rst").value.trim();
-const vehicle=$("wb_vehicle").value.trim().toUpperCase();
-const weight=parseFloat($("wb_weight").value);
-const slip=$("wb_slip").files[0];
+  const select = $("wb_vehicle_select");
+  const input = $("wb_vehicle");
 
-if(!vehicle || !Number.isFinite(weight) || weight<=0){
-$("wb_msg").innerText="ગાડી નંબર અને સાચું NET Weight લખો.";
-return;
+  if(!select || !input) return;
+
+  if(select.value === "OTHER"){
+    input.style.display = "block";
+    input.value = "";
+  }else{
+    input.style.display = "none";
+    input.value = select.value;
+  }
 }
 
-if(!slip){
-$("wb_msg").innerText="કાંટાની પાવતી / Slip Photo પસંદ કરો.";
-return;
+
+async function setNextRST(){
+
+  const rstInput = $("wb_rst");
+  if(!rstInput) return;
+
+  try{
+
+    const r = await db
+      .from("waybridge_entries")
+      .select("rst_no")
+      .not("rst_no","is",null)
+      .order("created_at",{ascending:false})
+      .limit(100);
+
+    if(r.error){
+      console.error("RST Load Error:",r.error);
+      if(!rstInput.value) rstInput.value = "1";
+      return;
+    }
+
+    let lastRST = 0;
+
+    for(const row of (r.data || [])){
+      const n = parseInt(row.rst_no,10);
+
+      if(Number.isFinite(n)){
+        lastRST = n;
+        break;
+      }
+    }
+
+    rstInput.value = String(lastRST + 1);
+
+  }catch(err){
+    console.error("RST Error:",err);
+    if(!rstInput.value) rstInput.value = "1";
+  }
 }
 
-$("wb_msg").innerText="Save થઈ રહ્યું છે...";
 
-const user=(await db.auth.getUser()).data.user;
+async function saveWaybridge(){
 
-if(!user){
-$("wb_msg").innerText="Login ફરી કરો.";
-return;
-}
+  const name = $("wb_name")?.value.trim() || "";
+  const mobile = $("wb_mobile")?.value.trim() || "";
+  const rst = $("wb_rst")?.value.trim() || "";
 
-const safeName=(slip.name||"slip.jpg")
-.replace(/[^a-zA-Z0-9._-]/g,"_");
+  const vehicleSelect =
+    $("wb_vehicle_select")?.value || "OTHER";
 
-const path=
-user.id+
-"/waybridge/"+
-Date.now()+
-"_"+
-safeName;
+  let vehicle = "";
 
-const upload=await db.storage
-.from("Way bridge slips")
-.upload(path,slip,{
-cacheControl:"3600",
-upsert:false
-});
+  if(vehicleSelect === "OTHER"){
+    vehicle =
+      $("wb_vehicle")?.value.trim().toUpperCase() || "";
+  }else{
+    vehicle = vehicleSelect;
+  }
 
-if(upload.error){
-$("wb_msg").innerText=
-"Photo Upload Error: "+upload.error.message;
-return;
-}
+  const weightText =
+    $("wb_weight")?.value.trim() || "";
 
-const publicData=db.storage
-.from("Way bridge slips")
-.getPublicUrl(path);
+  const weight =
+    weightText === "" ? null : parseFloat(weightText);
 
-const slipUrl=publicData.data.publicUrl;
+  const slip =
+    $("wb_slip")?.files?.[0] || null;
 
-const r=await db.from("waybridge_entries").insert({
-rst_no:rst||null,
-vehicle_number:vehicle,
-total_weight_kg:weight,
-net_weight_kg:weight,
-slip_url:slipUrl,
-created_by:user.id
-});
+  const msg = $("wb_msg");
 
-if(r.error){
-$("wb_msg").innerText=
-"Save Error: "+r.error.message;
-return;
-}
+  if(msg){
+    msg.innerText = "Save થઈ રહ્યું છે...";
+  }
 
-    await sendToGoogleSheet({
-  type: "Waybridge",
-  rst_no: rst,
-  vehicle_number: vehicle,
-  net_weight: weight,
-  slip_url: slipUrl
-});
-$("wb_msg").innerText=
-"Waybridge Weight સફળતાપૂર્વક Save થયું.";
 
-await compareVehicleWeight(vehicle,weight);
+  // Mobile આપ્યો હોય તો 10 digit હોવો જોઈએ.
+  // Mobile ખાલી રાખી શકાય છે.
+  if(mobile && !/^[0-9]{10}$/.test(mobile)){
+    if(msg){
+      msg.innerText =
+        "Mobile Number આપો તો 10 digitનો લખો.";
+    }
+    return;
+  }
+
+
+  // Weight આપ્યું હોય તો valid હોવું જોઈએ.
+  // Weight ખાલી રાખી શકાય છે.
+  if(weightText !== "" &&
+     (!Number.isFinite(weight) || weight < 0)){
+
+    if(msg){
+      msg.innerText =
+        "NET Weight સાચું લખો.";
+    }
+    return;
+  }
+
+
+  const user =
+    (await db.auth.getUser()).data.user;
+
+  if(!user){
+    if(msg){
+      msg.innerText = "Login ફરી કરો.";
+    }
+    return;
+  }
+
+
+  // ---------------------------------
+  // DUPLICATE RST CHECK
+  // Vehicle duplicate allowed છે.
+  // ---------------------------------
+
+  if(rst){
+
+    const duplicate = await db
+      .from("waybridge_entries")
+      .select("id,rst_no")
+      .eq("rst_no",rst)
+      .limit(1);
+
+    if(duplicate.error){
+
+      console.error(
+        "Duplicate Check Error:",
+        duplicate.error
+      );
+
+    }else if(
+      duplicate.data &&
+      duplicate.data.length > 0
+    ){
+
+      if(msg){
+        msg.innerText =
+          "આ RST નંબરની Entry પહેલેથી Save થયેલી છે.";
+      }
+
+      return;
+    }
+  }
+
+
+  // ---------------------------------
+  // OPTIONAL SLIP UPLOAD
+  // ---------------------------------
+
+  let slipUrl = null;
+
+  if(slip){
+
+    const safeName =
+      (slip.name || "slip.jpg")
+      .replace(/[^a-zA-Z0-9._-]/g,"_");
+
+    const path =
+      user.id +
+      "/waybridge/" +
+      Date.now() +
+      "_" +
+      safeName;
+
+    const upload =
+      await db.storage
+      .from("Way bridge slips")
+      .upload(path,slip,{
+        cacheControl:"3600",
+        upsert:false
+      });
+
+    if(upload.error){
+
+      if(msg){
+        msg.innerText =
+          "Photo Upload Error: " +
+          upload.error.message;
+      }
+
+      return;
+    }
+
+    const publicData =
+      db.storage
+      .from("Way bridge slips")
+      .getPublicUrl(path);
+
+    slipUrl =
+      publicData.data.publicUrl;
+  }
+
+
+  // ---------------------------------
+  // SAVE TO SUPABASE
+  // ---------------------------------
+
+  const insertData = {
+    rst_no: rst || null,
+    vehicle_number: vehicle || null,
+    total_weight_kg:
+      Number.isFinite(weight) ? weight : null,
+    net_weight_kg:
+      Number.isFinite(weight) ? weight : null,
+    slip_url: slipUrl,
+    created_by: user.id
+  };
+
+
+  const r =
+    await db
+    .from("waybridge_entries")
+    .insert(insertData);
+
+
+  if(r.error){
+
+    if(msg){
+      msg.innerText =
+        "Save Error: " +
+        r.error.message;
+    }
+
+    return;
+  }
+
+
+  // ---------------------------------
+  // GOOGLE SHEET
+  // ---------------------------------
+
+  await sendToGoogleSheet({
+
+    type: "Waybridge",
+
+    name: name,
+    mobile: mobile,
+
+    rst_no: rst,
+
+    vehicle_number: vehicle,
+
+    net_weight:
+      Number.isFinite(weight)
+        ? weight
+        : "",
+
+    slip_url:
+      slipUrl || ""
+  });
+
+
+  // ---------------------------------
+  // MATCH / MISMATCH
+  // Vehicle + Weight હોય ત્યારે જ
+  // ---------------------------------
+
+  if(
+    vehicle &&
+    Number.isFinite(weight)
+  ){
+
+    await compareVehicleWeight(
+      vehicle,
+      weight
+    );
+  }else{
+
+    const compareBox =
+      $("wb_compare");
+
+    if(compareBox){
+      compareBox.innerHTML = "";
+    }
+  }
+
+
+  if(msg){
+    msg.innerText =
+      "Waybridge Entry સફળતાપૂર્વક Save થઈ.";
+  }
+
+
+  // ---------------------------------
+  // AUTO NEXT RST
+  // User જે RST Save કરે તેના પછીનું
+  // ---------------------------------
+
+  if(rst){
+
+    const currentRST =
+      parseInt(rst,10);
+
+    if(Number.isFinite(currentRST)){
+      $("wb_rst").value =
+        String(currentRST + 1);
+    }else{
+      await setNextRST();
+    }
+
+  }else{
+
+    await setNextRST();
+  }
+
+
+  // ---------------------------------
+  // CLEAR OTHER FIELDS
+  // ---------------------------------
+
+  if($("wb_name")){
+    $("wb_name").value = "";
+  }
+
+  if($("wb_mobile")){
+    $("wb_mobile").value = "";
+  }
+
+  if($("wb_weight")){
+    $("wb_weight").value = "";
+  }
+
+  if($("wb_slip")){
+    $("wb_slip").value = "";
+  }
+
+  if($("wb_vehicle_select")){
+    $("wb_vehicle_select").value =
+      "OTHER";
+  }
+
+  if($("wb_vehicle")){
+    $("wb_vehicle").value = "";
+    $("wb_vehicle").style.display =
+      "block";
+  }
 }
 
 
