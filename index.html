@@ -2048,6 +2048,16 @@ setTimeout(() => {
     if (maalRes.error) throw maalRes.error;
 
     let all = [];
+    const majurTotals = {};
+
+(chRes.data || []).forEach(x => {
+  const vehicle = (x.vehicle_number || "").replace(/\s+/g,"").toUpperCase();
+  if (!vehicle) return;
+
+  majurTotals[vehicle] =
+    (majurTotals[vehicle] || 0) +
+    (parseFloat(x.weight_kg) || 0);
+});
 
     (chRes.data || []).forEach(x => {
       all.push({
@@ -2061,15 +2071,35 @@ setTimeout(() => {
     });
 
     (wbRes.data || []).forEach(x => {
-      all.push({
-        date: x.created_at,
-        type: "Waybridge",
-        number: x.rst_no || "",
-        vehicle: x.vehicle_number || "",
-        name: "",
-        weight: x.net_weight_kg || x.total_weight_kg || ""
-      });
-    });
+  const vehicleKey = (x.vehicle_number || "")
+    .replace(/\s+/g,"")
+    .toUpperCase();
+
+  const majurWeight = majurTotals[vehicleKey] || 0;
+  const wayWeight = parseFloat(
+    x.net_weight_kg || x.total_weight_kg
+  ) || 0;
+
+  const difference = Math.abs(wayWeight - majurWeight);
+
+  let matchStatus = "-";
+
+  if (majurWeight > 0) {
+    matchStatus = difference === 0
+      ? "MATCH"
+      : "MISMATCH " + difference + " KG";
+  }
+
+  all.push({
+    date: x.created_at,
+    type: "Waybridge",
+    number: x.rst_no || "",
+    vehicle: x.vehicle_number || "",
+    name: "",
+    weight: wayWeight,
+    status: matchStatus
+  });
+});
 
     (maalRes.data || []).forEach(x => {
       all.push({
@@ -2094,6 +2124,7 @@ setTimeout(() => {
           <th>Vehicle</th>
           <th>Farmer/Owner</th>
           <th>Weight KG</th>
+          <th>Status</th>
           <th>Date</th>
         </tr>
     `;
@@ -2106,6 +2137,7 @@ setTimeout(() => {
           <td>${x.vehicle}</td>
           <td>${x.name}</td>
           <td>${x.weight}</td>
+          <td>${x.status || "-"}</td>
           <td>${x.date ? new Date(x.date).toLocaleString() : ""}</td>
         </tr>
       `;
