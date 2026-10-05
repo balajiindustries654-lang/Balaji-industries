@@ -92,6 +92,17 @@ placeholder="ગાડી નંબર / ખેડૂત / મોબાઇલ / 
 <h3>📦 Maal Entry Records</h3>
 <button type="button" onclick="adminLoadMaalEntries()">Maal Entries જુઓ</button>
 <div id="admin_maal_results"></div>
+  <hr>
+
+<h3>📊 Excel / Live Data</h3>
+
+<p class="muted">
+Majur, Waybridge અને Maal Entry નો data Excel માટે જુઓ.
+</p>
+
+<button type="button" onclick="exportAllDataToCSV()">
+📥 Excel File Download
+</button>
 </div>
 
 <div id="worker" class="card hide">
@@ -1886,6 +1897,110 @@ if(session?.user)boot();
 }
 );
 
+  async function exportAllDataToCSV(){
+
+  try {
+
+    const [chRes, wbRes, maalRes] = await Promise.all([
+      db.from("chiththis").select("*").order("created_at",{ascending:false}),
+      db.from("waybridge_entries").select("*").order("created_at",{ascending:false}),
+      db.from("maal_entries").select("*").order("created_at",{ascending:false})
+    ]);
+
+    if(chRes.error) throw chRes.error;
+    if(wbRes.error) throw wbRes.error;
+    if(maalRes.error) throw maalRes.error;
+
+    const rows = [];
+
+    rows.push([
+      "Entry Type",
+      "Date",
+      "Chiththi / RST",
+      "Vehicle Number",
+      "Farmer / Owner",
+      "Mobile",
+      "Village",
+      "Material",
+      "Weight KG",
+      "Bags"
+    ]);
+
+    (chRes.data || []).forEach(x => {
+      rows.push([
+        "Majur Chiththi",
+        x.created_at || "",
+        x.chiththi_number || "",
+        x.vehicle_number || "",
+        x.farmer_name || "",
+        x.farmer_mobile || "",
+        x.village_name || "",
+        x.commodity_type || "",
+        x.weight_kg || "",
+        ""
+      ]);
+    });
+
+    (wbRes.data || []).forEach(x => {
+      rows.push([
+        "Waybridge",
+        x.created_at || "",
+        x.rst_no || "",
+        x.vehicle_number || "",
+        "",
+        "",
+        "",
+        "",
+        x.net_weight_kg || x.total_weight_kg || "",
+        ""
+      ]);
+    });
+
+    (maalRes.data || []).forEach(x => {
+      rows.push([
+        "Maal Entry",
+        x.entry_date || x.created_at || "",
+        "",
+        x.vehicle_number || "",
+        x.owner_name || "",
+        "",
+        "",
+        x.material || "",
+        "",
+        x.bags || ""
+      ]);
+    });
+
+    const csv = rows.map(row =>
+      row.map(value =>
+        '"' + String(value ?? "").replace(/"/g,'""') + '"'
+      ).join(",")
+    ).join("\n");
+
+    const blob = new Blob(
+      ["\uFEFF" + csv],
+      {type:"text/csv;charset=utf-8;"}
+    );
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+
+    a.href = url;
+    a.download =
+      "Balaji_Industries_" +
+      new Date().toISOString().slice(0,10) +
+      ".csv";
+
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    URL.revokeObjectURL(url);
+
+  } catch(err) {
+    alert("Excel Export Error: " + err.message);
+  }
+        }
 boot();
 
 </script>
