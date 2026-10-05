@@ -1987,18 +1987,21 @@ if(session?.user)boot();
   new Date().toISOString().slice(0,10) +
   ".csv";
 
-const csvData = "\uFEFF" + csv;
-const dataUrl =
-  "data:text/csv;charset=utf-8," +
-  encodeURIComponent(csvData);
+const file = new File(
+  ["\uFEFF" + csv],
+  fileName,
+  { type: "text/csv;charset=utf-8" }
+);
 
-const a = document.createElement("a");
-a.href = dataUrl;
-a.download = fileName;
-a.target = "_blank";
-document.body.appendChild(a);
-a.click();
-a.remove();
+if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+  await navigator.share({
+    files: [file],
+    title: "Balaji Industries Excel Data"
+  });
+} else {
+  const url = URL.createObjectURL(file);
+  window.open(url, "_blank");
+}
 
   } catch(err) {
     alert("Excel Export Error: " + err.message);
