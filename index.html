@@ -345,9 +345,25 @@ autocomplete="off">
 </datalist>
 
 <label><b>ગાડી નંબર</b></label>
+
+<select id="vehicle_number_select" onchange="majurVehicleChange()">
+  <option value="OTHER">OTHER</option>
+  <option value="GJ12CT5828">GJ12CT5828</option>
+  <option value="GJ12CT7996">GJ12CT7996</option>
+  <option value="GJ12CV6533">GJ12CV6533</option>
+  <option value="GJ12CT6533">GJ12CT6533</option>
+  <option value="GJ03W8824">GJ03W8824</option>
+  <option value="GJ13V6515">GJ13V6515</option>
+  <option value="GJ08AU0854">GJ08AU0854</option>
+  <option value="GJ12AT6598">GJ12AT6598</option>
+  <option value="GJ12BX4089">GJ12BX4089</option>
+  <option value="GJ09AV6063">GJ09AV6063</option>
+</select>
+
 <input id="vehicle_number"
-placeholder="ઉદાહરણ: GJ12FD4989"
-autocomplete="off">
+       placeholder="OTHER ગાડી નંબર લખો"
+       autocomplete="off"
+       style="text-transform:uppercase">
 
 <label><b>ખેડૂતનું નામ</b></label>
 <input id="farmer_name"
@@ -1009,7 +1025,20 @@ $("broker_name").value=selected;
 
 }
 }
+function majurVehicleChange(){
+  const select = $("vehicle_number_select");
+  const input = $("vehicle_number");
 
+  if(!select || !input) return;
+
+  if(select.value === "OTHER"){
+    input.style.display = "block";
+    input.value = "";
+  } else {
+    input.style.display = "none";
+    input.value = select.value;
+  }
+}
 async function saveChiththi(){
 
 const chiththiNumber=
