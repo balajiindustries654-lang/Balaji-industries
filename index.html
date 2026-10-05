@@ -1106,6 +1106,21 @@ r.error.message;
 return;
 }
 
+  await sendToGoogleSheet({
+  type: "Majur Chiththi",
+  chiththi_number: chiththiNumber,
+  vehicle_number: vehicle,
+  farmer_name: farmer,
+  mobile: mobile,
+  village: village,
+  material: commodity,
+  gross_weight: weight,
+  bardan_kg: bardan,
+  kardo_kg: kardo,
+  net_weight: netWeight,
+  broker_name: broker || "",
+  photo_url: photoUrl
+});
 $("chiththi_msg").innerText=
 "ચિઠ્ઠી Save થઈ ગઈ. Final વજન: "+
 netWeight.toFixed(2)+
@@ -2292,6 +2307,23 @@ setInterval(() => {
     loadLiveData();
   }
 }, 10000);
+  const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycby6i7QPgsQojqB7qJr5kZe8KQB0yHkqh69aldpHEKGzS-gAerQZqceqdLV26jevpbJNvA/exec";
+async function sendToGoogleSheet(data) {
+  try {
+    await fetch(GOOGLE_SHEET_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: {
+        "Content-Type": "text/plain;charset=utf-8"
+      },
+      body: JSON.stringify(data)
+    });
+
+    console.log("Google Sheet entry sent");
+  } catch (err) {
+    console.error("Google Sheet Error:", err);
+  }
+}
 boot();
 
 </script>
