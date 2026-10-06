@@ -3235,6 +3235,11 @@ const messaging = getMessaging(firebaseApp);
 
 window.enablePhoneNotifications = async function () {
   try {
+
+    if (!("Notification" in window)) {
+  alert("આ browser માં Web Notification support નથી. Chrome માં app ખોલો.");
+  return;
+    }
     const permission = await Notification.requestPermission();
 
     if (permission !== "granted") {
