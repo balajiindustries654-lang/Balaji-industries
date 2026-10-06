@@ -3150,12 +3150,10 @@ todayMaalEntries.forEach(x => {
   const entryType = (x.entry_type || x.type || "").toLowerCase();
 
   if(entryType.includes("unloading")) {
-    unloadingBags += bags;
-  }
-
-  if(entryType.includes("loading")) {
-    loadingBags += bags;
-  }
+  unloadingBags += bags;
+} else if(entryType.includes("loading")) {
+  loadingBags += bags;
+}
 });
 
   const totalWeight = todayWaybridge.reduce((sum, x) => {
