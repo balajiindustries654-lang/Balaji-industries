@@ -1637,6 +1637,24 @@ $("chiththi_msg").innerText=
 r.error.message;
 return;
 }
+  try {
+  const { error: notifyError } = await db.functions.invoke(
+    "send-push-notification",
+    {
+      body: {
+        type: "majur",
+        title: "નવી Majur Chiththi",
+        body: `${farmer} | ${vehicle} | ${netWeight.toFixed(2)} KG | Chiththi ${chiththiNumber}`
+      }
+    }
+  );
+
+  if (notifyError) {
+    console.error("Push Notification Error:", notifyError);
+  }
+} catch (notifyErr) {
+  console.error("Push Notification Error:", notifyErr);
+  }
 
   await sendToGoogleSheet({
   type: "Majur Chiththi",
