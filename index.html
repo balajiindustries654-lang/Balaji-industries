@@ -3215,6 +3215,56 @@ setTimeout(() => {
 
 </script>
 </main>
-  
+  <script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-messaging.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDZ34yiGLkH-Oi_5mLhFChoAz2depMlWIs",
+  authDomain: "balaji-industries-67fdb.firebaseapp.com",
+  projectId: "balaji-industries-67fdb",
+  storageBucket: "balaji-industries-67fdb.firebasestorage.app",
+  messagingSenderId: "728052088135",
+  appId: "1:728052088135:web:807259d88cd980b7da2062",
+  measurementId: "G-3PEFHY4XXE"
+};
+
+const firebaseApp = initializeApp(firebaseConfig);
+const messaging = getMessaging(firebaseApp);
+
+window.enablePhoneNotifications = async function () {
+  try {
+    const permission = await Notification.requestPermission();
+
+    if (permission !== "granted") {
+      alert("Notification permission મળ્યું નથી.");
+      return;
+    }
+
+    const registration = await navigator.serviceWorker.register(
+      "./firebase-messaging-sw.js"
+    );
+
+    const token = await getToken(messaging, {
+      vapidKey: "BHwATVSWk_ovsjM2HEuVUciLuutBSnKD44PriBqSzIBTz-IvymkBkyCVkBqVtxJ8TbGlGA5dZ6dDzDzrTVKf1Yo",
+      serviceWorkerRegistration: registration
+    });
+
+    if (token) {
+      console.log("FCM Token:", token);
+      alert("Phone Notification ચાલુ થઈ ગઈ ✅");
+    } else {
+      alert("Notification token મળ્યો નથી.");
+    }
+  } catch (error) {
+    console.error("Notification Error:", error);
+    alert("Notification Error: " + error.message);
+  }
+};
+
+onMessage(messaging, (payload) => {
+  console.log("Notification received:", payload);
+});
+  </script>
 </body>
 </html>
