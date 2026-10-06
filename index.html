@@ -1347,6 +1347,7 @@ const pub=db.storage
 
   await sendToGoogleSheet({
   type: "Maal Entry",
+    entry_type: entryType,
   date: entryDate,
   vehicle_number: vehicle,
   owner_name: owner || "",
