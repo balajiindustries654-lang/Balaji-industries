@@ -1290,12 +1290,12 @@ if(
 !Number.isInteger(bags) ||
 bags<=0 ||
 !material ||
-!entryDate ||
-!file
+!entryDate
+
 ){
 msg.innerText=maalLang==="hi"
-?"गाड़ी नंबर, बैग, माल, तारीख और पर्ची का फोटो जरूरी है।"
-:"Vehicle number, bags, material, date and slip photo are required.";
+?"गाड़ी नंबर, बैग, माल और तारीख जरूरी है।"
+:"Vehicle number, bags, material and date are required.";
 return;
 }
 
@@ -1310,28 +1310,33 @@ msg.innerText="Login again.";
 return;
 }
 
-const safe=(file.name||"slip.jpg")
-.replace(/[^a-zA-Z0-9._-]/g,"_");
+let slipUrl = null;
 
-const path=
-user.id+"/maal_entries/"+Date.now()+"_"+safe;
+if(file){
+  const safe=(file.name||"slip.jpg")
+    .replace(/[^a-zA-Z0-9._-]/g,"_");
 
-const up=await db.storage
-.from("Way bridge slips")
-.upload(path,file,{
-upsert:false,
-contentType:file.type||"image/jpeg"
-});
+  const path=
+    user.id+"/maal_entries/"+Date.now()+"_"+safe;
 
-if(up.error){
-msg.innerText="Photo Upload Error: "+up.error.message;
-return;
+  const up=await db.storage
+    .from("Way bridge slips")
+    .upload(path,file,{
+      upsert:false,
+      contentType:file.type||"image/jpeg"
+    });
+
+  if(up.error){
+    msg.innerText="Photo Upload Error: "+up.error.message;
+    return;
+  }
+
+  const pub=db.storage
+    .from("Way bridge slips")
+    .getPublicUrl(path);
+
+  slipUrl=pub.data.publicUrl;
 }
-
-const pub=db.storage
-.from("Way bridge slips")
-.getPublicUrl(path);
-
 
   const r=await db.from("maal_entries").insert({
   entry_type: entryType,
@@ -1340,7 +1345,7 @@ const pub=db.storage
   material_type:material,
   entry_date:entryDate,
   owner_name:owner||null,
-  slip_url:pub.data.publicUrl,
+  slip_url: slipUrl,
   created_by:user.id
 });
 
@@ -1353,7 +1358,7 @@ const pub=db.storage
   owner_name: owner || "",
   material: material,
   bags: bags,
-  slip_url: pub.data.publicUrl
+ slip_url: slipUrl
 });
 if(r.error){
 msg.innerText="Save Error: "+r.error.message;
