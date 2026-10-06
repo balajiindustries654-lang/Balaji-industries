@@ -3073,7 +3073,7 @@ setTimeout(() => {
   }
 }
   function updateDashboardStats(chiththis, waybridge, maalEntries) {
-  const today = new Date().toDateString();
+  const today = new Date().toLocaleDateString("en-CA");
 
   const todayChiththis = (chiththis || []).filter(x =>
     x.created_at && new Date(x.created_at).toDateString() === today
