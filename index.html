@@ -3257,9 +3257,34 @@ window.enablePhoneNotifications = async function () {
     });
 
     if (token) {
-      console.log("FCM Token:", token);
-      alert("Phone Notification ચાલુ થઈ ગઈ ✅");
-    } else {
+  console.log("FCM Token:", token);
+
+  const { data: { user } } = await db.auth.getUser();
+
+  if (!user) {
+    alert("Login user મળ્યો નથી.");
+    return;
+  }
+
+  const { error: tokenError } = await db
+    .from("push_tokens")
+    .upsert(
+      {
+        user_id: user.id,
+        token: token,
+        updated_at: new Date().toISOString()
+      },
+      { onConflict: "token" }
+    );
+
+  if (tokenError) {
+    console.error("Token Save Error:", tokenError);
+    alert("Notification Token Save Error: " + tokenError.message);
+    return;
+  }
+
+  alert("Phone Notification ચાલુ થઈ ગઈ ✅");
+} else {
       alert("Notification token મળ્યો નથી.");
     }
   } catch (error) {
