@@ -2964,6 +2964,8 @@ setTimeout(() => {
     if (chRes.error) throw chRes.error;
     if (wbRes.error) throw wbRes.error;
     if (maalRes.error) throw maalRes.error;
+    
+    updateDashboardStats(chRes.data || [], wbRes.data || [], maalRes.data || []);
 
     let all = [];
     const majurTotals = {};
