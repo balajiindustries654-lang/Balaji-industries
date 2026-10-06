@@ -3075,16 +3075,22 @@ setTimeout(() => {
   }
 }
   function updateDashboardStats(chiththis, waybridge, maalEntries) {
-  const today = new Date().toLocaleDateString("en-CA");
+const today = new Date().toLocaleDateString("en-CA", {
+  timeZone: "Asia/Kolkata"
+});
 
 const todayChiththis = (chiththis || []).filter(x =>
   x.created_at &&
-  new Date(x.created_at).toLocaleDateString("en-CA") === today
+  new Date(x.created_at).toLocaleDateString("en-CA", {
+  timeZone: "Asia/Kolkata"
+}) === today
 );
 
 const todayWaybridge = (waybridge || []).filter(x =>
   x.created_at &&
-  new Date(x.created_at).toLocaleDateString("en-CA") === today
+  new Date(x.created_at).toLocaleDateString("en-CA", {
+  timeZone: "Asia/Kolkata"
+}) === today
 );
 
   const vehicles = new Set(
