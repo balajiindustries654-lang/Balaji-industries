@@ -404,6 +404,21 @@ textarea{
     </div>
   </div>
 
+  <div class="stat-glass">
+  <div class="stat-icon">📥</div>
+  <div>
+    <div class="stat-label">આજનું Unloading</div>
+    <div class="stat-value" id="stat_unloading">0 Bags</div>
+  </div>
+</div>
+
+<div class="stat-glass">
+  <div class="stat-icon">📤</div>
+  <div>
+    <div class="stat-label">આજનું Loading</div>
+    <div class="stat-value" id="stat_loading">0 Bags</div>
+  </div>
+</div>
 </div>
   /* ===== TODAY STATS CARDS ===== */
 .stats-grid{
@@ -3104,6 +3119,28 @@ const todayWaybridge = (waybridge || []).filter(x =>
       .map(x => (x.farmer_name || "").trim())
       .filter(Boolean)
   );
+    const todayMaalEntries = (maalEntries || []).filter(x =>
+  x.created_at &&
+  new Date(x.created_at).toLocaleDateString("en-CA", {
+    timeZone: "Asia/Kolkata"
+  }) === today
+);
+
+let unloadingBags = 0;
+let loadingBags = 0;
+
+todayMaalEntries.forEach(x => {
+  const bags = parseFloat(x.bags) || 0;
+  const entryType = (x.entry_type || x.type || "").toLowerCase();
+
+  if(entryType.includes("unloading")) {
+    unloadingBags += bags;
+  }
+
+  if(entryType.includes("loading")) {
+    loadingBags += bags;
+  }
+});
 
   const totalWeight = todayWaybridge.reduce((sum, x) => {
     return sum + (parseFloat(x.net_weight_kg || x.total_weight_kg) || 0);
@@ -3113,11 +3150,15 @@ const todayWaybridge = (waybridge || []).filter(x =>
   const weightBox = document.getElementById("stat_weight");
   const vehicleBox = document.getElementById("stat_vehicles");
   const farmerBox = document.getElementById("stat_farmers");
+   const unloadingBox = document.getElementById("stat_unloading");
+const loadingBox = document.getElementById("stat_loading"); 
 
   if (entryBox) entryBox.innerText = todayChiththis.length;
   if (weightBox) weightBox.innerText = totalWeight.toLocaleString() + " KG";
   if (vehicleBox) vehicleBox.innerText = vehicles.size;
   if (farmerBox) farmerBox.innerText = farmers.size;
+  if (unloadingBox) unloadingBox.innerText = unloadingBags.toLocaleString() + " Bags";
+if (loadingBox) loadingBox.innerText = loadingBags.toLocaleString() + " Bags";
   }
 
 setInterval(() => {
