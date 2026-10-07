@@ -4435,5 +4435,201 @@ if(messaging){
   }
 })();
       </script>
+    <style>
+/* ===== COMPACT SETTINGS LIST ===== */
+
+#admin .bi-compact-settings .bi-settings-group {
+  margin: 0;
+  padding: 0;
+  background: white;
+  border: 0;
+  border-radius: 0;
+}
+
+#admin .bi-compact-settings .bi-settings-group h3,
+#admin .bi-compact-settings > hr {
+  display: none;
+}
+
+#admin .bi-compact-settings .bi-settings-group button,
+#admin .bi-compact-settings summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  min-height: 46px;
+  margin: 0;
+  padding: 12px 4px;
+  background: white;
+  color: var(--ink);
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+#admin .bi-compact-settings summary {
+  list-style: none;
+}
+
+#admin .bi-compact-settings summary::-webkit-details-marker {
+  display: none;
+}
+
+#admin .bi-compact-settings summary::after,
+#admin .bi-compact-settings .bi-settings-group button::after {
+  content: "›";
+  color: var(--muted);
+  font-size: 22px;
+  line-height: 1;
+}
+
+#admin .bi-compact-settings details[open] > summary::after {
+  content: "⌄";
+}
+
+#admin .bi-compact-settings .bi-settings-group button:hover,
+#admin .bi-compact-settings summary:hover {
+  background: var(--soft);
+}
+
+#admin .bi-compact-settings .bi-settings-logout {
+  color: #b42336;
+}
+
+#admin .bi-compact-settings .bi-settings-content {
+  padding: 14px 0;
+}
+
+#admin .bi-compact-settings .bi-password-form {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+}
+
+.bi-password-form > h3 {
+  display: none;
+}
+
+#admin .bi-password-form input {
+  min-height: 44px;
+  padding: 10px 12px;
+  font-size: 14px;
+}
+
+#admin .bi-password-form button {
+  width: auto;
+  min-height: 42px;
+  padding: 9px 16px;
+  font-size: 13px;
+}
+
+#admin .bi-compact-settings .bi-bar8 {
+  margin-bottom: 8px;
+}
+</style>
+
+<script>
+(function () {
+  function compactSettings() {
+    const passwordInput =
+      document.getElementById("pass_mobile");
+
+    const settings =
+      passwordInput?.closest(".bi-panel8");
+
+    if (
+      !settings ||
+      settings.classList.contains("bi-compact-settings")
+    ) return;
+
+    settings.classList.add("bi-compact-settings");
+
+    function makeDetails(title) {
+      const details = document.createElement("details");
+      const summary = document.createElement("summary");
+      const content = document.createElement("div");
+
+      summary.textContent = title;
+      content.className = "bi-settings-content";
+
+      details.append(summary, content);
+
+      return { details, content };
+    }
+
+    /* Pending Usersની list દબાવ્યા પછી ખૂલે */
+    const pendingButton = settings.querySelector(
+      'button[onclick*="loadPending"]'
+    );
+
+    const pendingList = document.getElementById("plist");
+
+    if (pendingButton && pendingList) {
+      const row = makeDetails("👥 Pending Users");
+
+      pendingButton.before(row.details);
+      row.content.appendChild(pendingList);
+      pendingButton.remove();
+
+      row.details.addEventListener("toggle", function () {
+        if (
+          row.details.open &&
+          typeof loadPending === "function"
+        ) {
+          loadPending();
+        }
+      });
+    }
+
+    /* Password form દબાવ્યા પછી ખૂલે */
+    const passwordForm = passwordInput.parentElement;
+    const passwordRow = makeDetails("🔑 User Password Change");
+
+    passwordForm.before(passwordRow.details);
+    passwordForm.classList.add("bi-password-form");
+    passwordRow.content.appendChild(passwordForm);
+
+    /* નાના અને સ્પષ્ટ row names */
+    const notifications = settings.querySelector(
+      'button[onclick*="enablePhoneNotifications"]'
+    );
+
+    if (notifications) {
+      notifications.textContent = "🔔 Notifications ચાલુ કરો";
+    }
+
+    const excel = settings.querySelector(
+      'button[onclick*="exportAllDataToCSV"]'
+    );
+
+    if (excel) {
+      excel.textContent = "📥 Excel Download";
+    }
+
+    const logout = settings.querySelector(
+      ".bi-settings-logout"
+    );
+
+    if (logout) {
+      logout.textContent = "Logout / બહાર નીકળો";
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener(
+      "DOMContentLoaded",
+      compactSettings
+    );
+  } else {
+    compactSettings();
+  }
+})();
+</script>
 </body>
 </html>
