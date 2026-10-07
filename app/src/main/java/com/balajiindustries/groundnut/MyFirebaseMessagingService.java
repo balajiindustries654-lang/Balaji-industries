@@ -14,6 +14,15 @@ import com.google.firebase.messaging.RemoteMessage;
 public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
     @Override
+    public void onNewToken(String token) {
+        super.onNewToken(token);
+        getSharedPreferences("balaji_push", MODE_PRIVATE)
+                .edit()
+                .putString("native_fcm_token", token)
+                .apply();
+    }
+
+    @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
         super.onMessageReceived(remoteMessage);
 
