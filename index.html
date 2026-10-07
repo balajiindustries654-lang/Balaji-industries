@@ -1171,6 +1171,164 @@ async function forgotPassword(){
     $("pass_msg").innerText = "Error: " + e.message;
   }
   }
+  // Native APK token registration
+let nativePushSaveInFlight = null;
+let nativePushSavedUser = "";
+let nativePushSavedToken = "";
+
+function nativePushStatus(text){
+  let box = $("native_push_status");
+
+  if(!box && $("admin")){
+    box = document.createElement("p");
+    box.id = "native_push_status";
+    box.className = "muted";
+    box.setAttribute("aria-live", "polite");
+    $("admin").prepend(box);
+  }
+
+  if(box) box.innerText = text;
+}
+
+async function registerNativePushToken(showMessage = false){
+  if(window.BalajiNativeApp !== true) return false;
+
+  if(nativePushSaveInFlight){
+    const result = await nativePushSaveInFlight;
+    if(showMessage && result){
+      alert($("native_push_status").innerText);
+    }
+    return result;
+  }
+
+  nativePushSaveInFlight = (async () => {
+    try{
+      const token = window.BalajiNativeFcmToken;
+
+      if(!token){
+        nativePushStatus(
+          "APK token હજી મળ્યો નથી. થોડું રાહ જોઈ ફરી બટન દબાવો."
+        );
+        return false;
+      }
+
+      const auth = await db.auth.getUser();
+      if(auth.error) throw auth.error;
+
+      const user = auth.data.user;
+
+      if(!user){
+        nativePushStatus("પહેલા Admin Login કરો.");
+        return false;
+      }
+
+      const profile = await db.from("user_profiles")
+        .select("role,approved")
+        .eq("id", user.id)
+        .single();
+
+      if(profile.error) throw profile.error;
+
+      if(profile.data.role !== "admin" ||
+         !profile.data.approved){
+        nativePushStatus(
+          "APK Notification માટે approved Admin Login જરૂરી છે."
+        );
+        return false;
+      }
+
+      if(nativePushSavedUser !== user.id ||
+         nativePushSavedToken !== token){
+
+        nativePushStatus(
+          "APK Notification token સેવ થઈ રહ્યો છે..."
+        );
+
+        const { error } = await db.from("push_tokens")
+          .upsert({
+            user_id: user.id,
+            token: token,
+            updated_at: new Date().toISOString()
+          }, {
+            onConflict: "token"
+          });
+
+        if(error) throw error;
+
+        nativePushSavedUser = user.id;
+        nativePushSavedToken = token;
+      }
+
+      nativePushStatus(
+        window.BalajiNativeNotificationsAllowed === false
+          ? "APK token સેવ થયો છે. ફોનની Settingsમાં Balaji Industriesની Notification permission ચાલુ કરો."
+          : "✅ APK Notification token Supabaseમાં સેવ થયો છે."
+      );
+
+      return true;
+
+    }catch(error){
+      nativePushStatus(
+        "APK Token Save Error: " + error.message
+      );
+      return false;
+    }
+  })();
+
+  let completedSuccessfully = false;
+
+  try{
+    const result = await nativePushSaveInFlight;
+    completedSuccessfully = result;
+
+    if(showMessage){
+      alert($("native_push_status").innerText);
+    }
+
+    return result;
+
+  }finally{
+    nativePushSaveInFlight = null;
+
+    if(completedSuccessfully &&
+       nativePushSavedToken &&
+       window.BalajiNativeFcmToken &&
+       nativePushSavedToken !== window.BalajiNativeFcmToken){
+
+      setTimeout(
+        () => registerNativePushToken(false),
+        0
+      );
+    }
+  }
+}
+
+window.addEventListener(
+  "balaji-native-token",
+  () => registerNativePushToken(false)
+);
+
+async function enablePhoneNotifications(){
+  if(window.BalajiNativeApp === true){
+    await registerNativePushToken(true);
+    return;
+  }
+
+  if(/\bwv\b/.test(navigator.userAgent)){
+    alert(
+      "નવા buildનું APK install કર્યા પછી ફરી તપાસો."
+    );
+    return;
+  }
+
+  if(typeof window.enableWebPhoneNotifications === "function"){
+    await window.enableWebPhoneNotifications();
+  }else{
+    alert(
+      "Notification code હજી લોડ થઈ રહ્યો છે. થોડું રાહ જોઈ ફરી પ્રયત્ન કરો."
+    );
+  }
+}
 async function logout(){
 await db.auth.signOut();
 location.reload();
@@ -1203,7 +1361,9 @@ return;
 }
 
 const id=p.role==="worker"?"worker":p.role;
-
+if(id==="admin"){
+  registerNativePushToken(false);
+}
 if($(id))
 $(id).classList.remove("hide");
 
@@ -3249,9 +3409,12 @@ const firebaseConfig = {
 };
 
 const firebaseApp = initializeApp(firebaseConfig);
-const messaging = getMessaging(firebaseApp);
+const messaging = (
+  "Notification" in window &&
+  "serviceWorker" in navigator
+) ? getMessaging(firebaseApp) : null;
 
-window.enablePhoneNotifications = async function () {
+window.enableWebPhoneNotifications = async function () {
   try {
 
     if (!("Notification" in window)) {
@@ -3311,9 +3474,11 @@ window.enablePhoneNotifications = async function () {
   }
 };
 
-onMessage(messaging, (payload) => {
-  console.log("Notification received:", payload);
-});
+if(messaging){
+  onMessage(messaging, (payload) => {
+    console.log("Notification received:", payload);
+  });
+}
   </script>
 </body>
 </html>
