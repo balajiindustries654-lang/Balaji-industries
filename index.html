@@ -4919,7 +4919,7 @@ if(messaging){
 const byId = id => document.getElementById(id);
 const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const ops = ['worker','waybridge','maal_entry'];
-let currentProfile = null, workerPromise = null, workerLanguage = '', scanBusy = false, progressBox = null;
+let currentProfile = null, scanBusy = false;
 const configurations = {
  worker: {file:'chiththi_photo', fields:[['chiththi_number','ચિઠ્ઠી નંબર'],['village_name','ગામ'],['vehicle_number','ગાડી નંબર'],['farmer_name','ખેડૂત'],['farmer_mobile','મોબાઇલ'],['farmer_weight','કુલ વજન KG'],['bardan_kg','બારદાન KG'],['kardo_kg','કરડો KG'],['commodity_type','માલ']]},
  waybridge: {file:'wb_slip', fields:[['wb_rst','RST'],['wb_vehicle','ગાડી નંબર'],['wb_name','નામ'],['wb_mobile','મોબાઇલ'],['wb_weight','NET વજન KG']]},
@@ -4998,7 +4998,7 @@ function applyValues(values, conflicts) {
 }
 function showReview(kind, parsed, config) {
  const overlay = document.createElement('dialog'); overlay.className='bi-scan-review';
- let language = kind === 'maal_entry' && typeof maalLang !== 'undefined' && maalLang==='hi' ? 'hi' : 'gu';
+ let language = parsed.target || 'gu';
  overlay.innerHTML = `<h2>Scanની વિગતો ચેક કરો</h2><p class="muted">વાંચેલું લખાણ અંદાજ છે. દરેક પસંદ કરેલી વિગત Save પહેલાં ચેક કરો. પહેલેથી ભરેલી માહિતી બદલવા checkbox પસંદ કરો.</p>
  <label>નામ / ગામ માટે ભાષા<select class="scan-language"><option value="gu">ગુજરાતી</option><option value="hi">हिंदी</option><option value="en">English</option></select></label>
  <button type="button" class="scan-translate">નામ / ગામની ભાષા બદલો</button><p class="scan-note muted" role="status"></p>
@@ -5009,6 +5009,7 @@ function showReview(kind, parsed, config) {
  document.body.appendChild(overlay);
  overlay.querySelector('.scan-language').value=language;
  overlay.querySelector('.scan-text').value=parsed.text;
+ overlay.querySelector('.scan-note').textContent=(parsed.warnings || []).join(' • ');
  const holders = new Map();
  config.fields.forEach(([id,label])=>{
   const row=document.createElement('div'); row.className='scan-field';
@@ -5020,25 +5021,32 @@ function showReview(kind, parsed, config) {
    const sel=document.createElement('select'); sel.className='candidate';
    sel.innerHTML=byId(id).innerHTML; sel.value=candidate; input.replaceWith(sel);
   } else if(id==='me_date') input.type='date';
-  else if(/weight|bags|bardan|kardo/.test(id)){ input.type='number'; input.min='0'; input.step=id==='me_bags'?'1':'0.01'; }
+  else if(/weight|bags|bardan|kardo/.test(id)){ input.type='number'; input.min='0'; input.step=id==='me_bags'?'1':'0.001'; }
   const pick=row.querySelector('[type=checkbox]'); pick.checked=Boolean(candidate && !replace);
   row.querySelector('.candidate').addEventListener('input',()=>{if(!old)pick.checked=true;});
   holders.set(id,row); overlay.querySelector('.scan-fields').appendChild(row);
  });
  if(kind==='worker'){
   const container=overlay.querySelector('.weight-rows');
-  function sum(){const total=[...container.querySelectorAll('.weight-row')].reduce((s,row)=>s+(row.querySelector('[type=checkbox]').checked?Number(row.querySelector('[type=number]').value)||0:0),0); overlay.querySelector('.weight-sum').textContent=`પસંદ કરેલું કુલ: ${total.toFixed(2)} KG`;return total;}
+  function sum(){const total=sumWeights([...container.querySelectorAll('.weight-row')].filter(row=>row.querySelector('[type=checkbox]').checked).map(row=>({value:row.querySelector('[type=number]').value}))); overlay.querySelector('.weight-sum').textContent=`પસંદ કરેલું કુલ: ${total.toFixed(3)} KG`;return total;}
   function add(value='',source='નવી લાઇન'){
    const row=document.createElement('div'); row.className='weight-row';
-   row.innerHTML='<input type="checkbox" aria-label="આ વજન ગણો"><input type="number" min="0" step="0.01" aria-label="વજન KG"><button type="button" aria-label="લાઇન કાઢો">×</button><small></small>';
+   row.innerHTML='<input type="checkbox" aria-label="આ વજન ગણો"><input type="number" min="0" step="0.001" aria-label="વજન KG"><button type="button" aria-label="લાઇન કાઢો">×</button><small></small>';
    row.querySelector('[type=number]').value=value; row.querySelector('small').textContent=source;
    row.addEventListener('input',sum); row.querySelector('button').onclick=()=>{row.remove();sum();}; container.appendChild(row); sum();
   }
   parsed.weights.forEach(x=>add(x.value,x.source));
+  const allTotal=sumWeights(parsed.weights);
+  const printed=Number(parsed.fields.farmer_weight);
+  const info=document.createElement('p');info.className='muted';
+  info.textContent=`વાંચેલી ${parsed.weights.length} વજનની લાઇનોનું કુલ: ${allTotal.toFixed(3)} KG`+(printed>0?` • ચિઠ્ઠીનું Total: ${printed} KG • તફાવત: ${Math.abs(allTotal-printed).toFixed(3)} KG`:'');
+  container.before(info);
+  const all=document.createElement('button');all.type='button';all.textContent='ચેક કર્યા પછી બધી વજનની લાઇનો પસંદ કરો';
+  all.onclick=()=>{container.querySelectorAll('[type=checkbox]').forEach(x=>x.checked=true);sum();};container.after(all);
   overlay.querySelector('.add-weight').onclick=()=>add();
   overlay.querySelector('.use-weight-sum').onclick=()=>{
    const total=sum(); if(total<=0){alert('સાચી વજનની લાઇનો પસંદ કરો.');return;}
-   holders.get('farmer_weight').querySelector('.candidate').value=total.toFixed(2);
+   holders.get('farmer_weight').querySelector('.candidate').value=total.toFixed(3);
    // The user must explicitly select replacement if the form already had weight.
    if(!byId('farmer_weight').value)holders.get('farmer_weight').querySelector('[type=checkbox]').checked=true;
    overlay.querySelector('.scan-note').textContent='આ કુલ વજન જૂના વજનમાં ઉમેરાતું નથી. જૂનું વજન બદલવા તેની checkbox પસંદ કરો.';
@@ -5050,9 +5058,12 @@ function showReview(kind, parsed, config) {
   const texts=ids.map(id=>holders.get(id).querySelector('.candidate').value);
   this.disabled=true;
   try {
-   const r=await db.functions.invoke('translate-entry',{body:{texts,target}});
-   if(r.error||!Array.isArray(r.data?.texts)||r.data.texts.length!==texts.length)throw new Error('ભાષાંતર સેવા સેટ કરેલી નથી અથવા જવાબ મળ્યો નથી.');
-   ids.forEach((id,i)=>{holders.get(id).querySelector('.candidate').value=r.data.texts[i];});
+   if(!parsed.request)throw new Error('ભાષા પસંદ કરીને ફોટો ફરી Scan કરો.');
+   const r=await invokeScan({...parsed.request,target});
+   ids.forEach((id,i)=>{
+    const input=holders.get(id).querySelector('.candidate');
+    if(input.value===texts[i] && r.fields[id])input.value=r.fields[id];
+   });
    overlay.querySelector('.scan-note').textContent='ભાષા બદલાઈ. વ્યક્તિ અને ગામનાં નામ ચેક કરો.';
   }catch(error){overlay.querySelector('.scan-note').textContent=error.message+' મૂળ લખાણ રાખ્યું છે; જાતે સુધારી શકો છો.';}
   finally{this.disabled=false;}
@@ -5072,31 +5083,55 @@ function showReview(kind, parsed, config) {
  };
  overlay.showModal();
  overlay.querySelector('.scan-language').addEventListener('change',()=>overlay.querySelector('.scan-translate').click());
- const nameValues=config.fields.filter(x=>/name|owner/.test(x[0])).map(x=>parsed.fields[x[0]]||'').join(' ');
- if(nameValues.trim() && (language==='gu'?/[A-Za-z\u0900-\u097f]/.test(nameValues):language==='hi'?/[A-Za-z\u0a80-\u0aff]/.test(nameValues):/[\u0900-\u097f\u0a80-\u0aff]/.test(nameValues))) overlay.querySelector('.scan-translate').click();
+
+}
+function sumWeights(weights){
+ return weights.reduce((sum,x)=>sum+(positive(String(x.value))?Math.round(Number(x.value)*1000):0),0)/1000;
+}
+function validateScan(data,kind){
+ if(!data || !data.fields || !Array.isArray(data.weights) || typeof data.text!=='string')throw new Error('Scanનો જવાબ વાંચી શકાયો નથી. ફરી પ્રયાસ કરો.');
+ const fields={};configurations[kind].fields.forEach(([id])=>{fields[id]=typeof data.fields[id]==='string'?data.fields[id].slice(0,200):'';});
+ const weights=kind==='worker'?data.weights.slice(0,200).filter(x=>x && positive(String(x.value))).map(x=>({value:String(x.value),source:String(x.source||'').slice(0,200)})):[];
+ return {fields,weights,text:data.text,warnings:Array.isArray(data.warnings)?data.warnings.filter(x=>typeof x==='string'):[]};
+}
+async function invokeScan(body){
+ const r=await db.functions.invoke('scan-entry',{body});
+ if(r.error){
+  let message='Scan સેવા જવાબ આપી શકી નથી. Internet અને Login તપાસો.';
+  try{const details=await r.error.context.json();if(typeof details.error==='string')message=details.error;}catch(_){}
+  throw new Error(message);
+ }
+ return validateScan(r.data,body.kind);
+}
+async function photoPayload(file){
+ if(file.size>20*1024*1024)throw new Error('ફોટો બહુ મોટો છે. 20 MBથી નાનો ફોટો પસંદ કરો.');
+ const url=URL.createObjectURL(file);
+ try{
+  const img=await new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=()=>reject(new Error('ફોટો ખોલી શકાયો નથી. JPG / PNG ફોટો પસંદ કરો.'));image.src=url;});
+  const ratio=Math.min(1,2400/Math.max(img.naturalWidth,img.naturalHeight));
+  const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(img.naturalWidth*ratio));canvas.height=Math.max(1,Math.round(img.naturalHeight*ratio));
+  const ctx=canvas.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width,canvas.height);
+  const image=canvas.toDataURL('image/jpeg',0.9).split(',')[1];
+  if(!image || image.length>6500000)throw new Error('ફોટો બહુ મોટો છે. નજીકથી સાફ ફોટો લઈને ફરી પ્રયાસ કરો.');
+  return {mimeType:'image/jpeg',image};
+ }finally{URL.revokeObjectURL(url);}
 }
 async function scan(kind, button, status) {
  if(scanBusy){status.textContent='બીજો Scan ચાલી રહ્યો છે.';return;}
- const config=configurations[kind];
- const file=byId(config.file)?.files?.[0];
+ const config=configurations[kind],file=byId(config.file)?.files?.[0];
  if(!file){status.textContent='પહેલા Camera / Galleryમાંથી ફોટો પસંદ કરો.';return;}
  if(!/^image\//.test(file.type)){status.textContent='ફોટો પસંદ કરો.';return;}
- const langs=byId(kind).querySelector('.scan-ocr-language').value;
- const sourceForm=byId(kind); const snapshot=Object.fromEntries(config.fields.map(([id])=>[id,byId(id)?.value]));
+ const target=byId(kind).querySelector('.scan-ocr-language').value;
+ const sourceForm=byId(kind),snapshot=Object.fromEntries(config.fields.map(([id])=>[id,byId(id)?.value]));
  scanBusy=true;button.disabled=true;
  try{
-  status.textContent='Scan શરૂ થઈ રહ્યો છે… પ્રથમ વખત ભાષાની ફાઇલો લોડ થશે.';
-  if(!window.Tesseract)throw new Error('Scan library લોડ થઈ નથી. Internet તપાસો.');
-  progressBox=status;
-  if(workerPromise && workerLanguage!==langs){await (await workerPromise).terminate();workerPromise=null;}
-  workerLanguage=langs;
-  if(!workerPromise)workerPromise=Tesseract.createWorker(langs,1,{logger:m=>{if(m.status==='recognizing text' && progressBox)progressBox.textContent=`Scan: ${Math.round(m.progress*100)}%`;}}).catch(e=>{workerPromise=null;throw e;});
-  const worker=await workerPromise; const result=await worker.recognize(file);
-  // A changed photo or edited form while scanning requires a fresh scan.
+  status.textContent='ફોટો વાંચાઈ રહ્યો છે… થોડો સમય લાગશે.';
+  const request={kind,target,...await photoPayload(file)};
+  const parsed=await invokeScan(request);parsed.target=target;parsed.request=request;
   if(byId(config.file).files[0]!==file || config.fields.some(([id])=>byId(id)?.value!==snapshot[id]))throw new Error('Scan દરમિયાન ફોટો અથવા form બદલાયું. ફરી Scan કરો.');
   if(sourceForm.classList.contains('hide'))throw new Error('બીજું form ખોલ્યું છે. Scan ફરી કરો.');
-  if(!result.data.text.trim())throw new Error('લખાણ વાંચી શકાયું નથી. સાફ ફોટો લો અથવા જાતે વિગતો ભરો.');
-  showReview(kind,parseScan(result.data.text,kind),config);
+  if(!parsed.text.trim() && !Object.values(parsed.fields).some(Boolean) && !parsed.weights.length)throw new Error('લખાણ વાંચી શકાયું નથી. સાફ ફોટો લો અથવા જાતે વિગતો ભરો.');
+  showReview(kind,parsed,config);
   status.textContent='Scan પૂર્ણ. વિગતો ચેક કરીને formમાં ભરો; પછી Save કરો.';
  }catch(error){status.textContent='Scan: '+error.message;}
  finally{scanBusy=false;button.disabled=false;}
@@ -5105,7 +5140,8 @@ function installScan(kind){
  const form=byId(kind); if(!form || form.querySelector('.bi-scan-tools'))return;
  const config=configurations[kind],file=byId(config.file); if(!file)return;
  const tools=document.createElement('div');tools.className='bi-scan-tools';
- tools.innerHTML='<h3>ફોટોમાંથી વિગતો ભરો</h3><label>ફોટાની ભાષા<select class="scan-ocr-language"><option value="eng+guj+hin">ગુજરાતી / हिंदी / English</option><option value="eng+hin+mar">मराठी / हिंदी / English</option><option value="eng+tam">தமிழ் / English</option><option value="eng+tel">తెలుగు / English</option><option value="eng+ben">বাংলা / English</option><option value="eng+urd">اردو / English</option><option value="eng+ara">العربية / English</option></select></label><div class="bi-scan-buttons"><button type="button" class="scan-camera">Camera</button><button type="button" class="scan-gallery">Gallery</button><button type="button" class="scan-start">Scan કરો</button></div><p class="muted scan-progress" role="status">Scan પછી વિગતો ચેક કરીને બદલી શકશો. Save આપમેળે થતું નથી.</p>';
+ tools.innerHTML='<h3>ફોટોમાંથી વિગતો ભરો</h3><label>નામ / ગામ માટે ભાષા<select class="scan-ocr-language"><option value="gu">ગુજરાતી</option><option value="hi">हिंदी</option><option value="en">English</option></select></label><div class="bi-scan-buttons"><button type="button" class="scan-camera">Camera</button><button type="button" class="scan-gallery">Gallery</button><button type="button" class="scan-start">Scan કરો</button></div><p class="muted">Scan માટે ફોટો Google Geminiને મોકલાશે. વાંચેલી વિગતો ચેક કરવી જરૂરી છે.</p><p class="muted scan-progress" role="status">Scan પછી વિગતો સુધારી શકશો. Save આપમેળે થતું નથી.</p>';
+ if(kind==='maal_entry')tools.querySelector('.scan-ocr-language').value=typeof maalLang!=='undefined'&&maalLang==='hi'?'hi':'en';
  file.after(tools);
  const camera=document.createElement('input');camera.type='file';camera.accept='image/*';camera.capture='environment';camera.hidden=true;tools.appendChild(camera);
  camera.onchange=()=>{if(camera.files[0]){try{const dt=new DataTransfer();dt.items.add(camera.files[0]);file.files=dt.files;tools.querySelector('.scan-progress').textContent='ફોટો પસંદ થયો. Scan કરો.';}catch(e){tools.querySelector('.scan-progress').textContent='Camera ફોટો Galleryમાં પસંદ કરો.';}}};
@@ -5217,7 +5253,7 @@ function init(){
  boot();
 }
 // Parser/apply functions are separated so double-count behavior can be verified.
-window.BalajiScan={parseScan,normalizeDigits,applyValues};
+window.BalajiScan={parseScan,normalizeDigits,applyValues,validateScan,sumWeights};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
 
