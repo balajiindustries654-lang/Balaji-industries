@@ -60,6 +60,7 @@ main > div > img {
   border: 1px solid var(--line);
   padding: 4px;
 }
+
 h2 {
   font-size: 23px;
   line-height: 1.35;
@@ -227,6 +228,7 @@ button[onclick*="delete"],
   background: #b92d40;
   color: white;
 }
+
 button[onclick*="logout"] {
   background: white;
   color: var(--muted);
@@ -331,6 +333,7 @@ button[onclick*="logout"] {
 #msg:not(:empty) {
   display: block !important;
 }
+
 #msg {
   background: var(--soft) !important;
   color: var(--dark) !important;
@@ -435,6 +438,7 @@ tbody tr:nth-child(even) {
 @keyframes splashSpin {
   to { transform: rotate(360deg); }
 }
+
 @media (min-width: 650px) {
   main { padding-top: 30px; }
 
@@ -602,6 +606,7 @@ tbody tr:nth-child(even) {
 
   <p id="pass_msg"></p>
   </div>
+
 <hr>
 
 <h3>🔍 તમામ ડેટા Search</h3>
@@ -811,6 +816,7 @@ oninput="calculateNetWeight()">
 type="number"
 readonly
 placeholder="Automatic આવશે">
+
 <label><b>ખેડૂતની ચિઠ્ઠીનો ફોટો</b></label>
 
 <button type="button"
@@ -915,6 +921,7 @@ placeholder="Automatic આવશે">
          min="0"
          step="0.01"
          placeholder="NET Weight KG માં લખો">
+
   <label for="wb_slip"><b>કાંટાની પાવતી / Slip Photo</b></label>
 
   <input id="wb_slip"
@@ -935,6 +942,7 @@ placeholder="Automatic આવશે">
 </div>
 <!-- NEW MAAL ENTRY DASHBOARD -->
 <div id="maal_entry" class="card hide">
+
 <div style="display:flex;gap:8px;align-items:center;justify-content:space-between">
 <h2 id="me_title" style="margin:0">Maal Entry Dashboard</h2>
 <button type="button"
@@ -976,6 +984,7 @@ placeholder="Number of bags">
 <option value="Gau">Gau / गेहूं</option>
 <option value="Govar">Govar / ग्वार</option>
 </select>
+
 <label><b id="me_date_label">Date *</b></label>
 <input id="me_date" type="date">
 
@@ -1017,6 +1026,7 @@ Refresh
 <h2>Farmer Dashboard</h2>
 <p>તમારી માહિતી અહીં દેખાશે.</p>
 </div>
+
 </section>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1079,6 +1089,7 @@ if(!r.error) boot();
 }
 async function forgotPassword(){
   const mobile = cleanMobile($("lm").value);
+
   if(!mobile){
     $("msg").innerText = "પહેલા તમારો Mobile Number નાખો.";
     return;
@@ -1183,6 +1194,7 @@ async function registerNativePushToken(showMessage = false){
         );
         return false;
       }
+
       const auth = await db.auth.getUser();
       if(auth.error) throw auth.error;
 
@@ -1245,6 +1257,7 @@ async function registerNativePushToken(showMessage = false){
       return false;
     }
   })();
+
   let completedSuccessfully = false;
 
   try{
@@ -1307,6 +1320,7 @@ location.reload();
 async function boot(){}
 
 let maalLang="en";
+
 function setMaalDefaultDate(){
 const d=$("me_date");
 
@@ -1558,6 +1572,7 @@ net>=0?net.toFixed(2):"0.00";
 }
 
 function toggleBrokerOther(){
+
 const selected=$("broker_select").value;
 const otherBox=$("broker_other");
 
@@ -1830,6 +1845,7 @@ box.innerHTML=
 
 const user=
 (await db.auth.getUser()).data.user;
+
 if(!user){
 box.innerHTML=
 '<p class="danger">Login ફરી કરો.</p>';
@@ -1850,6 +1866,7 @@ esc(r.error.message)+
 '</p>';
 return;
 }
+
 if(!r.data || !r.data.length){
 box.innerHTML=
 '<p class="muted">હજુ કોઈ ચિઠ્ઠી Save નથી.</p>';
@@ -1912,6 +1929,7 @@ async function setNextRST(){
       .not("rst_no","is",null)
       .order("created_at",{ascending:false})
       .limit(100);
+
     if(r.error){
       console.error("RST Load Error:",r.error);
       if(!rstInput.value) rstInput.value = "1";
@@ -1994,6 +2012,7 @@ async function saveWaybridge(){
     }
     return;
   }
+
 
   const user =
     (await db.auth.getUser()).data.user;
@@ -2078,6 +2097,7 @@ async function saveWaybridge(){
 
       return;
     }
+
     const publicData =
       db.storage
       .from("Way bridge slips")
@@ -2140,6 +2160,7 @@ async function saveWaybridge(){
   } catch (notifyErr) {
     console.error("Waybridge Push Error:", notifyErr);
   }
+
   // ---------------------------------
   // GOOGLE SHEET
   // ---------------------------------
@@ -2202,6 +2223,7 @@ async function saveWaybridge(){
   // ---------------------------------
 
   if(rst){
+
     const currentRST =
       parseInt(rst,10);
 
@@ -2285,6 +2307,7 @@ box.innerHTML=`
 style="box-shadow:none;border:1px solid #ddd">
 
 <h3>${match?"✅ MATCH":"❌ NOT MATCH"}</h3>
+
 ગાડી:
 <b>${esc(vehicle)}</b><br>
 
@@ -2410,6 +2433,7 @@ if(mode==="month"){
 
 const y=now.getFullYear();
 const m=String(now.getMonth()+1).padStart(2,"0");
+
 from=`${y}-${m}-01`;
 
 const last=new Date(y,now.getMonth()+1,0);
@@ -2451,6 +2475,7 @@ q=q.gte(
 range.from+"T00:00:00"
 );
 }
+
 if(range.to){
 q=q.lte(
 "created_at",
@@ -2555,6 +2580,7 @@ const w=wbMap[vehicle];
 return `
 <div class="card"
 style="box-shadow:none;border:1px solid #ddd">
+
 <b>ચિઠ્ઠી:
 ${esc(x.chiththi_number||"-")}</b><br>
 
@@ -2575,6 +2601,7 @@ ${esc(x.farmer_name||"-")}<br>
 
 મોબાઇલ:
 ${esc(x.farmer_mobile||"-")}<br>
+
 ખેડૂત વજન:
 ${esc(x.gross_weight_kg||0)} KG<br>
 
@@ -2700,6 +2727,7 @@ box.innerHTML=
 
 const ch=await db.from("chiththis")
 .select("vehicle_number,gross_weight_kg");
+
 if(ch.error){
 box.innerHTML=
 '<p class="danger">'+esc(ch.error.message)+'</p>';
@@ -2720,6 +2748,7 @@ const totals={};
 const counts={};
 
 (ch.data||[]).forEach(x=>{
+
 const v=(x.vehicle_number||"")
 .trim()
 .toUpperCase();
@@ -2740,6 +2769,7 @@ const latest={};
 const v=(x.vehicle_number||"")
 .trim()
 .toUpperCase();
+
 if(v && !latest[v])
 latest[v]=x;
 
@@ -2781,6 +2811,7 @@ ${match?"✅ MATCH":"❌ MISMATCH"}
 
 RST:
 ${esc(w.rst_no||"-")}<br>
+
 ચિઠ્ઠીઓ:
 ${counts[v]||0}<br>
 
@@ -3074,6 +3105,7 @@ if(session?.user)boot();
   [csv],
   {type:"text/csv;charset=utf-8"}
 );
+
     const fileName =
   "Balaji_Industries_" +
   new Date().toISOString().slice(0,10) +
@@ -3136,6 +3168,7 @@ setTimeout(() => {
 (chRes.data || []).forEach(x => {
   const vehicle = (x.vehicle_number || "").replace(/\s+/g,"").toUpperCase();
   if (!vehicle) return;
+
   majurTotals[vehicle] =
     (majurTotals[vehicle] || 0) +
     (parseFloat(x.weight_kg) || 0);
@@ -3156,6 +3189,7 @@ setTimeout(() => {
   const vehicleKey = (x.vehicle_number || "")
     .replace(/\s+/g,"")
     .toUpperCase();
+
   const majurWeight = majurTotals[vehicleKey] || 0;
   const wayWeight = parseFloat(
     x.net_weight_kg || x.total_weight_kg
@@ -3239,6 +3273,7 @@ setTimeout(() => {
 const today = new Date().toLocaleDateString("en-CA", {
   timeZone: "Asia/Kolkata"
 });
+
 const todayChiththis = (chiththis || []).filter(x =>
   x.created_at &&
   new Date(x.created_at).toLocaleDateString("en-CA", {
@@ -3385,6 +3420,7 @@ window.enableWebPhoneNotifications = async function () {
   console.log("FCM Token:", token);
 
   const { data: { user } } = await db.auth.getUser();
+
   if (!user) {
     alert("Login user મળ્યો નથી.");
     return;
@@ -3468,6 +3504,7 @@ if(messaging){
   text-align: center;
   transition: background .15s, border-color .15s;
 }
+
 #admin .bi-tile8:hover {
   background: var(--soft);
   border-color: #8bc7c9;
@@ -3593,6 +3630,7 @@ if(messaging){
     font-size: 18px;
   }
 }
+
 @media (prefers-reduced-motion: reduce) {
   #admin .bi-tile8 {
     transition: none;
@@ -3676,6 +3714,7 @@ if(messaging){
 
     const menu = document.createElement("div");
     menu.id = "bi-menu8";
+
     menu.innerHTML = `
       <h3>Quick Actions</h3>
       <div class="bi-grid8"></div>
@@ -4011,6 +4050,7 @@ if(messaging){
   min-width: 0;
   margin: 0;
 }
+
 #admin .bi-report-shortcuts button {
   background: var(--soft);
   color: var(--dark);
@@ -4178,6 +4218,7 @@ if(messaging){
 
       const group = document.createElement("div");
       group.className = "bi-settings-group";
+
       const heading = document.createElement("h3");
       heading.textContent = title;
 
@@ -4198,6 +4239,7 @@ if(messaging){
         'button[onclick*="exportAllDataToCSV"]'
       )
     );
+
     /* Admin Logout Settingsમાં */
     if (logoutButton) {
       const settingsLogout = logoutButton.cloneNode(true);
@@ -4218,6 +4260,7 @@ if(messaging){
       dates.className = "bi-report-dates";
 
       from.before(dates);
+
       [
         [from, "તારીખથી"],
         [to, "તારીખ સુધી"]
@@ -4322,6 +4365,7 @@ if(messaging){
         hint.className = "bi-login-hint";
         hint.textContent =
           "તમારા Mobile Number અને Passwordથી Login કરો.";
+
         loginTitle.after(hint);
       }
 
@@ -4510,6 +4554,7 @@ if(messaging){
     passwordForm.before(passwordRow.details);
     passwordForm.classList.add("bi-password-form");
     passwordRow.content.appendChild(passwordForm);
+
     /* નાના અને સ્પષ્ટ row names */
     const notifications = settings.querySelector(
       'button[onclick*="enablePhoneNotifications"]'
@@ -4530,6 +4575,7 @@ if(messaging){
     const logout = settings.querySelector(
       ".bi-settings-logout"
     );
+
     if (logout) {
       logout.textContent = "Logout / બહાર નીકળો";
     }
@@ -4592,6 +4638,7 @@ if(messaging){
   font-weight: 750;
   overflow-wrap: anywhere;
 }
+
 .bi-maal-date {
   margin-top: 4px;
   color: var(--muted);
@@ -4801,6 +4848,7 @@ if(messaging){
                   </div>
                 </div>
               </div>
+
               <div class="bi-maal-bottom">
                 <div class="bi-maal-owner">
                   <div class="bi-maal-label">માલિક / સપ્લાયર</div>
@@ -4906,3 +4954,273 @@ function parseScan(raw, kind) {
    const trimmed = line.trim();
    // Exclude totals, deductions, dates, names, IDs and phone numbers.
    if(/total|net|gross|કુલ|ટોટલ|સરવાળો|जोड़|कुल|बर्दान|બારદાન|કરડો|कटौती|bardan|kardo|rst|date|તારીખ|तारीख|mobile|મોબાઇલ|મોબાઈલ|phone|ચિઠ્ઠી|પર્ચી|પાવતી|vehicle/i.test(trimmed)) continue;
+   const only = trimmed.match(/^(\d{1,6}(?:\.\d{1,3})?)\s*(?:kg|kgs|કિગ્રા|કિલો|કિલોગ્રામ|કિલોગ્રામ|किलो|किग्रा)?\s*$/i);
+   const labelled = trimmed.match(/(?:weight|વજન|वजन)\s*[:=\-]?\s*(\d{1,6}(?:\.\d{1,3})?)\s*(?:kg|kgs|કિલો|किलो)?\s*$/i);
+   const indexed = trimmed.match(/^\d{1,3}\s*[).:]\s*(\d{1,6}(?:\.\d{1,3})?)\s*(?:kg|kgs|કિલો|किलो)?\s*$/i);
+   const found = only || labelled || indexed;
+   if(found && positive(found[1])) weights.push({value:found[1],source:trimmed});
+  }
+  const totalLine = text.split(/\r?\n/).find(x=>/total|કુલ|ટોટલ|સરવાળો|कुल/i.test(x));
+  if(totalLine) fields.farmer_weight = totalLine.match(/(?:total|કુલ|ટોટલ|સરવાળો|कुल)\s*(?:weight|વજન|वजन)?\s*[:=\-]?\s*(\d[\d,]*(?:\.\d+)?)/i)?.[1]?.replace(/,/g,'') || '';
+ } else if(kind === 'waybridge') {
+  fields.wb_rst = fieldLabels(text,/\bRST\s*(?:no\.?|number)?\s*[:=\-]?\s*/i).match(/^\d+/)?.[0] || '';
+  fields.wb_name = fieldLabels(text,/(?:name|નામ|नाम)\s*[:=\-]?\s*/i);
+  fields.wb_weight = text.match(/(?:net\s*(?:weight|wt)?|ચોખ્ખું\s*વજન|नेट\s*वजन)\s*[:=\-]?\s*(\d[\d,]*(?:\.\d+)?)/i)?.[1]?.replace(/,/g,'') || '';
+ } else {
+  fields.me_entry_type = /unloading|અનલોડિંગ|उतार|अनलोडिंग/i.test(text) ? 'unloading' : /loading|લોડિંગ|लोडिंग/i.test(text) ? 'loading' : '';
+  fields.me_bags = text.match(/(?:bags?|બેગ|બોરી|બોરા|बैग|बोरी|कट्टे)\s*[:=\-]?\s*(\d+)/i)?.[1] || '';
+  fields.me_owner = fieldLabels(text,/(?:owner|supplier|માલિક|સપ્લાયર|मालिक)\s*(?:name|નામ|नाम)?\s*[:=\-]?\s*/i);
+  const d = text.match(/\b(\d{4})-(\d{2})-(\d{2})\b/);
+  const e = text.match(/\b(\d{1,2})[/.\-](\d{1,2})[/.\-](\d{4})\b/);
+  if(d) fields.me_date = d[0];
+  else if(e) fields.me_date = `${e[3]}-${e[2].padStart(2,'0')}-${e[1].padStart(2,'0')}`;
+ }
+ return {fields, weights, text};
+}
+function changeField(id,value) {
+ const input = byId(id); if(!input) return;
+ // Assign, never add. Repeated scans are idempotent.
+ if(id === 'vehicle_number' || id === 'wb_vehicle') {
+  const select = byId(id === 'vehicle_number' ? 'vehicle_number_select' : 'wb_vehicle_select');
+  if(select) select.value = 'OTHER'; input.style.display='block';
+ }
+ input.value = value;
+ input.dispatchEvent(new Event('input',{bubbles:true}));
+ input.dispatchEvent(new Event('change',{bubbles:true}));
+}
+function applyValues(values, conflicts) {
+ Object.entries(values).forEach(([id,value])=>{
+  if(value === '') return;
+  if(byId(id)?.value && String(byId(id).value)!==String(value) && !conflicts.has(id)) return;
+  changeField(id,value);
+ });
+ if(byId('farmer_weight')) calculateNetWeight();
+}
+function showReview(kind, parsed, config) {
+ const overlay = document.createElement('dialog'); overlay.className='bi-scan-review';
+ let language = kind === 'maal_entry' && typeof maalLang !== 'undefined' && maalLang==='hi' ? 'hi' : 'gu';
+ overlay.innerHTML = `<h2>Scanની વિગતો ચેક કરો</h2><p class="muted">વાંચેલું લખાણ અંદાજ છે. દરેક પસંદ કરેલી વિગત Save પહેલાં ચેક કરો. પહેલેથી ભરેલી માહિતી બદલવા checkbox પસંદ કરો.</p>
+ <label>નામ / ગામ માટે ભાષા<select class="scan-language"><option value="gu">ગુજરાતી</option><option value="hi">हिंदी</option><option value="en">English</option></select></label>
+ <button type="button" class="scan-translate">નામ / ગામની ભાષા બદલો</button><p class="scan-note muted" role="status"></p>
+ <div class="scan-fields"></div>
+ ${kind==='worker'?'<details class="scan-weights"><summary>વજનની લાઇનો ચેક કરીને સરવાળો કરો</summary><p class="muted">લાઇનોનો સરવાળો અને છાપેલું Total બંને એકસાથે ઉમેરાશે નહીં. સાચી વજનની લાઇનો જ પસંદ કરો.</p><div class="weight-rows"></div><button type="button" class="add-weight">+ વજનની લાઇન</button><strong class="weight-sum"></strong><button type="button" class="use-weight-sum">આ સરવાળો વજન તરીકે રાખો</button></details>':''}
+ <details><summary>ફોટામાંથી વાંચેલું મૂળ લખાણ</summary><textarea class="scan-text" readonly></textarea></details>
+ <div class="scan-actions"><button type="button" class="scan-cancel">રદ કરો</button><button type="button" class="scan-apply">ચેક કરેલી વિગતો ભરો</button></div>`;
+ document.body.appendChild(overlay);
+ overlay.querySelector('.scan-language').value=language;
+ overlay.querySelector('.scan-text').value=parsed.text;
+ const holders = new Map();
+ config.fields.forEach(([id,label])=>{
+  const row=document.createElement('div'); row.className='scan-field';
+  const old=byId(id)?.value || ''; const candidate=parsed.fields[id] || '';
+  const replace=Boolean(old && old!==candidate);
+  row.innerHTML=`<label>${escape(label)}${old?`<small>હાલ: ${escape(old)}</small>`:''}</label><input class="candidate"><label class="scan-pick"><input type="checkbox"> ${replace?'હાલની વિગત બદલો':'આ વિગત ભરો'}</label>`;
+  const input=row.querySelector('.candidate'); input.value=candidate;
+  if(id==='commodity_type'||id==='me_material'||id==='me_entry_type'){
+   const sel=document.createElement('select'); sel.className='candidate';
+   sel.innerHTML=byId(id).innerHTML; sel.value=candidate; input.replaceWith(sel);
+  } else if(id==='me_date') input.type='date';
+  else if(/weight|bags|bardan|kardo/.test(id)){ input.type='number'; input.min='0'; input.step=id==='me_bags'?'1':'0.01'; }
+  const pick=row.querySelector('[type=checkbox]'); pick.checked=Boolean(candidate && !replace);
+  row.querySelector('.candidate').addEventListener('input',()=>{if(!old)pick.checked=true;});
+  holders.set(id,row); overlay.querySelector('.scan-fields').appendChild(row);
+ });
+ if(kind==='worker'){
+  const container=overlay.querySelector('.weight-rows');
+  function sum(){const total=[...container.querySelectorAll('.weight-row')].reduce((s,row)=>s+(row.querySelector('[type=checkbox]').checked?Number(row.querySelector('[type=number]').value)||0:0),0); overlay.querySelector('.weight-sum').textContent=`પસંદ કરેલું કુલ: ${total.toFixed(2)} KG`;return total;}
+  function add(value='',source='નવી લાઇન'){
+   const row=document.createElement('div'); row.className='weight-row';
+   row.innerHTML='<input type="checkbox" aria-label="આ વજન ગણો"><input type="number" min="0" step="0.01" aria-label="વજન KG"><button type="button" aria-label="લાઇન કાઢો">×</button><small></small>';
+   row.querySelector('[type=number]').value=value; row.querySelector('small').textContent=source;
+   row.addEventListener('input',sum); row.querySelector('button').onclick=()=>{row.remove();sum();}; container.appendChild(row); sum();
+  }
+  parsed.weights.forEach(x=>add(x.value,x.source));
+  overlay.querySelector('.add-weight').onclick=()=>add();
+  overlay.querySelector('.use-weight-sum').onclick=()=>{
+   const total=sum(); if(total<=0){alert('સાચી વજનની લાઇનો પસંદ કરો.');return;}
+   holders.get('farmer_weight').querySelector('.candidate').value=total.toFixed(2);
+   // The user must explicitly select replacement if the form already had weight.
+   if(!byId('farmer_weight').value)holders.get('farmer_weight').querySelector('[type=checkbox]').checked=true;
+   overlay.querySelector('.scan-note').textContent='આ કુલ વજન જૂના વજનમાં ઉમેરાતું નથી. જૂનું વજન બદલવા તેની checkbox પસંદ કરો.';
+  };
+ }
+ overlay.querySelector('.scan-translate').onclick=async function(){
+  const target=overlay.querySelector('.scan-language').value;
+  const ids=config.fields.map(x=>x[0]).filter(id=>/name|owner/.test(id));
+  const texts=ids.map(id=>holders.get(id).querySelector('.candidate').value);
+  this.disabled=true;
+  try {
+   const r=await db.functions.invoke('translate-entry',{body:{texts,target}});
+   if(r.error||!Array.isArray(r.data?.texts)||r.data.texts.length!==texts.length)throw new Error('ભાષાંતર સેવા સેટ કરેલી નથી અથવા જવાબ મળ્યો નથી.');
+   ids.forEach((id,i)=>{holders.get(id).querySelector('.candidate').value=r.data.texts[i];});
+   overlay.querySelector('.scan-note').textContent='ભાષા બદલાઈ. વ્યક્તિ અને ગામનાં નામ ચેક કરો.';
+  }catch(error){overlay.querySelector('.scan-note').textContent=error.message+' મૂળ લખાણ રાખ્યું છે; જાતે સુધારી શકો છો.';}
+  finally{this.disabled=false;}
+ };
+ function close(){overlay.close();overlay.remove();}
+ overlay.querySelector('.scan-cancel').onclick=close;
+ overlay.addEventListener('cancel',e=>{e.preventDefault();close();});
+ overlay.querySelector('.scan-apply').onclick=()=>{
+  const selected={},allowed=new Set();
+  for(const [id,row] of holders){
+   if(!row.querySelector('[type=checkbox]').checked)continue;
+   const field=row.querySelector('.candidate'),value=field.value.trim();
+   if(value && !field.checkValidity()){field.reportValidity();return;}
+   selected[id]=value; allowed.add(id);
+  }
+  applyValues(selected,allowed); close();
+ };
+ overlay.showModal();
+ overlay.querySelector('.scan-language').addEventListener('change',()=>overlay.querySelector('.scan-translate').click());
+ const nameValues=config.fields.filter(x=>/name|owner/.test(x[0])).map(x=>parsed.fields[x[0]]||'').join(' ');
+ if(nameValues.trim() && (language==='gu'?/[A-Za-z\u0900-\u097f]/.test(nameValues):language==='hi'?/[A-Za-z\u0a80-\u0aff]/.test(nameValues):/[\u0900-\u097f\u0a80-\u0aff]/.test(nameValues))) overlay.querySelector('.scan-translate').click();
+}
+async function scan(kind, button, status) {
+ if(scanBusy){status.textContent='બીજો Scan ચાલી રહ્યો છે.';return;}
+ const config=configurations[kind];
+ const file=byId(config.file)?.files?.[0];
+ if(!file){status.textContent='પહેલા Camera / Galleryમાંથી ફોટો પસંદ કરો.';return;}
+ if(!/^image\//.test(file.type)){status.textContent='ફોટો પસંદ કરો.';return;}
+ const langs=byId(kind).querySelector('.scan-ocr-language').value;
+ const sourceForm=byId(kind); const snapshot=Object.fromEntries(config.fields.map(([id])=>[id,byId(id)?.value]));
+ scanBusy=true;button.disabled=true;
+ try{
+  status.textContent='Scan શરૂ થઈ રહ્યો છે… પ્રથમ વખત ભાષાની ફાઇલો લોડ થશે.';
+  if(!window.Tesseract)throw new Error('Scan library લોડ થઈ નથી. Internet તપાસો.');
+  progressBox=status;
+  if(workerPromise && workerLanguage!==langs){await (await workerPromise).terminate();workerPromise=null;}
+  workerLanguage=langs;
+  if(!workerPromise)workerPromise=Tesseract.createWorker(langs,1,{logger:m=>{if(m.status==='recognizing text' && progressBox)progressBox.textContent=`Scan: ${Math.round(m.progress*100)}%`;}}).catch(e=>{workerPromise=null;throw e;});
+  const worker=await workerPromise; const result=await worker.recognize(file);
+  // A changed photo or edited form while scanning requires a fresh scan.
+  if(byId(config.file).files[0]!==file || config.fields.some(([id])=>byId(id)?.value!==snapshot[id]))throw new Error('Scan દરમિયાન ફોટો અથવા form બદલાયું. ફરી Scan કરો.');
+  if(sourceForm.classList.contains('hide'))throw new Error('બીજું form ખોલ્યું છે. Scan ફરી કરો.');
+  if(!result.data.text.trim())throw new Error('લખાણ વાંચી શકાયું નથી. સાફ ફોટો લો અથવા જાતે વિગતો ભરો.');
+  showReview(kind,parseScan(result.data.text,kind),config);
+  status.textContent='Scan પૂર્ણ. વિગતો ચેક કરીને formમાં ભરો; પછી Save કરો.';
+ }catch(error){status.textContent='Scan: '+error.message;}
+ finally{scanBusy=false;button.disabled=false;}
+}
+function installScan(kind){
+ const form=byId(kind); if(!form || form.querySelector('.bi-scan-tools'))return;
+ const config=configurations[kind],file=byId(config.file); if(!file)return;
+ const tools=document.createElement('div');tools.className='bi-scan-tools';
+ tools.innerHTML='<h3>ફોટોમાંથી વિગતો ભરો</h3><label>ફોટાની ભાષા<select class="scan-ocr-language"><option value="eng+guj+hin">ગુજરાતી / हिंदी / English</option><option value="eng+hin+mar">मराठी / हिंदी / English</option><option value="eng+tam">தமிழ் / English</option><option value="eng+tel">తెలుగు / English</option><option value="eng+ben">বাংলা / English</option><option value="eng+urd">اردو / English</option><option value="eng+ara">العربية / English</option></select></label><div class="bi-scan-buttons"><button type="button" class="scan-camera">Camera</button><button type="button" class="scan-gallery">Gallery</button><button type="button" class="scan-start">Scan કરો</button></div><p class="muted scan-progress" role="status">Scan પછી વિગતો ચેક કરીને બદલી શકશો. Save આપમેળે થતું નથી.</p>';
+ file.after(tools);
+ const camera=document.createElement('input');camera.type='file';camera.accept='image/*';camera.capture='environment';camera.hidden=true;tools.appendChild(camera);
+ camera.onchange=()=>{if(camera.files[0]){try{const dt=new DataTransfer();dt.items.add(camera.files[0]);file.files=dt.files;tools.querySelector('.scan-progress').textContent='ફોટો પસંદ થયો. Scan કરો.';}catch(e){tools.querySelector('.scan-progress').textContent='Camera ફોટો Galleryમાં પસંદ કરો.';}}};
+ tools.querySelector('.scan-camera').onclick=()=>{camera.value='';camera.click();};
+ tools.querySelector('.scan-gallery').onclick=()=>file.click();
+ tools.querySelector('.scan-start').onclick=e=>scan(kind,e.currentTarget,tools.querySelector('.scan-progress'));
+ file.addEventListener('change',()=>{tools.querySelector('.scan-progress').textContent='ફોટો પસંદ થયો. Scan કરો.';});
+ if(kind==='worker'){
+  const originals=form.querySelectorAll('button[onclick*="chiththi_camera"],button[onclick*="chiththi_photo"]'); originals.forEach(b=>b.hidden=true);
+ }
+}
+function installStaff(){
+ if(byId('bi-staff-dashboard'))return;
+ const card=document.createElement('section');card.id='bi-staff-dashboard';card.className='card hide';
+ card.innerHTML='<h2>નવી Entry</h2><p class="muted">જે કામ કરવું હોય તેનું form પસંદ કરો.</p><div class="bi-staff-tabs" role="tablist" aria-label="Entry type"></div>';
+ byId('worker').before(card);
+ ops.forEach((kind,i)=>{const button=document.createElement('button');button.type='button';button.textContent=['📝 ચિઠ્ઠી','⚖️ Waybridge','📦 માલ'][i];button.dataset.form=kind;button.setAttribute('role','tab');button.setAttribute('aria-controls',kind);button.onclick=()=>selectStaff(kind);card.querySelector('.bi-staff-tabs').appendChild(button);});
+}
+function selectStaff(kind){
+ ops.forEach(id=>byId(id).classList.toggle('hide',id!==kind));
+ document.querySelectorAll('.bi-staff-tabs button').forEach(b=>{const active=b.dataset.form===kind;b.classList.toggle('active',active);b.setAttribute('aria-selected',String(active));});
+ if(kind==='worker')loadMyChiththis();
+ if(kind==='waybridge'){if(!byId('wb_rst').value)setNextRST();loadStaffWaybridge();}
+ if(kind==='maal_entry'){setMaalDefaultDate();loadMyMaalEntries();}
+}
+// Replace boot with one profile fetch; pending users never receive any form.
+let bootInFlight=null;
+boot=function(){
+ if(bootInFlight)return bootInFlight;
+ bootInFlight=(async()=>{
+  const auth=await db.auth.getUser();if(!auth.data.user)return;
+  const result=await db.from('user_profiles').select('*').eq('id',auth.data.user.id).single();
+  byId('auth').classList.add('hide');byId('app').classList.remove('hide');
+  ['admin','worker','waybridge','maal_entry','farmer','pending','bi-staff-dashboard'].forEach(id=>byId(id)?.classList.add('hide'));
+  if(result.error){byId('who').textContent=result.error.message;return;}
+  currentProfile=result.data;const p=currentProfile;
+  byId('who').textContent=(p.full_name||'User')+' — '+(ops.includes(p.role)?'Staff':p.role);
+  if(!p.approved){byId('pending').classList.remove('hide');return;}
+  if(ops.includes(p.role)){byId('bi-staff-dashboard').classList.remove('hide');selectStaff('worker');}
+  else if(p.role==='admin'){byId('admin').classList.remove('hide');registerNativePushToken(false);}
+  else if(p.role==='farmer')byId('farmer').classList.remove('hide');
+ })().finally(()=>{bootInFlight=null;});return bootInFlight;
+};
+const oldPending=loadPending;
+loadPending=async function(){await oldPending();document.querySelectorAll('#plist select[id^="role_"]').forEach(select=>{select.innerHTML='<option value="worker">Staff — ચિઠ્ઠી / Waybridge / માલ</option><option value="farmer">Farmer</option>';});};
+forgotPassword=async function(){
+ const mobile=cleanMobile(byId('lm').value);const msg=byId('msg');msg.style.display='block';
+ if(!/^[6-9]\d{9}$/.test(mobile)){msg.textContent='પહેલા સાચો 10 અંકનો mobile number લખો.';return;}
+ msg.textContent='Adminને request મોકલાઈ રહી છે…';
+ try{const r=await db.rpc('balaji_request_password_help',{p_mobile:mobile});if(r.error)throw r.error;msg.textContent='Password બદલવાની request મોકલી છે. Admin તમારી ઓળખ ચકાસીને password બદલશે.';}
+ catch(e){msg.textContent='Request મોકલાઈ નથી: '+e.message;}
+};
+async function loadPasswordRequests(box){
+ box.textContent='લોડ થઈ રહ્યું છે…';
+ const r=await db.from('password_reset_requests').select('id,mobile,created_at').is('resolved_at',null).order('created_at',{ascending:false}).limit(100);
+ if(r.error){box.textContent='Request load: '+r.error.message;return;}
+ box.innerHTML='';
+ if(!r.data.length){box.textContent='કોઈ Password Request નથી.';return;}
+ r.data.forEach(x=>{const row=document.createElement('div');row.className='bi-password-request';const name=document.createElement('span');name.textContent=x.mobile+' · '+new Date(x.created_at).toLocaleDateString('en-IN');const pick=document.createElement('button');pick.type='button';pick.textContent='પસંદ કરો';pick.onclick=()=>{byId('pass_mobile').value=x.mobile;const form=byId('pass_mobile');form.closest('details').open=true;form.focus();};row.append(name,pick);box.appendChild(row);});
+}
+const oldChange=adminChangePassword;
+adminChangePassword=async function(){
+ const mobile=cleanMobile(byId('pass_mobile').value);await oldChange();
+ if(byId('pass_msg').textContent.startsWith('✅')){
+  const r=await db.from('password_reset_requests').update({resolved_at:new Date().toISOString()}).eq('mobile',mobile).is('resolved_at',null);
+  if(r.error)byId('pass_msg').textContent+=' Request status બદલાયો નથી: '+r.error.message;
+ }
+};
+// Prevent repeated save clicks and edits while an upload/save is in progress.
+for(const name of ['saveChiththi','saveWaybridge','saveMaalEntry']){
+ const original=window[name];let busy=false;
+ window[name]=async function(){
+  if(busy)return;busy=true;
+  const kind=name==='saveChiththi'?'worker':name==='saveWaybridge'?'waybridge':'maal_entry';
+  const form=byId(kind);const controls=[...form.querySelectorAll('input,select,textarea,button')];const states=controls.map(el=>el.disabled);
+  controls.forEach(el=>el.disabled=true);
+  try{await original();}catch(e){byId(kind==='worker'?'chiththi_msg':kind==='waybridge'?'wb_msg':'me_msg').textContent='Save: '+e.message;}
+  finally{controls.forEach((el,i)=>el.disabled=states[i]);busy=false;}
+ };
+}
+
+async function loadStaffWaybridge(){
+ const box=byId('bi-staff-waybridge-list');if(!box)return;
+ box.textContent='લોડ થઈ રહ્યું છે…';
+ const auth=await db.auth.getUser();if(!auth.data.user){box.textContent='ફરી Login કરો.';return;}
+ const r=await db.from('waybridge_entries').select('rst_no,vehicle_number,net_weight_kg,created_at').eq('created_by',auth.data.user.id).order('created_at',{ascending:false}).limit(50);
+ if(r.error){box.textContent=r.error.message;return;}
+ box.innerHTML=r.data.length?r.data.map(x=>`<article class="bi-maal-record"><strong>${escape(x.vehicle_number||'—')}</strong><div class="muted">RST ${escape(x.rst_no||'—')} · ${escape(new Date(x.created_at).toLocaleDateString('en-IN'))}</div><strong>${escape(x.net_weight_kg??'—')} KG</strong></article>`).join(''):'હજુ કોઈ Waybridge Entry નથી.';
+}
+compareVehicleWeight=async function(vehicle,weight){
+ const box=byId('wb_compare');box.textContent='ચિઠ્ઠીઓનું કુલ વજન ગણાઈ રહ્યું છે…';
+ const r=await db.rpc('balaji_vehicle_chit_total',{p_vehicle:vehicle});
+ if(r.error){box.textContent='Comparison: '+r.error.message;return;}
+ const data=r.data?.[0];if(!data){box.textContent='Comparison data મળ્યું નથી.';return;}
+ if(Number(data.missing_weight)>0||Number(data.chit_count)===0){box.textContent='આ ગાડીની ચિઠ્ઠીઓ અથવા તેમનું મૂળ વજન ઉપલબ્ધ નથી; Match ચેક કરી શકાયું નથી.';return;}
+ const total=Number(data.gross_total),diff=Math.abs(Number(weight)-total);
+ box.innerHTML=`<article class="bi-maal-record"><h3>${diff<0.01?'✅ MATCH':'❌ MISMATCH'}</h3><strong>${escape(vehicle)}</strong><p>ચિઠ્ઠીઓ: ${escape(data.chit_count)}<br>ચિઠ્ઠી કુલ: ${total.toFixed(2)} KG<br>Waybridge: ${Number(weight).toFixed(2)} KG<br>Difference: ${diff.toFixed(2)} KG</p></article>`;
+};
+
+function init(){
+ installStaff();ops.forEach(installScan);
+ const history=document.createElement('section');history.innerHTML='<h3>મારી Waybridge Entries</h3><button type="button">Refresh</button><div id="bi-staff-waybridge-list"></div>';history.querySelector('button').onclick=loadStaffWaybridge;byId('waybridge').appendChild(history);
+ const password=byId('pass_mobile');const settings=password?.closest('.bi-panel8');
+ if(settings && !byId('bi-password-requests')){
+  const details=document.createElement('details');details.id='bi-password-requests';details.innerHTML='<summary>🔑 Password Requests</summary><div class="bi-password-requests-content"></div>';
+  const parent=password.closest('details')||password.parentElement;parent.before(details);
+  details.addEventListener('toggle',()=>{if(details.open)loadPasswordRequests(details.querySelector('div'));});
+ }
+ boot();
+}
+// Parser/apply functions are separated so double-count behavior can be verified.
+window.BalajiScan={parseScan,normalizeDigits,applyValues};
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+
+</script>
+</body>
+</html>
