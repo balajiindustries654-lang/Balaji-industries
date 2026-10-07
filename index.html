@@ -1525,7 +1525,24 @@ if(r.error){
 msg.innerText="Save Error: "+r.error.message;
 return;
 }
+try {
+  const { error: notifyError } = await db.functions.invoke(
+    "send-push-notification",
+    {
+      body: {
+        type: "maal_entry",
+        title: "નવી Maal Entry",
+        body: `${vehicle} | ${material} | ${bags} બેગ | ${owner || "-"}`
+      }
+    }
+  );
 
+  if (notifyError) {
+    console.error("Maal Push Error:", notifyError);
+  }
+} catch (notifyErr) {
+  console.error("Maal Push Error:", notifyErr);
+}
 msg.innerText=maalLang==="hi"
 ?"एंट्री सफलतापूर्वक सेव हो गई।"
 :"Entry saved successfully.";
