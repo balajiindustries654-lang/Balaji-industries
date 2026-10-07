@@ -3935,5 +3935,35 @@ if(messaging){
   }
 })();
 </script>
+    <style>
+/* દરેક પાનાં પર heading એક જ વાર */
+#admin .bi-panel8 > h3 {
+  display: none;
+}
+
+/* નામ અને Logout એક લાઇનમાં */
+#app > .card:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px;
+}
+
+#app > .card:first-child #who {
+  margin: 0;
+  min-width: 0;
+  font-size: 15px;
+}
+
+#app > .card:first-child button {
+  width: auto;
+  min-height: 40px;
+  margin: 0;
+  padding: 8px 14px;
+  flex-shrink: 0;
+  font-size: 13px;
+}
+    </style>
 </body>
 </html>
