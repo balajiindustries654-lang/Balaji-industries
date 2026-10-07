@@ -3965,5 +3965,475 @@ if(messaging){
   font-size: 13px;
 }
     </style>
+    <style>
+/* ===== BALAJI APP POLISH ===== */
+
+.bi-brand {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 16px;
+  margin-bottom: 20px;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+}
+
+.bi-brand > div:first-child {
+  margin: 0 !important;
+  flex-shrink: 0;
+}
+
+.bi-brand img {
+  width: 52px !important;
+  height: 52px !important;
+  padding: 3px !important;
+  object-fit: contain !important;
+  border-radius: 12px !important;
+  box-shadow: none !important;
+}
+
+.bi-brand h1 {
+  text-align: left;
+  font-size: 20px;
+  line-height: 1.3;
+}
+
+.bi-brand p {
+  margin: 3px 0 0;
+  font-size: 12px;
+}
+
+#app .bi-account-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+#app button.bi-settings-gear {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  min-height: 42px;
+  padding: 10px;
+  margin: 0;
+  background: var(--soft);
+  color: var(--dark);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.bi-settings-gear svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+#admin .bi-nav8 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+#admin .bi-grid8 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+#admin .bi-tile8 {
+  min-height: 108px;
+}
+
+#admin .bi-settings-group {
+  padding: 16px;
+  margin: 16px 0;
+  background: #f8fbfb;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+}
+
+#admin .bi-settings-group h3 {
+  display: block;
+  margin: 0 0 12px;
+  font-size: 16px;
+}
+
+#admin .bi-settings-group button {
+  margin-bottom: 0;
+}
+
+#admin .bi-settings-logout {
+  background: white;
+  color: #b42336;
+  border: 1px solid #efcbd0;
+}
+
+.bi-report-dates,
+.bi-report-shortcuts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.bi-report-dates {
+  margin: 8px 0 14px;
+}
+
+.bi-report-dates label {
+  margin: 0 0 6px;
+}
+
+.bi-report-dates input {
+  min-width: 0;
+  margin: 0;
+}
+
+#admin .bi-report-shortcuts button {
+  background: var(--soft);
+  color: var(--dark);
+  border: 1px solid #c5dddd;
+  margin: 4px 0;
+  font-size: 13px;
+}
+
+.bi-signup {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.bi-signup summary {
+  padding: 12px;
+  border-radius: 10px;
+  color: var(--dark);
+  background: var(--soft);
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.bi-signup[open] summary {
+  margin-bottom: 16px;
+}
+
+#auth > h2 {
+  margin-bottom: 6px;
+}
+
+.bi-login-hint {
+  margin: 0 0 20px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+@media (max-width: 380px) {
+  .bi-brand {
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .bi-brand h1 {
+    font-size: 18px;
+  }
+
+  .bi-report-dates,
+  .bi-report-shortcuts {
+    gap: 8px;
+  }
+}
+</style>
+
+<script>
+(function () {
+  function polishBalajiApp() {
+    const admin = document.getElementById("admin");
+    const menu = document.getElementById("bi-menu8");
+
+    if (
+      !admin ||
+      !menu ||
+      document.getElementById("bi-settings-gear")
+    ) return;
+
+    const nav = admin.querySelector(".bi-nav8");
+    const usersNav = nav?.querySelector(
+      'button[data-target="users"]'
+    );
+
+    const panels = Array.from(
+      admin.querySelectorAll(".bi-panel8")
+    );
+
+    const settings = panels.find(panel =>
+      panel.querySelector("#pass_mobile")
+    );
+
+    if (!settings || !usersNav) return;
+
+    /* Settings પાનું */
+    settings.querySelector(".bi-bar8 h2").textContent =
+      "Settings / સેટિંગ્સ";
+
+    /* Home પર ફક્ત ચાર જરૂરી actions */
+    menu.querySelector(
+      'button[data-target="users"]'
+    )?.remove();
+
+    menu.querySelector(
+      'button[data-target="excel"]'
+    )?.remove();
+
+    /* નીચે Home, Entries અને Reports */
+    usersNav.remove();
+
+    /* ઉપર નામની બાજુ નાનું Settings icon */
+    const who = document.getElementById("who");
+    const accountCard = who?.parentElement;
+
+    if (!accountCard) return;
+
+    const logoutButton = accountCard.querySelector(
+      'button[onclick*="logout"]'
+    );
+
+    const accountActions = document.createElement("div");
+    accountActions.className = "bi-account-actions";
+
+    if (logoutButton) {
+      accountActions.appendChild(logoutButton);
+    }
+
+    const gear = document.createElement("button");
+    gear.type = "button";
+    gear.id = "bi-settings-gear";
+    gear.className = "bi-settings-gear";
+    gear.setAttribute("aria-label", "Settings");
+    gear.setAttribute("title", "Settings");
+
+    gear.innerHTML = `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="
+          M9 3h6l1 3 3 1 2 5-2 5-3 1-1 3H9
+          l-1-3-3-1-2-5 2-5 3-1z
+        "/>
+        <circle cx="12" cy="12" r="3"/>
+      </svg>
+    `;
+
+    gear.onclick = function () {
+      usersNav.click();
+    };
+
+    accountActions.appendChild(gear);
+    accountCard.appendChild(accountActions);
+
+    /* Admin સિવાયના roles માટે મૂળ Logout રહે */
+    function syncAccountButtons() {
+      const isAdmin = !admin.classList.contains("hide");
+
+      gear.style.display = isAdmin ? "grid" : "none";
+
+      if (logoutButton) {
+        logoutButton.style.display =
+          isAdmin ? "none" : "block";
+      }
+    }
+
+    syncAccountButtons();
+
+    new MutationObserver(syncAccountButtons).observe(
+      admin,
+      {
+        attributes: true,
+        attributeFilter: ["class"]
+      }
+    );
+
+    /* Settingsમાં Notification અને Excel */
+    function addSettingsGroup(title, button) {
+      if (!button) return;
+
+      const group = document.createElement("div");
+      group.className = "bi-settings-group";
+
+      const heading = document.createElement("h3");
+      heading.textContent = title;
+
+      group.append(heading, button);
+      settings.appendChild(group);
+    }
+
+    addSettingsGroup(
+      "Notifications / સૂચનાઓ",
+      admin.querySelector(
+        'button[onclick*="enablePhoneNotifications"]'
+      )
+    );
+
+    addSettingsGroup(
+      "Data Download / ડેટા ડાઉનલોડ",
+      admin.querySelector(
+        'button[onclick*="exportAllDataToCSV"]'
+      )
+    );
+
+    /* Admin Logout Settingsમાં */
+    if (logoutButton) {
+      const settingsLogout = logoutButton.cloneNode(true);
+      settingsLogout.removeAttribute("id");
+      settingsLogout.className = "bi-settings-logout";
+      settingsLogout.style.display = "block";
+      settingsLogout.textContent = "Logout / બહાર નીકળો";
+
+      addSettingsGroup("Account", settingsLogout);
+    }
+
+    /* Reportsમાં તારીખો બાજુબાજુ અને labels */
+    const from = document.getElementById("admin_from");
+    const to = document.getElementById("admin_to");
+
+    if (from && to && from.parentElement === to.parentElement) {
+      const dates = document.createElement("div");
+      dates.className = "bi-report-dates";
+
+      from.before(dates);
+
+      [
+        [from, "તારીખથી"],
+        [to, "તારીખ સુધી"]
+      ].forEach(([input, text]) => {
+        const field = document.createElement("div");
+        const label = document.createElement("label");
+
+        label.htmlFor = input.id;
+        label.textContent = text;
+
+        field.append(label, input);
+        dates.appendChild(field);
+      });
+    }
+
+    /* આજનો અને મહિનાનો Report નાના buttons */
+    const todayButton = admin.querySelector(
+      'button[onclick="adminSearch(\'today\')"]'
+    );
+
+    const monthButton = admin.querySelector(
+      'button[onclick="adminSearch(\'month\')"]'
+    );
+
+    if (todayButton && monthButton) {
+      const shortcuts = document.createElement("div");
+      shortcuts.className = "bi-report-shortcuts";
+
+      todayButton.before(shortcuts);
+      shortcuts.append(todayButton, monthButton);
+    }
+
+    /* નાનું Brand header */
+    const main = document.querySelector("main");
+
+    const title = main && Array.from(main.children).find(
+      el => el.tagName === "H1"
+    );
+
+    if (title) {
+      const logo = title.previousElementSibling;
+      const subtitle = title.nextElementSibling;
+
+      if (
+        logo?.querySelector('img[src="balaji-logo.png"]') &&
+        subtitle?.matches("p.muted")
+      ) {
+        const header = document.createElement("header");
+        header.className = "bi-brand";
+
+        logo.before(header);
+
+        const text = document.createElement("div");
+        text.append(title, subtitle);
+
+        header.append(logo, text);
+      }
+    }
+
+    /* Login અને Sign Up અલગ */
+    const auth = document.getElementById("auth");
+
+    if (auth && !auth.querySelector(".bi-signup")) {
+      const signupTitle = Array.from(auth.children).find(
+        el =>
+          el.tagName === "H3" &&
+          el.textContent.includes("Sign Up")
+      );
+
+      if (signupTitle) {
+        const signupElements = [];
+        let current = signupTitle.nextElementSibling;
+
+        while (current) {
+          signupElements.push(current);
+          current = current.nextElementSibling;
+        }
+
+        const divider = signupTitle.previousElementSibling;
+
+        if (divider?.tagName === "HR") divider.remove();
+
+        const details = document.createElement("details");
+        details.className = "bi-signup";
+
+        const summary = document.createElement("summary");
+        summary.textContent = "નવું Account બનાવો / Sign Up";
+
+        details.appendChild(summary);
+
+        signupElements.forEach(el =>
+          details.appendChild(el)
+        );
+
+        signupTitle.replaceWith(details);
+      }
+
+      const loginTitle = auth.querySelector("h2");
+
+      if (loginTitle) {
+        const hint = document.createElement("p");
+        hint.className = "bi-login-hint";
+        hint.textContent =
+          "તમારા Mobile Number અને Passwordથી Login કરો.";
+
+        loginTitle.after(hint);
+      }
+
+      [
+        ["lm", "Mobile Number"],
+        ["lp", "Password"]
+      ].forEach(([id, text]) => {
+        const input = document.getElementById(id);
+
+        if (input && !auth.querySelector('label[for="' + id + '"]')) {
+          const label = document.createElement("label");
+          label.htmlFor = id;
+          label.textContent = text;
+          input.before(label);
+        }
+      });
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener(
+      "DOMContentLoaded",
+      polishBalajiApp
+    );
+  } else {
+    polishBalajiApp();
+  }
+})();
+      </script>
 </body>
 </html>
