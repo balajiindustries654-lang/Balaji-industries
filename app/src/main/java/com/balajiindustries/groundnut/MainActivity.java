@@ -9,6 +9,9 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.os.Build;
 
 public class MainActivity extends Activity {
 
@@ -19,6 +22,14 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+        checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED) {
+    requestPermissions(
+            new String[]{Manifest.permission.POST_NOTIFICATIONS},
+            2001
+    );
+        }
 
         webView = new WebView(this);
         setContentView(webView);
