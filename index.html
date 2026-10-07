@@ -2,500 +2,483 @@
 <html lang="gu"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Balaji Industries</title>
 <style>
-body{font-family:system-ui;background:#f4f5f7;margin:0;color:#161616}main{max-width:720px;margin:auto;padding:18px}
-.card{background:#fff;padding:20px;border-radius:16px;margin:14px 0;box-shadow:0 2px 12px #0001}
-input,select,button{width:100%;padding:13px;margin:6px 0;box-sizing:border-box;border-radius:10px;border:1px solid #ccc;font-size:16px}
-button{background:#16834a;color:#fff;border:0;font-weight:700}.hide{display:none}.muted{color:#666}.danger{color:#b00020}
-  /* ===== Common Dashboard Design ===== */
+:root {
+  --teal: #087f83;
+  --dark: #065e62;
+  --ink: #173438;
+  --muted: #63797c;
+  --line: #dce7e8;
+  --soft: #edf7f7;
+  --bg: #f3f6f7;
+}
 
+* {
+  box-sizing: border-box;
+}
 
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 16px;
+  line-height: 1.55;
+}
 
-#admin h2, #worker h2, #waybridge h2,
-#maal_entry h2, #farmer h2 {
-  margin-top: 0;
-  font-size: 22px;
+main {
+  max-width: 760px;
+  margin: auto;
+  padding: 20px 18px 48px;
+}
+
+.hide {
+  display: none !important;
+}
+
+h1, h2, h3, p {
+  overflow-wrap: anywhere;
+}
+
+h1 {
+  font-size: 25px;
+  margin: 0;
+  text-align: center;
+}
+
+main > p.muted {
+  text-align: center;
+  margin: 5px 0 24px;
+}
+
+main > div > img {
+  width: 80px !important;
+  height: 80px !important;
+  object-fit: contain !important;
+  border-radius: 18px !important;
+  box-shadow: none !important;
+  background: white;
+  border: 1px solid var(--line);
+  padding: 4px;
+}
+
+h2 {
+  font-size: 23px;
+  line-height: 1.35;
+  margin: 0 0 18px;
+}
+
+h3 {
+  font-size: 17px;
+  margin: 25px 0 12px;
+}
+
+p {
+  margin: 12px 0;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.danger {
+  color: #b42336;
+}
+
+a {
+  color: var(--dark);
+  text-underline-offset: 3px;
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 25px 0;
+}
+
+.card {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 24px;
+  margin: 16px 0;
+  box-shadow: 0 5px 18px rgba(24, 66, 70, .04);
+}
+
+#auth {
+  max-width: 480px;
+  margin: 24px auto;
+}
+
+#auth > h2 {
+  color: var(--dark);
+}
+
+label {
+  display: block;
+  margin: 18px 0 6px;
+  font-size: 14px;
+  font-weight: 650;
+  color: #334f53;
+}
+
+label b {
+  font-weight: 650;
+}
+
+input, select, textarea {
+  width: 100%;
+  min-height: 50px;
+  padding: 12px 14px;
+  margin: 0 0 10px;
+  border: 1px solid #ccdadd;
+  border-radius: 11px;
+  background: white;
+  color: var(--ink);
+  font: inherit;
+}
+
+textarea {
+  min-height: 100px;
+}
+
+input::placeholder {
+  color: #83979a;
+  font-size: 14px;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: 3px solid #d6eeee;
+  border-color: var(--teal);
+}
+
+input[readonly] {
+  background: var(--soft);
+  border-color: #bcdddd;
+  color: var(--dark);
+  font-weight: 750;
+}
+
+input[type="file"] {
+  min-height: 60px;
+  background: #f8fbfb;
+  border: 1px dashed #a9cacc;
+  padding: 10px;
+  font-size: 13px;
+}
+
+input::file-selector-button {
+  background: #e5f2f2;
+  color: var(--dark);
+  border: 0;
+  border-radius: 7px;
+  padding: 10px;
+  margin-right: 10px;
+}
+
+input[type="hidden"] {
+  display: none;
 }
 
 button {
-  min-height: 44px;
-  border-radius: 10px;
-  font-weight: 600;
-}
-
-input, select {
-  min-height: 44px;
-  border-radius: 9px;
-}
-
-table th, table td {
-  padding: 8px;
-  vertical-align: middle;
-}
-
-table th {
+  display: block;
+  width: 100%;
+  min-height: 49px;
+  padding: 12px 16px;
+  margin: 9px 0;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  background: var(--teal);
+  color: white;
+  font: inherit;
+  font-size: 15px;
   font-weight: 700;
+  cursor: pointer;
 }
 
-@media (max-width: 600px) {
-  #admin, #worker, #waybridge, #maal_entry, #farmer {
-    padding: 12px;
-    border-radius: 12px;
-  }
-
-  button {
-    width: 100%;
-    margin-top: 6px;
-  }
-}
-  .dash-welcome{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  padding:18px;
-  margin:12px 0 20px;
-  border-radius:16px;
-  background:rgba(255,255,255,.92);
-  box-shadow:0 4px 15px rgba(0,0,0,.10);
+button:hover {
+  background: var(--dark);
 }
 
-.dash-icon{
-  width:52px;
-  height:52px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  border-radius:14px;
-  background:#e8f2ff;
-  font-size:28px;
-}
- body{
-  background-image:
-    linear-gradient(rgba(255,255,255,0.68), rgba(255,255,255,0.68)),
-    url("./dashboard-bg.png") !important;
-  background-size: cover !important;
-  background-position: center !important;
-  background-attachment: fixed !important;
-  background-repeat: no-repeat !important;
-}
-  /* Transparent Glass Dashboard */
-.card{
-  background:rgba(255,255,255,0.72) !important;
-  backdrop-filter:blur(5px);
-  -webkit-backdrop-filter:blur(5px);
-  border:1px solid rgba(255,255,255,0.55) !important;
-  box-shadow:0 4px 15px rgba(0,0,0,0.08) !important;
+button:focus-visible {
+  outline: 3px solid #80c9cc;
+  outline-offset: 3px;
 }
 
-.dash-welcome{
-  background:rgba(255,255,255,0.55) !important;
-  backdrop-filter:blur(4px);
-  -webkit-backdrop-filter:blur(4px);
-  box-shadow:none !important;
-}
-  /* Balaji Industries - Glass Design */
-.card{
-  background:rgba(255,255,255,0.42) !important;
-  backdrop-filter:blur(4px);
-  -webkit-backdrop-filter:blur(4px);
-  border:1px solid rgba(255,255,255,0.50) !important;
-  box-shadow:0 5px 18px rgba(0,0,0,0.08) !important;
+button:active {
+  transform: translateY(1px);
 }
 
-.dash-welcome{
-  background:rgba(255,255,255,0.45) !important;
-  backdrop-filter:blur(4px);
-  -webkit-backdrop-filter:blur(4px);
-  border:1px solid rgba(255,255,255,0.45) !important;
-  box-shadow:0 4px 14px rgba(0,0,0,0.06) !important;
-}
-  /* ===== Balaji Splash Screen ===== */
-#splashScreen{
-  position:fixed;
-  inset:0;
-  z-index:99999;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  text-align:center;
-  background:
-    linear-gradient(rgba(255,255,255,.70),rgba(255,255,255,.70)),
-    url("./dashboard-bg.png");
-  background-size:cover;
-  background-position:center;
+button:disabled {
+  opacity: .55;
 }
 
-.splash-box{
-  width:82%;
-  max-width:360px;
-  padding:35px 22px;
-  border-radius:24px;
-  background:rgba(255,255,255,.55);
-  backdrop-filter:blur(7px);
-  -webkit-backdrop-filter:blur(7px);
-  box-shadow:0 8px 30px rgba(0,0,0,.15);
+button[onclick*="forgotPassword"],
+button[onclick*="Refresh"],
+button[onclick*="loadMy"],
+button[onclick*=".click()"],
+#me_lang_btn {
+  background: var(--soft) !important;
+  color: var(--dark) !important;
+  border: 1px solid #c5dddd !important;
 }
 
-.splash-logo{
-  font-size:58px;
-  margin-bottom:10px;
+button[onclick*="delete"],
+#deleteYes {
+  background: #b92d40;
+  color: white;
 }
 
-.splash-title{
-  font-size:27px;
-  font-weight:800;
-  margin:0;
+button[onclick*="logout"] {
+  background: white;
+  color: var(--muted);
+  border: 1px solid var(--line);
 }
 
-.splash-subtitle{
-  margin-top:7px;
-  font-size:16px;
-  color:#555;
+#who {
+  display: block;
+  font-size: 16px;
+  margin-bottom: 12px;
 }
 
-.splash-loader{
-  width:38px;
-  height:38px;
-  margin:22px auto 0;
-  border:4px solid rgba(0,0,0,.12);
-  border-top-color:#16834a;
-  border-radius:50%;
-  animation:splashSpin .8s linear infinite;
+.dash-welcome {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--soft);
+  border: 1px solid #d4eaea;
+  border-radius: 15px;
+  padding: 18px;
+  margin: 0 0 18px;
 }
 
-@keyframes splashSpin{
-  to{transform:rotate(360deg);}
+.dash-welcome h2 {
+  font-size: 19px;
+  margin: 0;
 }
 
-#admin,
-#worker,
-#waybridge,
-#maal_entry{
-  background:rgba(255,255,255,0.42) !important;
+.dash-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: #d8eeee;
+  font-size: 24px;
+  flex-shrink: 0;
 }
 
-input,
-select,
-textarea{
-  background:rgba(255,255,255,0.75) !important;
-  backdrop-filter:blur(3px);
-  -webkit-backdrop-filter:blur(3px);
+.dash-welcome .muted {
+  font-size: 12px;
+  margin-top: 3px;
 }
 
-#admin > div,
-#worker > div,
-#waybridge > div,
-#maal_entry > div{
-  background-color:rgba(255,255,255,0.35);
-}
-  /* ===== BALAJI GLASS PREMIUM ADMIN DASHBOARD ===== */
-
-#admin{
-  background:rgba(10,18,25,.58) !important;
-  color:#fff;
-  border:1px solid rgba(255,255,255,.20) !important;
-  border-radius:24px !important;
-  padding:16px !important;
-  backdrop-filter:blur(10px);
-  -webkit-backdrop-filter:blur(10px);
-  box-shadow:0 12px 35px rgba(0,0,0,.28) !important;
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 22px 0;
 }
 
-/* Admin Dashboard heading */
-#admin > h2:first-child{
-  text-align:center;
-  font-size:25px;
-  margin:4px 0 15px;
-  color:#fff;
-  text-shadow:0 2px 8px rgba(0,0,0,.35);
+.stat-glass {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  min-width: 0;
+  padding: 17px 12px;
 }
 
-/* Welcome premium glass box */
-#admin .dash-welcome{
-  background:linear-gradient(
-    135deg,
-    rgba(255,255,255,.24),
-    rgba(255,255,255,.10)
-  ) !important;
-  border:1px solid rgba(255,255,255,.32) !important;
-  border-radius:20px !important;
-  padding:16px !important;
-  color:#fff;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.25),
-    0 8px 25px rgba(0,0,0,.18) !important;
-  backdrop-filter:blur(12px);
-  -webkit-backdrop-filter:blur(12px);
+.stat-icon {
+  font-size: 22px;
+  flex-shrink: 0;
 }
 
-/* Factory icon */
-#admin .dash-icon{
-  width:58px;
-  height:58px;
-  flex:0 0 58px;
-  border-radius:17px;
-  font-size:30px;
-  background:linear-gradient(135deg,#00b96b,#087d50);
-  box-shadow:0 5px 16px rgba(0,185,107,.30);
+.stat-label {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 6px;
 }
 
-/* Welcome text */
-#admin .dash-welcome h2{
-  color:#fff;
-  font-size:20px;
+.stat-value {
+  font-size: 22px;
+  line-height: 1.25;
+  font-weight: 800;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
 }
 
-#admin .dash-welcome .muted{
-  color:rgba(255,255,255,.75) !important;
+#native_push_status:empty,
+#msg:empty,
+#chiththi_msg:empty,
+#wb_msg:empty,
+#me_msg:empty {
+  display: none !important;
 }
 
-/* Section headings */
-#admin h3{
-  color:#fff;
-  margin-top:22px;
-  margin-bottom:10px;
-  font-size:18px;
+#native_push_status:not(:empty),
+#chiththi_msg:not(:empty),
+#wb_msg:not(:empty),
+#me_msg:not(:empty) {
+  background: var(--soft);
+  border: 1px solid #d4eaea;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 14px;
 }
 
-/* Divider */
-#admin hr{
-  border:0;
-  height:1px;
-  margin:20px 0;
-  background:linear-gradient(
-    90deg,
-    transparent,
-    rgba(255,255,255,.35),
-    transparent
-  );
+#msg:not(:empty) {
+  display: block !important;
 }
 
-/* Inputs */
-#admin input,
-#admin select{
-  background:rgba(255,255,255,.90) !important;
-  color:#151515 !important;
-  border:1px solid rgba(255,255,255,.65) !important;
-  border-radius:13px !important;
-  min-height:48px;
-  padding:12px 14px;
-  box-shadow:0 3px 12px rgba(0,0,0,.10);
+#msg {
+  background: var(--soft) !important;
+  color: var(--dark) !important;
 }
 
-#admin input:focus,
-#admin select:focus{
-  outline:none;
-  border-color:#20d98a !important;
-  box-shadow:0 0 0 3px rgba(32,217,138,.20);
+#pending {
+  border-left: 4px solid #d49c2d;
 }
 
-/* Premium buttons */
-#admin button{
-  min-height:50px;
-  border-radius:14px !important;
-  border:1px solid rgba(255,255,255,.20) !important;
-  background:linear-gradient(135deg,#08a65f,#047745) !important;
-  color:#fff !important;
-  font-size:15px;
-  font-weight:700;
-  box-shadow:0 6px 16px rgba(0,0,0,.18);
-  transition:transform .15s ease, box-shadow .15s ease;
-}
-
-#admin button:active{
-  transform:scale(.98);
-  box-shadow:0 3px 8px rgba(0,0,0,.18);
-}
-
-/* Password box */
-#admin > div[style*="border:1px solid"]{
-  background:rgba(255,255,255,.10) !important;
-  border:1px solid rgba(255,255,255,.24) !important;
-  border-radius:18px !important;
-  backdrop-filter:blur(10px);
-  -webkit-backdrop-filter:blur(10px);
-  box-shadow:0 7px 22px rgba(0,0,0,.15);
-}
-
-/* Result areas */
-#plist,
-#admin_match_results,
-#admin_summary,
 #admin_results,
-#admin_maal_results,
-#live_data_results{
-  margin-top:10px;
-  border-radius:16px;
-  overflow:hidden;
+#admin_match_results,
+#live_data_results,
+#admin_maal_results {
+  max-width: 100%;
+  overflow-x: auto;
 }
 
-/* Tables */
-#admin table{
-  width:100%;
-  border-collapse:separate;
-  border-spacing:0;
-  background:rgba(255,255,255,.92);
-  color:#171717;
-  border-radius:14px;
-  overflow:hidden;
+table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 0;
+  background: white;
+  font-size: 13px;
 }
 
-#admin table th{
-  background:rgba(6,119,69,.94);
-  color:#fff;
+th {
+  background: var(--soft);
+  color: var(--dark);
+  text-align: left;
+  white-space: nowrap;
 }
 
-#admin table td,
-#admin table th{
-  padding:10px 8px;
-  border-bottom:1px solid rgba(0,0,0,.08);
+th, td {
+  padding: 12px 10px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
 }
 
-/* Muted text inside Admin */
-#admin .muted{
-  color:rgba(255,255,255,.72);
+td button {
+  min-height: 36px;
+  font-size: 12px;
+  padding: 6px 9px;
 }
 
-/* Mobile premium spacing */
-@media(max-width:600px){
-  #admin{
-    padding:13px !important;
-    border-radius:20px !important;
-  }
-
-  #admin button{
-    margin:5px 0;
-  }
-
-  #admin .dash-welcome{
-    margin-bottom:16px;
-  }
+tbody tr:nth-child(even) {
+  background: #f9fbfb;
 }
 
-
-<div class="stats-grid">
-  <div class="stat-glass">
-    <div class="stat-icon">🧾</div>
-    <div>
-      <div class="stat-label">આજની ચિઠ્ઠી</div>
-      <div class="stat-value" id="stat_entries">0</div>
-    </div>
-  </div>
-
-  <div class="stat-glass">
-    <div class="stat-icon">⚖️</div>
-    <div>
-      <div class="stat-label">આજનું કુલ વજન</div>
-      <div class="stat-value" id="stat_weight">0 KG</div>
-    </div>
-  </div>
-
-  <div class="stat-glass">
-    <div class="stat-icon">🚛</div>
-    <div>
-      <div class="stat-label">આજની ગાડીઓ</div>
-      <div class="stat-value" id="stat_vehicles">0</div>
-    </div>
-  </div>
-
-  <div class="stat-glass">
-    <div class="stat-icon">👨‍🌾</div>
-    <div>
-      <div class="stat-label">આજના ખેડૂતો</div>
-      <div class="stat-value" id="stat_farmers">0</div>
-    </div>
-  </div>
-
-  <div class="stat-glass">
-  <div class="stat-icon">📥</div>
-  <div>
-    <div class="stat-label">આજનું Unloading</div>
-    <div class="stat-value" id="stat_unloading">0 Bags</div>
-  </div>
-</div>
-
-<div class="stat-glass">
-  <div class="stat-icon">📤</div>
-  <div>
-    <div class="stat-label">આજનું Loading</div>
-    <div class="stat-value" id="stat_loading">0 Bags</div>
-  </div>
-</div>
-</div>
-  /* ===== TODAY STATS CARDS ===== */
-.stats-grid{
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:12px;
-  margin:16px 0;
+#admin .card {
+  background: white;
+  border: 1px solid var(--line);
+  box-shadow: none;
 }
 
-.stat-glass{
-  background:rgba(255,255,255,.18) !important;
-  border:1px solid rgba(255,255,255,.30);
-  border-radius:18px;
-  padding:15px;
-  display:flex;
-  align-items:center;
-  gap:12px;
-  box-shadow:0 6px 18px rgba(0,0,0,.12);
-  backdrop-filter:blur(8px);
-  -webkit-backdrop-filter:blur(8px);
+#splashScreen {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  text-align: center;
 }
 
-.stat-icon{
-  font-size:28px;
+.splash-box {
+  width: 82%;
+  max-width: 360px;
+  padding: 36px 22px;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 24px;
 }
 
-.stat-label{
-  font-size:14px;
-  color:#fff;
+.splash-logo {
+  font-size: 50px;
 }
 
-.stat-value{
-  font-size:22px;
-  font-weight:800;
-  color:#fff;
+.splash-title {
+  font-size: 23px;
+  font-weight: 800;
+  margin-top: 15px;
 }
 
-@media(max-width:600px){
-  .stats-grid{
-    grid-template-columns:repeat(2,1fr);
+.splash-subtitle {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 6px;
+}
+
+.splash-loader {
+  width: 30px;
+  height: 30px;
+  margin: 25px auto 0;
+  border: 3px solid #d6eeee;
+  border-top-color: var(--teal);
+  border-radius: 50%;
+  animation: splashSpin .8s linear infinite;
+}
+
+@keyframes splashSpin {
+  to { transform: rotate(360deg); }
+}
+
+@media (min-width: 650px) {
+  main { padding-top: 30px; }
+
+  #admin .stats-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
-/* ===== TODAY STATS FINAL MOBILE FIX ===== */
-#admin .stats-grid{
-  display:grid !important;
-  grid-template-columns:repeat(2, minmax(0,1fr)) !important;
-  gap:12px !important;
-  margin:16px 0 !important;
+
+@media (max-width: 420px) {
+  main { padding: 16px 12px 36px; }
+
+  .card {
+    padding: 20px 16px;
+    border-radius: 17px;
+  }
+
+  h1 { font-size: 22px; }
+  h2 { font-size: 21px; }
+
+  .stat-glass {
+    padding: 15px 10px;
+    gap: 8px;
+  }
+
+  .stat-icon { font-size: 18px; }
+  .stat-value { font-size: 20px; }
+  .dash-welcome { padding: 15px 12px; }
+  #me_title { font-size: 19px; }
 }
 
-#admin .stat-glass{
-  min-width:0 !important;
-  min-height:105px !important;
-  padding:14px 10px !important;
-  border-radius:18px !important;
-  display:flex !important;
-  align-items:center !important;
-  gap:10px !important;
-  background:rgba(255,255,255,.18) !important;
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
 }
-
-#admin .stat-icon{
-  font-size:26px !important;
-  flex-shrink:0;
-}
-
-#admin .stat-label{
-  font-size:13px !important;
-  line-height:1.3 !important;
-}
-
-#admin .stat-value{
-  font-size:21px !important;
-  font-weight:800 !important;
-}
-</style></head><body><main>
+</style>
+  </head><body><main>
+  
+  
   <!-- ===== Balaji Splash Screen ===== -->
 <div id="splashScreen">
   <div class="splash-box">
