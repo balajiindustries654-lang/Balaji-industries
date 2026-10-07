@@ -3499,5 +3499,441 @@ if(messaging){
   });
 }
   </script>
+    <style>
+/* ===== BALAJI ADMIN MENU — OPTION 8 ===== */
+
+#admin [hidden] {
+  display: none !important;
+}
+
+#admin {
+  padding-bottom: 110px;
+}
+
+#bi-menu8 {
+  margin-top: 28px;
+}
+
+#bi-menu8 > h3 {
+  margin: 0 0 14px;
+  font-size: 18px;
+}
+
+.bi-grid8 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+#admin .bi-tile8 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 116px;
+  margin: 0;
+  padding: 18px 8px;
+  background: white;
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 4px 14px rgba(24, 66, 70, .04);
+  font-size: 13px;
+  line-height: 1.4;
+  text-align: center;
+  transition: background .15s, border-color .15s;
+}
+
+#admin .bi-tile8:hover {
+  background: var(--soft);
+  border-color: #8bc7c9;
+}
+
+.bi-tile8 svg {
+  width: 44px;
+  height: 44px;
+  padding: 9px;
+  background: var(--soft);
+  color: var(--teal);
+  border-radius: 12px;
+}
+
+.bi-tile8 svg,
+.bi-navbtn8 svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+}
+
+.bi-bar8 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 16px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.bi-bar8 h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+#admin .bi-back8 {
+  width: auto;
+  min-height: 40px;
+  margin: 0;
+  padding: 8px 12px;
+  background: var(--soft);
+  color: var(--dark);
+  border: 1px solid #c5dddd;
+  border-radius: 10px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.bi-panel8 > h3 {
+  margin-top: 14px;
+}
+
+.bi-panel8 > hr:last-child {
+  display: none;
+}
+
+#admin .bi-nav8 {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  width: 100%;
+  max-width: 760px;
+  padding: 8px 10px;
+  padding-bottom: calc(8px + env(safe-area-inset-bottom));
+  background: white;
+  border: 1px solid var(--line);
+  border-bottom: 0;
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -5px 22px rgba(24, 66, 70, .08);
+}
+
+#admin .bi-navbtn8 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 58px;
+  margin: 0;
+  padding: 7px 3px;
+  background: transparent;
+  color: var(--muted);
+  border: 0;
+  border-radius: 12px;
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+.bi-navbtn8 svg {
+  width: 23px;
+  height: 23px;
+}
+
+#admin .bi-navbtn8.active {
+  background: var(--soft);
+  color: var(--teal);
+}
+
+#admin .bi-navbtn8:hover {
+  background: var(--soft);
+  color: var(--dark);
+}
+
+@media (max-width: 380px) {
+  .bi-grid8 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  #admin .bi-tile8 {
+    min-height: 106px;
+  }
+
+  .bi-bar8 h2 {
+    font-size: 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #admin .bi-tile8 {
+    transition: none;
+  }
+}
+</style>
+
+<script>
+(function () {
+  function setupBalajiMenu() {
+    const admin = document.getElementById("admin");
+
+    if (!admin || document.getElementById("bi-menu8")) {
+      return;
+    }
+
+    const children = Array.from(admin.children);
+
+    const pending = children.find(el =>
+      el.matches('button[onclick*="loadPending"]')
+    );
+
+    function heading(text) {
+      return children.find(el =>
+        el.tagName === "H3" &&
+        el.textContent.includes(text)
+      );
+    }
+
+    const liveHeading = children.find(el =>
+      el.tagName === "H3" &&
+      el.textContent.includes("Live Data") &&
+      !el.textContent.includes("Excel")
+    );
+
+    const starts = [
+      pending,
+      heading("તમામ ડેટા Search"),
+      heading("Maal Entry Records"),
+      heading("Excel / Live Data"),
+      liveHeading
+    ];
+
+    const indexes = starts.map(el =>
+      children.indexOf(el)
+    );
+
+    if (
+      indexes.some(i => i < 0) ||
+      indexes.some((i, n) =>
+        n > 0 && i <= indexes[n - 1]
+      )
+    ) {
+      return;
+    }
+
+    const names = [
+      "users",
+      "reports",
+      "entries",
+      "excel",
+      "live"
+    ];
+
+    const titles = [
+      "Users / Password",
+      "Search / Reports",
+      "Maal Entry Records",
+      "Excel Download",
+      "Live Data"
+    ];
+
+    const panels = {};
+
+    const home = document.createElement("div");
+    home.id = "bi-home8";
+
+    children.slice(0, indexes[0]).forEach(el => {
+      home.appendChild(el);
+    });
+
+    const menu = document.createElement("div");
+    menu.id = "bi-menu8";
+
+    menu.innerHTML = `
+      <h3>Quick Actions</h3>
+      <div class="bi-grid8"></div>
+    `;
+
+    home.appendChild(menu);
+    admin.appendChild(home);
+
+    names.forEach((name, n) => {
+      const panel = document.createElement("section");
+      panel.className = "bi-panel8";
+      panel.hidden = true;
+
+      const bar = document.createElement("div");
+      bar.className = "bi-bar8";
+
+      const title = document.createElement("h2");
+      title.textContent = titles[n];
+
+      const back = document.createElement("button");
+      back.type = "button";
+      back.className = "bi-back8";
+      back.textContent = "← Home";
+      back.onclick = () => show("home");
+
+      bar.append(title, back);
+      panel.appendChild(bar);
+
+      const end = n + 1 < indexes.length
+        ? indexes[n + 1]
+        : children.length;
+
+      children.slice(indexes[n], end).forEach(el => {
+        panel.appendChild(el);
+      });
+
+      admin.appendChild(panel);
+      panels[name] = panel;
+    });
+
+    const paths = {
+      home:
+        "M3 10l9-7 9 7M5 9v12h5v-7h4v7h5V9",
+
+      reports:
+        "M6 3h8l4 4v14H6zM14 3v5h4M9 12h6M9 16h6",
+
+      match:
+        "M3 6h11v11H3zM14 10h4l3 4v3h-7" +
+        "M7 17a2 2 0 1 0 0 4 2 2 0 0 0 0-4" +
+        "M18 17a2 2 0 1 0 0 4 2 2 0 0 0 0-4",
+
+      entries:
+        "M4 7l8-4 8 4v10l-8 4-8-4z" +
+        "M4 7l8 4 8-4M12 11v10",
+
+      users:
+        "M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8" +
+        "M2 21v-3a7 7 0 0 1 14 0v3" +
+        "M17 4a4 4 0 0 1 0 7" +
+        "M19 14a6 6 0 0 1 3 5v2",
+
+      excel:
+        "M6 3h8l4 4v14H6zM9 11l6 6M15 11l-6 6",
+
+      live:
+        "M4 20V12h4v8M10 20V7h4v13" +
+        "M16 20V3h4v17M2 21h20"
+    };
+
+    function icon(name) {
+      return `
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="${paths[name]}"></path>
+        </svg>
+      `;
+    }
+
+    function makeButton(label, name, target, className) {
+      const button = document.createElement("button");
+
+      button.type = "button";
+      button.className = className;
+      button.dataset.target = target;
+
+      button.innerHTML =
+        icon(name) + "<span>" + label + "</span>";
+
+      button.onclick = () => show(target);
+
+      return button;
+    }
+
+    const grid = menu.querySelector(".bi-grid8");
+
+    const actions = [
+      ["Reports", "reports", "reports"],
+      ["ગાડી Match", "match", "match"],
+      ["Maal Records", "entries", "entries"],
+      ["Users", "users", "users"],
+      ["Excel", "excel", "excel"],
+      ["Live Data", "live", "live"]
+    ];
+
+    actions.forEach(row => {
+      grid.appendChild(
+        makeButton(row[0], row[1], row[2], "bi-tile8")
+      );
+    });
+
+    const nav = document.createElement("nav");
+    nav.className = "bi-nav8";
+    nav.setAttribute("aria-label", "Admin navigation");
+
+    const navigation = [
+      ["Home", "home", "home"],
+      ["Entries", "entries", "entries"],
+      ["Reports", "reports", "reports"],
+      ["Users", "users", "users"]
+    ];
+
+    navigation.forEach(row => {
+      nav.appendChild(
+        makeButton(row[0], row[1], row[2], "bi-navbtn8")
+      );
+    });
+
+    admin.appendChild(nav);
+
+    function show(target, scroll = true) {
+      const selected =
+        target === "match" ? "reports" : target;
+
+      home.hidden = selected !== "home";
+
+      Object.entries(panels).forEach(([name, panel]) => {
+        panel.hidden = name !== selected;
+      });
+
+      nav.querySelectorAll("button").forEach(button => {
+        const active =
+          button.dataset.target === selected;
+
+        button.classList.toggle("active", active);
+
+        if (active) {
+          button.setAttribute("aria-current", "page");
+        } else {
+          button.removeAttribute("aria-current");
+        }
+      });
+
+      if (scroll) {
+        admin.scrollIntoView({ block: "start" });
+      }
+
+      if (target === "match") {
+        const matchButton = panels.reports.querySelector(
+          'button[onclick*="adminVehicleMatch"]'
+        );
+
+        if (matchButton) {
+          matchButton.focus({ preventScroll: true });
+        }
+      }
+    }
+
+    show("home", false);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener(
+      "DOMContentLoaded",
+      setupBalajiMenu
+    );
+  } else {
+    setupBalajiMenu();
+  }
+})();
+</script>
 </body>
 </html>
