@@ -12,6 +12,7 @@ import android.webkit.WebViewClient;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 public class MainActivity extends Activity {
 
@@ -30,6 +31,7 @@ public class MainActivity extends Activity {
             2001
     );
         }
+        FirebaseMessaging.getInstance().subscribeToTopic("admin");
 
         webView = new WebView(this);
         setContentView(webView);
