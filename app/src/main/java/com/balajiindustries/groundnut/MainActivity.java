@@ -1,4 +1,4 @@
-package com.balajiindustries.groundnut;
+package com.balajiindustries.app;
 
 import android.app.Activity;
 import android.content.Intent;
