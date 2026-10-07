@@ -2180,7 +2180,26 @@ async function saveWaybridge(){
 
     return;
   }
+  try {
+    const { error: notifyError } = await db.functions.invoke(
+      "send-push-notification",
+      {
+        body: {
+          type: "waybridge",
+          title: "નવી Waybridge Entry",
+          body: `${vehicle || "ગાડી નંબર નથી"} | ${
+            Number.isFinite(weight) ? weight + " KG" : "વજન નથી"
+          } | RST ${rst || "-"}`
+        }
+      }
+    );
 
+    if (notifyError) {
+      console.error("Waybridge Push Error:", notifyError);
+    }
+  } catch (notifyErr) {
+    console.error("Waybridge Push Error:", notifyErr);
+  }
 
   // ---------------------------------
   // GOOGLE SHEET
