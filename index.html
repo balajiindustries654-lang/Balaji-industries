@@ -60,7 +60,6 @@ main > div > img {
   border: 1px solid var(--line);
   padding: 4px;
 }
-
 h2 {
   font-size: 23px;
   line-height: 1.35;
@@ -228,7 +227,6 @@ button[onclick*="delete"],
   background: #b92d40;
   color: white;
 }
-
 button[onclick*="logout"] {
   background: white;
   color: var(--muted);
@@ -333,7 +331,6 @@ button[onclick*="logout"] {
 #msg:not(:empty) {
   display: block !important;
 }
-
 #msg {
   background: var(--soft) !important;
   color: var(--dark) !important;
@@ -438,7 +435,6 @@ tbody tr:nth-child(even) {
 @keyframes splashSpin {
   to { transform: rotate(360deg); }
 }
-
 @media (min-width: 650px) {
   main { padding-top: 30px; }
 
@@ -606,7 +602,6 @@ tbody tr:nth-child(even) {
 
   <p id="pass_msg"></p>
   </div>
-
 <hr>
 
 <h3>🔍 તમામ ડેટા Search</h3>
@@ -816,7 +811,6 @@ oninput="calculateNetWeight()">
 type="number"
 readonly
 placeholder="Automatic આવશે">
-
 <label><b>ખેડૂતની ચિઠ્ઠીનો ફોટો</b></label>
 
 <button type="button"
@@ -921,7 +915,6 @@ placeholder="Automatic આવશે">
          min="0"
          step="0.01"
          placeholder="NET Weight KG માં લખો">
-
   <label for="wb_slip"><b>કાંટાની પાવતી / Slip Photo</b></label>
 
   <input id="wb_slip"
@@ -942,7 +935,6 @@ placeholder="Automatic આવશે">
 </div>
 <!-- NEW MAAL ENTRY DASHBOARD -->
 <div id="maal_entry" class="card hide">
-
 <div style="display:flex;gap:8px;align-items:center;justify-content:space-between">
 <h2 id="me_title" style="margin:0">Maal Entry Dashboard</h2>
 <button type="button"
@@ -984,7 +976,6 @@ placeholder="Number of bags">
 <option value="Gau">Gau / गेहूं</option>
 <option value="Govar">Govar / ग्वार</option>
 </select>
-
 <label><b id="me_date_label">Date *</b></label>
 <input id="me_date" type="date">
 
@@ -1026,7 +1017,6 @@ Refresh
 <h2>Farmer Dashboard</h2>
 <p>તમારી માહિતી અહીં દેખાશે.</p>
 </div>
-
 </section>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1089,7 +1079,6 @@ if(!r.error) boot();
 }
 async function forgotPassword(){
   const mobile = cleanMobile($("lm").value);
-
   if(!mobile){
     $("msg").innerText = "પહેલા તમારો Mobile Number નાખો.";
     return;
@@ -1124,7 +1113,7 @@ async function forgotPassword(){
     }
 
     const res = await fetch(
-      "https://tiugeimmfevelnudddhbr.supabase.co/functions/v1/admin-change-password",
+      "https://tiugeimmfevelnuddhbr.supabase.co/functions/v1/admin-change-password",
       {
         method: "POST",
         headers: {
@@ -1194,7 +1183,6 @@ async function registerNativePushToken(showMessage = false){
         );
         return false;
       }
-
       const auth = await db.auth.getUser();
       if(auth.error) throw auth.error;
 
@@ -1257,7 +1245,6 @@ async function registerNativePushToken(showMessage = false){
       return false;
     }
   })();
-
   let completedSuccessfully = false;
 
   try{
@@ -1317,50 +1304,9 @@ await db.auth.signOut();
 location.reload();
 }
 
-async function boot(){
-const u=(await db.auth.getUser()).data.user;
-if(!u)return;
-
-$("auth").classList.add("hide");
-$("app").classList.remove("hide");
-
-const r=await db.from("user_profiles")
-.select("*")
-.eq("id",u.id)
-.single();
-
-if(r.error){
-$("who").innerText=r.error.message;
-return;
-}
-
-const p=r.data;
-
-$("who").innerText=(p.full_name||"User")+" — "+p.role;
-
-if(!p.approved){
-$("pending").classList.remove("hide");
-return;
-}
-
-const id=p.role==="worker"?"worker":p.role;
-if(id==="admin"){
-  registerNativePushToken(false);
-}
-if($(id))
-$(id).classList.remove("hide");
-
-if(id==="worker")
-loadMyChiththis();
-
-if(id==="maal_entry"){
-setMaalDefaultDate();
-loadMyMaalEntries();
-}
-}
+async function boot(){}
 
 let maalLang="en";
-
 function setMaalDefaultDate(){
 const d=$("me_date");
 
@@ -1494,6 +1440,10 @@ if(file){
 });
 
 
+if(r.error){
+msg.innerText="Save Error: "+r.error.message;
+return;
+}
   await sendToGoogleSheet({
   type: "Maal Entry",
     entry_type: entryType,
@@ -1504,10 +1454,7 @@ if(file){
   bags: bags,
  slip_url: slipUrl
 });
-if(r.error){
-msg.innerText="Save Error: "+r.error.message;
-return;
-}
+
 try {
   const { error: notifyError } = await db.functions.invoke(
     "send-push-notification",
@@ -1611,7 +1558,6 @@ net>=0?net.toFixed(2):"0.00";
 }
 
 function toggleBrokerOther(){
-
 const selected=$("broker_select").value;
 const otherBox=$("broker_other");
 
@@ -1793,8 +1739,7 @@ created_by:user.id
 
 if(r.error){
 $("chiththi_msg").innerText=
-"Save Error: "+
-r.error.message;
+(r.error.code === "23505" ? "આ નંબરની Entry પહેલેથી Save છે. નંબર ચેક કરો." : "Save Error: " + r.error.message);
 return;
 }
   try {
@@ -1885,7 +1830,6 @@ box.innerHTML=
 
 const user=
 (await db.auth.getUser()).data.user;
-
 if(!user){
 box.innerHTML=
 '<p class="danger">Login ફરી કરો.</p>';
@@ -1906,7 +1850,6 @@ esc(r.error.message)+
 '</p>';
 return;
 }
-
 if(!r.data || !r.data.length){
 box.innerHTML=
 '<p class="muted">હજુ કોઈ ચિઠ્ઠી Save નથી.</p>';
@@ -1969,7 +1912,6 @@ async function setNextRST(){
       .not("rst_no","is",null)
       .order("created_at",{ascending:false})
       .limit(100);
-
     if(r.error){
       console.error("RST Load Error:",r.error);
       if(!rstInput.value) rstInput.value = "1";
@@ -2052,7 +1994,6 @@ async function saveWaybridge(){
     }
     return;
   }
-
 
   const user =
     (await db.auth.getUser()).data.user;
@@ -2137,7 +2078,6 @@ async function saveWaybridge(){
 
       return;
     }
-
     const publicData =
       db.storage
       .from("Way bridge slips")
@@ -2200,7 +2140,6 @@ async function saveWaybridge(){
   } catch (notifyErr) {
     console.error("Waybridge Push Error:", notifyErr);
   }
-
   // ---------------------------------
   // GOOGLE SHEET
   // ---------------------------------
@@ -2263,7 +2202,6 @@ async function saveWaybridge(){
   // ---------------------------------
 
   if(rst){
-
     const currentRST =
       parseInt(rst,10);
 
@@ -2347,7 +2285,6 @@ box.innerHTML=`
 style="box-shadow:none;border:1px solid #ddd">
 
 <h3>${match?"✅ MATCH":"❌ NOT MATCH"}</h3>
-
 ગાડી:
 <b>${esc(vehicle)}</b><br>
 
@@ -2473,7 +2410,6 @@ if(mode==="month"){
 
 const y=now.getFullYear();
 const m=String(now.getMonth()+1).padStart(2,"0");
-
 from=`${y}-${m}-01`;
 
 const last=new Date(y,now.getMonth()+1,0);
@@ -2515,7 +2451,6 @@ q=q.gte(
 range.from+"T00:00:00"
 );
 }
-
 if(range.to){
 q=q.lte(
 "created_at",
@@ -2620,7 +2555,6 @@ const w=wbMap[vehicle];
 return `
 <div class="card"
 style="box-shadow:none;border:1px solid #ddd">
-
 <b>ચિઠ્ઠી:
 ${esc(x.chiththi_number||"-")}</b><br>
 
@@ -2641,7 +2575,6 @@ ${esc(x.farmer_name||"-")}<br>
 
 મોબાઇલ:
 ${esc(x.farmer_mobile||"-")}<br>
-
 ખેડૂત વજન:
 ${esc(x.gross_weight_kg||0)} KG<br>
 
@@ -2767,7 +2700,6 @@ box.innerHTML=
 
 const ch=await db.from("chiththis")
 .select("vehicle_number,gross_weight_kg");
-
 if(ch.error){
 box.innerHTML=
 '<p class="danger">'+esc(ch.error.message)+'</p>';
@@ -2788,7 +2720,6 @@ const totals={};
 const counts={};
 
 (ch.data||[]).forEach(x=>{
-
 const v=(x.vehicle_number||"")
 .trim()
 .toUpperCase();
@@ -2809,7 +2740,6 @@ const latest={};
 const v=(x.vehicle_number||"")
 .trim()
 .toUpperCase();
-
 if(v && !latest[v])
 latest[v]=x;
 
@@ -2851,7 +2781,6 @@ ${match?"✅ MATCH":"❌ MISMATCH"}
 
 RST:
 ${esc(w.rst_no||"-")}<br>
-
 ચિઠ્ઠીઓ:
 ${counts[v]||0}<br>
 
@@ -3129,7 +3058,7 @@ if(session?.user)boot();
         x.owner_name || "",
         "",
         "",
-        x.material || "",
+        x.material_type || "",
         "",
         x.bags || ""
       ]);
@@ -3145,7 +3074,6 @@ if(session?.user)boot();
   [csv],
   {type:"text/csv;charset=utf-8"}
 );
-
     const fileName =
   "Balaji_Industries_" +
   new Date().toISOString().slice(0,10) +
@@ -3208,7 +3136,6 @@ setTimeout(() => {
 (chRes.data || []).forEach(x => {
   const vehicle = (x.vehicle_number || "").replace(/\s+/g,"").toUpperCase();
   if (!vehicle) return;
-
   majurTotals[vehicle] =
     (majurTotals[vehicle] || 0) +
     (parseFloat(x.weight_kg) || 0);
@@ -3229,7 +3156,6 @@ setTimeout(() => {
   const vehicleKey = (x.vehicle_number || "")
     .replace(/\s+/g,"")
     .toUpperCase();
-
   const majurWeight = majurTotals[vehicleKey] || 0;
   const wayWeight = parseFloat(
     x.net_weight_kg || x.total_weight_kg
@@ -3287,12 +3213,12 @@ setTimeout(() => {
     all.forEach(x => {
       html += `
         <tr>
-          <td>${x.type}</td>
-          <td>${x.number}</td>
-          <td>${x.vehicle}</td>
-          <td>${x.name}</td>
-          <td>${x.weight}</td>
-          <td>${x.status || "-"}</td>
+          <td>${esc(x.type)}</td>
+          <td>${esc(x.number)}</td>
+          <td>${esc(x.vehicle)}</td>
+          <td>${esc(x.name)}</td>
+          <td>${esc(x.weight)}</td>
+          <td>${esc(x.status || "-")}</td>
           <td>${x.date ? new Date(x.date).toLocaleString() : ""}</td>
         </tr>
       `;
@@ -3313,7 +3239,6 @@ setTimeout(() => {
 const today = new Date().toLocaleDateString("en-CA", {
   timeZone: "Asia/Kolkata"
 });
-
 const todayChiththis = (chiththis || []).filter(x =>
   x.created_at &&
   new Date(x.created_at).toLocaleDateString("en-CA", {
@@ -3460,7 +3385,6 @@ window.enableWebPhoneNotifications = async function () {
   console.log("FCM Token:", token);
 
   const { data: { user } } = await db.auth.getUser();
-
   if (!user) {
     alert("Login user મળ્યો નથી.");
     return;
@@ -3544,7 +3468,6 @@ if(messaging){
   text-align: center;
   transition: background .15s, border-color .15s;
 }
-
 #admin .bi-tile8:hover {
   background: var(--soft);
   border-color: #8bc7c9;
@@ -3670,7 +3593,6 @@ if(messaging){
     font-size: 18px;
   }
 }
-
 @media (prefers-reduced-motion: reduce) {
   #admin .bi-tile8 {
     transition: none;
@@ -3754,7 +3676,6 @@ if(messaging){
 
     const menu = document.createElement("div");
     menu.id = "bi-menu8";
-
     menu.innerHTML = `
       <h3>Quick Actions</h3>
       <div class="bi-grid8"></div>
@@ -4090,7 +4011,6 @@ if(messaging){
   min-width: 0;
   margin: 0;
 }
-
 #admin .bi-report-shortcuts button {
   background: var(--soft);
   color: var(--dark);
@@ -4258,7 +4178,6 @@ if(messaging){
 
       const group = document.createElement("div");
       group.className = "bi-settings-group";
-
       const heading = document.createElement("h3");
       heading.textContent = title;
 
@@ -4279,7 +4198,6 @@ if(messaging){
         'button[onclick*="exportAllDataToCSV"]'
       )
     );
-
     /* Admin Logout Settingsમાં */
     if (logoutButton) {
       const settingsLogout = logoutButton.cloneNode(true);
@@ -4300,7 +4218,6 @@ if(messaging){
       dates.className = "bi-report-dates";
 
       from.before(dates);
-
       [
         [from, "તારીખથી"],
         [to, "તારીખ સુધી"]
@@ -4405,7 +4322,6 @@ if(messaging){
         hint.className = "bi-login-hint";
         hint.textContent =
           "તમારા Mobile Number અને Passwordથી Login કરો.";
-
         loginTitle.after(hint);
       }
 
@@ -4594,7 +4510,6 @@ if(messaging){
     passwordForm.before(passwordRow.details);
     passwordForm.classList.add("bi-password-form");
     passwordRow.content.appendChild(passwordForm);
-
     /* નાના અને સ્પષ્ટ row names */
     const notifications = settings.querySelector(
       'button[onclick*="enablePhoneNotifications"]'
@@ -4615,7 +4530,6 @@ if(messaging){
     const logout = settings.querySelector(
       ".bi-settings-logout"
     );
-
     if (logout) {
       logout.textContent = "Logout / બહાર નીકળો";
     }
@@ -4678,7 +4592,6 @@ if(messaging){
   font-weight: 750;
   overflow-wrap: anywhere;
 }
-
 .bi-maal-date {
   margin-top: 4px;
   color: var(--muted);
@@ -4888,7 +4801,6 @@ if(messaging){
                   </div>
                 </div>
               </div>
-
               <div class="bi-maal-bottom">
                 <div class="bi-maal-owner">
                   <div class="bi-maal-label">માલિક / સપ્લાયર</div>
@@ -4899,5 +4811,98 @@ if(messaging){
             </article>
           `;
         }).join("");
-</body>
-</html>
+
+      } catch (error) {
+        box.innerHTML = `<p class="bi-maal-message" role="alert">Records લોડ થયા નથી: ${esc(error.message)}</p>`;
+      } finally {
+        loading = false;
+        if (button) button.disabled = false;
+      }
+    };
+    if (panel) {
+      function loadWhenVisible() {
+        if (!panel.hidden && !panel.classList.contains("hide") && !admin.classList.contains("hide")) window.adminLoadMaalEntries();
+      }
+      new MutationObserver(loadWhenVisible).observe(panel, {attributes:true, attributeFilter:["hidden","class"]});
+      loadWhenVisible();
+    }
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", setupMaalRecords);
+  else setupMaalRecords();
+})();
+</script>
+<style>
+/* Staff forms and scan review */
+.bi-staff-tabs,.bi-scan-buttons,.scan-actions {display:flex;gap:8px;flex-wrap:wrap;}
+.bi-staff-tabs button {flex:1;min-width:90px;background:var(--soft);color:var(--dark);font-size:13px;padding:10px 6px;border:1px solid var(--line);}
+.bi-staff-tabs button.active {background:var(--teal);color:white;}
+.bi-scan-tools {padding:14px;background:var(--soft);border:1px solid var(--line);border-radius:14px;margin:12px 0 18px;}
+.bi-scan-tools h3 {margin:0 0 8px;font-size:15px;}
+.bi-scan-buttons button {flex:1;min-width:80px;font-size:13px;padding:9px;min-height:44px;}
+.bi-scan-tools .muted {font-size:12px;margin-bottom:0;}
+.bi-scan-review {width:calc(100% - 24px);max-width:620px;max-height:90dvh;border:0;border-radius:18px;padding:20px;color:var(--ink);background:white;overflow:auto;}
+.bi-scan-review::backdrop {background:rgba(8,35,38,.65);}
+.bi-scan-review h2 {font-size:20px;}
+.bi-scan-review input,.bi-scan-review select,.bi-scan-review textarea {font-size:14px;min-height:44px;}
+.bi-scan-review details {border-bottom:1px solid var(--line);padding:12px 0;}
+.bi-scan-review summary {cursor:pointer;min-height:44px;display:flex;align-items:center;font-weight:650;}
+.scan-field {border-bottom:1px solid var(--line);padding-bottom:8px;}
+.scan-field small {display:block;color:var(--muted);font-size:12px;font-weight:400;}
+.bi-scan-review .scan-pick {display:flex;align-items:center;gap:8px;margin:0;font-size:13px;min-height:44px;}
+.bi-scan-review input[type=checkbox] {width:20px;min-height:20px;height:20px;margin:0;flex-shrink:0;}
+.weight-row {display:grid;grid-template-columns:24px 1fr 44px;align-items:center;gap:8px;margin:8px 0;}
+.weight-row small {grid-column:2/4;font-size:11px;color:var(--muted);}
+.weight-row button {padding:4px;min-height:44px;margin:0;}
+.weight-row input[type=number] {margin:0;}
+.scan-actions {position:sticky;bottom:-20px;padding:12px 0;background:white;}
+.scan-actions button {flex:1;font-size:13px;}
+.scan-cancel {background:var(--soft);color:var(--dark);}
+.scan-text {min-height:150px;}
+.bi-password-request {display:flex;gap:10px;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px;}
+.bi-password-request button {width:auto;min-height:44px;font-size:12px;}
+#bi-password-requests summary {cursor:pointer;min-height:46px;padding:12px 4px;border-bottom:1px solid var(--line);font-size:14px;font-weight:600;}
+#worker [hidden],#waybridge [hidden],#maal_entry [hidden] {display:none!important;}
+
+</style>
+<script>
+/* Balaji staff dashboard, reviewed OCR and password requests */
+(function () {
+'use strict';
+const byId = id => document.getElementById(id);
+const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ops = ['worker','waybridge','maal_entry'];
+let currentProfile = null, workerPromise = null, workerLanguage = '', scanBusy = false, progressBox = null;
+const configurations = {
+ worker: {file:'chiththi_photo', fields:[['chiththi_number','ચિઠ્ઠી નંબર'],['village_name','ગામ'],['vehicle_number','ગાડી નંબર'],['farmer_name','ખેડૂત'],['farmer_mobile','મોબાઇલ'],['farmer_weight','કુલ વજન KG'],['bardan_kg','બારદાન KG'],['kardo_kg','કરડો KG'],['commodity_type','માલ']]},
+ waybridge: {file:'wb_slip', fields:[['wb_rst','RST'],['wb_vehicle','ગાડી નંબર'],['wb_name','નામ'],['wb_mobile','મોબાઇલ'],['wb_weight','NET વજન KG']]},
+ maal_entry: {file:'me_slip', fields:[['me_entry_type','Loading / Unloading'],['me_vehicle','ગાડી નંબર'],['me_bags','બેગ'],['me_material','માલ'],['me_date','તારીખ'],['me_owner','માલિક / સપ્લાયર']]}
+};
+function normalizeDigits(text) {
+ return String(text).replace(/[૦-૯०-९]/g,c => String(c.charCodeAt(0) - (c >= '૦' && c <= '૯' ? 0xAE6 : 0x966)));
+}
+function positive(value) { return /^\d+(?:\.\d{1,3})?$/.test(value) && Number(value) > 0; }
+function fieldLabels(text, regex) {
+ const line = text.split(/\r?\n/).find(x => regex.test(x));
+ if (!line) return '';
+ return line.replace(regex,'').replace(/^\s*[:=\-]\s*/, '').trim();
+}
+/* Candidate parsing never writes to the actual form. */
+function parseScan(raw, kind) {
+ const text = normalizeDigits(raw), fields = {}, weights = [];
+ const vehicle = text.toUpperCase().match(/\b[A-Z]{2}[\s-]*\d{1,2}[\s-]*[A-Z]{1,3}[\s-]*\d{1,4}\b/);
+ const prefix = kind === 'worker' ? '' : kind === 'waybridge' ? 'wb_' : 'me_';
+ if(vehicle) fields[kind === 'worker' ? 'vehicle_number' : prefix+'vehicle'] = vehicle[0].replace(/[\s-]/g,'');
+ const mobile = text.match(/(?<!\d)[6-9]\d{9}(?!\d)/);
+ if(mobile && kind !== 'maal_entry') fields[kind === 'worker' ? 'farmer_mobile' : 'wb_mobile'] = mobile[0];
+ const material = /મગફળી|मूंगफली|groundnut|magfadi|peanut/i.test(text) ? 'Magfadi' : /એરંડા|अरंडी|aeranda|castor/i.test(text) ? 'Aeranda' : /ઘઉં|गेहूं|wheat|\bgau\b/i.test(text) ? 'Gau' : /ગવાર|ग्वार|govar|guar/i.test(text) ? 'Govar' : '';
+ if(material && kind !== 'waybridge') fields[kind === 'worker' ? 'commodity_type' : 'me_material'] = material;
+ if(kind === 'worker') {
+  fields.bardan_kg = text.match(/(?:bardan|બારદાન|बारदान|बर्दान)\s*[:=\-]?\s*(\d+(?:\.\d+)?)/i)?.[1] || '';
+  fields.kardo_kg = text.match(/(?:kardo|કરડો|करडो)\s*[:=\-]?\s*(\d+(?:\.\d+)?)/i)?.[1] || '';
+  fields.chiththi_number = fieldLabels(text,/(?:chiththi|chit|ચિઠ્ઠી|पर्ची)\s*(?:number|no\.?|નંબર|નં\.?|संख्या)?\s*[:=\-]?\s*/i).match(/^\d+/)?.[0] || '';
+  fields.farmer_name = fieldLabels(text,/(?:farmer\s*(?:name)?|ખેડૂત\s*(?:નું નામ|નામ)?|किसान\s*(?:का नाम|नाम)?)\s*[:=\-]?\s*/i);
+  fields.village_name = fieldLabels(text,/(?:village|ગામ\s*(?:નું નામ|નામ)?|गांव|गाँव)\s*[:=\-]?\s*/i);
+  for(const line of text.split(/\r?\n/)) {
+   const trimmed = line.trim();
+   // Exclude totals, deductions, dates, names, IDs and phone numbers.
+   if(/total|net|gross|કુલ|ટોટલ|સરવાળો|जोड़|कुल|बर्दान|બારદાન|કરડો|कटौती|bardan|kardo|rst|date|તારીખ|तारीख|mobile|મોબાઇલ|મોબાઈલ|phone|ચિઠ્ઠી|પર્ચી|પાવતી|vehicle/i.test(trimmed)) continue;
