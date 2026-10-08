@@ -4921,7 +4921,7 @@ const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp
 const ops = ['worker','waybridge','maal_entry'];
 let currentProfile = null, scanBusy = false;
 const configurations = {
- worker: {file:'chiththi_photo', fields:[['chiththi_number','\u0a9a\u0abf\u0aa0\u0acd\u0aa0\u0ac0 \u0aa8\u0a82\u0aac\u0ab0'],['village_name','\u0a97\u0abe\u0aae'],['vehicle_number','\u0a97\u0abe\u0aa1\u0ac0 \u0aa8\u0a82\u0aac\u0ab0'],['farmer_name','\u0a96\u0ac7\u0aa1\u0ac2\u0aa4'],['farmer_mobile','\u0aae\u0acb\u0aac\u0abe\u0a87\u0ab2'],['farmer_weight','\u0a95\u0ac1\u0ab2 \u0ab5\u0a9c\u0aa8 KG'],['bardan_kg','\u0aac\u0abe\u0ab0\u0aa6\u0abe\u0aa8 KG'],['kardo_kg','\u0a95\u0ab0\u0aa1\u0acb KG'],['commodity_type','\u0aae\u0abe\u0ab2']]},
+ worker: {file:'chiththi_photo', fields:[['chiththi_number','\u0a9a\u0abf\u0aa0\u0acd\u0aa0\u0ac0 \u0aa8\u0a82\u0aac\u0ab0'],['village_name','\u0a97\u0abe\u0aae'],['vehicle_number','\u0a97\u0abe\u0aa1\u0ac0 \u0aa8\u0a82\u0aac\u0ab0'],['farmer_name','\u0a96\u0ac7\u0aa1\u0ac2\u0aa4'],['broker_name','\u0aa6\u0ab2\u0abe\u0ab2'],['farmer_mobile','\u0aae\u0acb\u0aac\u0abe\u0a87\u0ab2'],['farmer_weight','\u0a95\u0ac1\u0ab2 \u0ab5\u0a9c\u0aa8 KG'],['bardan_kg','\u0aac\u0abe\u0ab0\u0aa6\u0abe\u0aa8 KG'],['kardo_kg','\u0a95\u0ab0\u0aa1\u0acb KG'],['commodity_type','\u0aae\u0abe\u0ab2']]},
  waybridge: {file:'wb_slip', fields:[['wb_rst','RST'],['wb_vehicle','\u0a97\u0abe\u0aa1\u0ac0 \u0aa8\u0a82\u0aac\u0ab0'],['wb_name','\u0aa8\u0abe\u0aae'],['wb_mobile','\u0aae\u0acb\u0aac\u0abe\u0a87\u0ab2'],['wb_weight','NET \u0ab5\u0a9c\u0aa8 KG']]},
  maal_entry: {file:'me_slip', fields:[['me_entry_type','Loading / Unloading'],['me_vehicle','\u0a97\u0abe\u0aa1\u0ac0 \u0aa8\u0a82\u0aac\u0ab0'],['me_bags','\u0aac\u0ac7\u0a97'],['me_material','\u0aae\u0abe\u0ab2'],['me_date','\u0aa4\u0abe\u0ab0\u0ac0\u0a96'],['me_owner','\u0aae\u0abe\u0ab2\u0abf\u0a95 / \u0ab8\u0aaa\u0acd\u0ab2\u0abe\u0aaf\u0ab0']]}
 };
@@ -4979,6 +4979,17 @@ function parseScan(raw, kind) {
 }
 function changeField(id,value) {
  const input = byId(id); if(!input) return;
+ if(id === 'broker_name') {
+  const select=byId('broker_select'),other=byId('broker_other');
+  const norm=x=>String(x).normalize('NFKC').replace(/\s+/g,' ').trim().toLowerCase();
+  const match=[...select.options].find(o=>o.value && o.value!=='Other' && (norm(o.value)===norm(value) || norm(o.textContent)===norm(value)));
+  select.value=value ? (match ? match.value : 'Other') : '';
+  other.style.display=value && !match ? 'block' : 'none';
+  other.value=value && !match ? value : '';
+  other.oninput=()=>{input.value=other.value.trim();};
+  input.value=match ? match.value : value;
+  return;
+ }
  // Assign, never add. Repeated scans are idempotent.
  if(id === 'vehicle_number' || id === 'wb_vehicle') {
   const select = byId(id === 'vehicle_number' ? 'vehicle_number_select' : 'wb_vehicle_select');
