@@ -784,6 +784,13 @@ autocomplete="off">
 inputmode="numeric"
 placeholder="&#2710;&#2759;&#2721;&#2754;&#2724;&#2728;&#2763; &#2734;&#2763;&#2732;&#2750;&#2695;&#2738; &#2728;&#2690;&#2732;&#2736;">
 
+<div class="bag-calc">
+<label for="bag_weights"><b>બેગ પ્રમાણે વજન (ઓપ્શનલ)</b></label>
+<textarea id="bag_weights" inputmode="decimal" rows="4" placeholder="દરેક લાઇનમાં એક બેગનું વજન&#10;62.5&#10;61.8&#10;63"></textarea>
+<div id="bag_sum" class="bag-sum">0 બેગ · કુલ 0 KG</div>
+<button type="button" id="bag_apply" class="bag-apply" hidden>✔ ચકાસ્યા પછી કુલ વજન ભરો</button>
+<p class="muted" style="margin:6px 0 0">બેગનું વજન લખશો એટલે નીચે “ખેડૂતનું વજન” આપમેળે ભરાઈ જશે.</p>
+</div>
 <label><b>&#2710;&#2759;&#2721;&#2754;&#2724;&#2728;&#2753;&#2690; &#2741;&#2716;&#2728; (KG) *</b></label>
 <input id="farmer_weight"
 type="number"
@@ -4442,14 +4449,14 @@ if(messaging){
 
 #admin .bi-compact-settings summary::after,
 #admin .bi-compact-settings .bi-settings-group button::after {
-  content: "&#8250;";
+  content: "\203A";
   color: var(--muted);
   font-size: 22px;
   line-height: 1;
 }
 
 #admin .bi-compact-settings details[open] > summary::after {
-  content: "&#8964;";
+  content: "\2304";
 }
 
 #admin .bi-compact-settings .bi-settings-group button:hover,
@@ -5014,11 +5021,14 @@ function applyScanDirect(kind, parsed, config) {
   const count=parsed.weights.length;
   const incomplete=parsed.weight_summary?.incomplete || parsed.weights.some(w=>!positive(String(w.value)));
   const printed=parsed.weight_summary?.written_total ?? fields.farmer_weight;
-  if(count && !incomplete){
+  if(count && !incomplete && parsed.weight_summary?.verified!==false){
    const total=sumWeights(parsed.weights);
    fields.farmer_weight=total.toFixed(3);
    notes.push(`${count} \u0aac\u0ac7\u0a97\u0aa8\u0ac1\u0a82 \u0a95\u0ac1\u0ab2: ${total.toFixed(3)} KG`);
    if(positive(String(printed)) && Math.abs(total-Number(printed))>0.001)notes.push(`\u0a9a\u0abf\u0aa0\u0acd\u0aa0\u0ac0\u0aae\u0abe\u0a82 \u0ab2\u0a96\u0ac7\u0ab2\u0ac1\u0a82 \u0a95\u0ac1\u0ab2: ${printed} KG; \u0aa4\u0aab\u0abe\u0ab5\u0aa4: ${Math.abs(total-Number(printed)).toFixed(3)} KG`);
+  }else if(count && !incomplete){
+   fields.farmer_weight='';
+   notes.push('\u26a0\ufe0f \u0aac\u0ac7\u0a97\u0aa8\u0ac0 \u0aaf\u0abe\u0aa6\u0ac0 \u0a9a\u0a95\u0abe\u0ab8\u0ac0 \u0aa8\u0aa5\u0ac0. \u0aaf\u0abe\u0aa6\u0ac0 \u0aae\u0ac7\u0ab3\u0ab5\u0acd\u0aaf\u0abe \u0aaa\u0a9b\u0ac0 "\u0a95\u0ac1\u0ab2 \u0ab5\u0a9c\u0aa8 \u0aad\u0ab0\u0acb" \u0aa6\u0aac\u0abe\u0ab5\u0acb.');
   }else if(count){
    fields.farmer_weight='';
    notes.push(`${count} \u0aac\u0ac7\u0a97\u0aae\u0abe\u0a82\u0aa5\u0ac0 \u0a85\u0aae\u0ac1\u0a95 \u0ab5\u0a9c\u0aa8 \u0a85\u0ab8\u0acd\u0aaa\u0ab7\u0acd\u0a9f \u0a9b\u0ac7. \u0a95\u0ac1\u0ab2 \u0ab5\u0a9c\u0aa8 \u0a9a\u0ac7\u0a95 \u0a95\u0ab0\u0ac0\u0aa8\u0ac7 \u0aad\u0ab0\u0acb.`);
@@ -5026,8 +5036,13 @@ function applyScanDirect(kind, parsed, config) {
  }
  // Replace the previous slip, including clearing values absent from this photo.
  // Never save an entry here: every field remains editable in the ordinary form.
- config.fields.forEach(([id])=>changeField(id,fields[id] || ''));
- if(kind==='worker')calculateNetWeight();
+ config.fields.forEach(([id])=>{if(kind==='worker' && (id==='bardan_kg'||id==='kardo_kg') && !fields[id])return;changeField(id,fields[id] || '');});
+ if(kind==='worker'){
+  const unverified=parsed.weight_summary?.verified===false;
+  const list=parsed.weights.map(w=>positive(String(w.value))?w.value:'?');
+  if(window.BalajiBags)window.BalajiBags.set(list,{apply:!unverified});
+  calculateNetWeight();
+ }
  notes.push(...(parsed.warnings || []));
  return notes.join(' \u2022 ');
 }
@@ -5035,10 +5050,16 @@ function sumWeights(weights){
  return weights.reduce((sum,x)=>sum+(positive(String(x.value))?Math.round(Number(x.value)*1000):0),0)/1000;
 }
 function validateScan(data,kind){
- if(!data || !data.fields || !Array.isArray(data.weights) || typeof data.text!=='string')throw new Error('Scan\u0aa8\u0acb \u0a9c\u0ab5\u0abe\u0aac \u0ab5\u0abe\u0a82\u0a9a\u0ac0 \u0ab6\u0a95\u0abe\u0aaf\u0acb \u0aa8\u0aa5\u0ac0. \u0aab\u0ab0\u0ac0 \u0aaa\u0acd\u0ab0\u0aaf\u0abe\u0ab8 \u0a95\u0ab0\u0acb.');
- const fields={};configurations[kind].fields.forEach(([id])=>{fields[id]=typeof data.fields[id]==='string'?data.fields[id].slice(0,200):'';});
- const weights=kind==='worker'?data.weights.slice(0,200).filter(x=>x && typeof x.value==='string').map(x=>({value:String(x.value),source:String(x.source||'').slice(0,200)})):[];
- return {fields,weights,weight_summary:data.weight_summary,text:data.text,warnings:Array.isArray(data.warnings)?data.warnings.filter(x=>typeof x==='string'):[]};
+ if(!data || typeof data!=='object')throw new Error('Scan\u0aa8\u0acb \u0a9c\u0ab5\u0abe\u0aac \u0ab5\u0abe\u0a82\u0a9a\u0ac0 \u0ab6\u0a95\u0abe\u0aaf\u0acb \u0aa8\u0aa5\u0ac0. \u0aab\u0ab0\u0ac0 \u0aaa\u0acd\u0ab0\u0aaf\u0abe\u0ab8 \u0a95\u0ab0\u0acb.');
+ // Server may return numbers instead of strings; accept both so nothing is silently dropped.
+ const src=(data.fields && typeof data.fields==='object')?data.fields:{};
+ const toText=v=>(typeof v==='string'||typeof v==='number')?String(v).trim().slice(0,200):'';
+ const fields={};configurations[kind].fields.forEach(([id])=>{fields[id]=toText(src[id]);});
+ const rawWeights=Array.isArray(data.weights)?data.weights:[];
+ const toWeight=v=>toText(v).replace(/,/g,'');
+ const weights=kind==='worker'?rawWeights.slice(0,200).filter(x=>x!==null && x!==undefined).map(x=>(typeof x==='object')?{value:toWeight(x.value),source:String(x.source||'').slice(0,200)}:{value:toWeight(x),source:''}):[];
+ const text=typeof data.text==='string'?data.text:'';
+ return {fields,weights,weight_summary:data.weight_summary,text,warnings:Array.isArray(data.warnings)?data.warnings.filter(x=>typeof x==='string'):[]};
 }
 async function invokeScan(body){
  const r=await db.functions.invoke('scan-entry',{body});
@@ -5062,6 +5083,14 @@ async function photoPayload(file){
   return {mimeType:'image/jpeg',image};
  }finally{URL.revokeObjectURL(url);}
 }
+async function localScan(kind,file,status){
+ if(typeof Tesseract==='undefined')throw new Error('Phone reader load thayu nathi (internet check karo).');
+ status.textContent='\u0aab\u0acb\u0aa8 \u0aaa\u0ab0 \u0ab5\u0abe\u0a82\u0a9a\u0ac0 \u0ab0\u0ab9\u0acd\u0aaf\u0acb \u0a9b\u0ac1\u0a82\u2026';
+ const result=await Tesseract.recognize(file,'guj+eng',{logger:m=>{if(m.status==='recognizing text')status.textContent='\u0aab\u0acb\u0aa8 \u0aaa\u0ab0 \u0ab5\u0abe\u0a82\u0a9a\u0abe\u0aaf \u0a9b\u0ac7\u2026 '+Math.round((m.progress||0)*100)+'%';}});
+ const text=(result&&result.data&&result.data.text)||'';
+ const parsed=parseScan(text,kind);
+ return validateScan({fields:parsed.fields,weights:parsed.weights,text,warnings:[],weight_summary:{verified:false}},kind);
+}
 async function scan(kind, button, status) {
  if(scanBusy){status.textContent='\u0aac\u0ac0\u0a9c\u0acb Scan \u0a9a\u0abe\u0ab2\u0ac0 \u0ab0\u0ab9\u0acd\u0aaf\u0acb \u0a9b\u0ac7.';return;}
  const config=configurations[kind],file=byId(config.file)?.files?.[0];
@@ -5074,12 +5103,24 @@ async function scan(kind, button, status) {
   status.textContent='\u0aab\u0acb\u0a9f\u0acb \u0ab5\u0abe\u0a82\u0a9a\u0abe\u0a88 \u0ab0\u0ab9\u0acd\u0aaf\u0acb \u0a9b\u0ac7\u2026 \u0aa5\u0acb\u0aa1\u0acb \u0ab8\u0aae\u0aaf \u0ab2\u0abe\u0a97\u0ab6\u0ac7.';
   const request={kind,target,...await photoPayload(file)};
   const parsed=await invokeScan(request);parsed.target=target;parsed.request=request;
-  if(byId(config.file).files[0]!==file || config.fields.some(([id])=>byId(id)?.value!==snapshot[id]))throw new Error('Scan \u0aa6\u0ab0\u0aae\u0abf\u0aaf\u0abe\u0aa8 \u0aab\u0acb\u0a9f\u0acb \u0a85\u0aa5\u0ab5\u0abe form \u0aac\u0aa6\u0ab2\u0abe\u0aaf\u0ac1\u0a82. \u0aab\u0ab0\u0ac0 Scan \u0a95\u0ab0\u0acb.');
+  if(byId(config.file).files[0]!==file)throw new Error('Scan \u0aa6\u0ab0\u0aae\u0abf\u0aaf\u0abe\u0aa8 \u0aab\u0acb\u0a9f\u0acb \u0a85\u0aa5\u0ab5\u0abe form \u0aac\u0aa6\u0ab2\u0abe\u0aaf\u0ac1\u0a82. \u0aab\u0ab0\u0ac0 Scan \u0a95\u0ab0\u0acb.');
   if(sourceForm.classList.contains('hide'))throw new Error('\u0aac\u0ac0\u0a9c\u0ac1\u0a82 form \u0a96\u0acb\u0ab2\u0acd\u0aaf\u0ac1\u0a82 \u0a9b\u0ac7. Scan \u0aab\u0ab0\u0ac0 \u0a95\u0ab0\u0acb.');
   if(!parsed.text.trim() && !Object.values(parsed.fields).some(Boolean) && !parsed.weights.length)throw new Error('\u0ab2\u0a96\u0abe\u0aa3 \u0ab5\u0abe\u0a82\u0a9a\u0ac0 \u0ab6\u0a95\u0abe\u0aaf\u0ac1\u0a82 \u0aa8\u0aa5\u0ac0. \u0ab8\u0abe\u0aab \u0aab\u0acb\u0a9f\u0acb \u0ab2\u0acb \u0a85\u0aa5\u0ab5\u0abe \u0a9c\u0abe\u0aa4\u0ac7 \u0ab5\u0abf\u0a97\u0aa4\u0acb \u0aad\u0ab0\u0acb.');
   const note=applyScanDirect(kind,parsed,config);
   status.textContent='Scan\u0aa8\u0ac0 \u0ab5\u0abf\u0a97\u0aa4\u0acb \u0aad\u0ab0\u0abe\u0a88 \u0a97\u0a88. \u0a85\u0ab9\u0ac0\u0a82 \u0a9c \u0ab8\u0ac1\u0aa7\u0abe\u0ab0\u0ac0 \u0ab6\u0a95\u0acb \u0a9b\u0acb. '+note;
- }catch(error){status.textContent='Scan: '+error.message;}
+ }catch(error){
+  let message=error.message;
+  try{
+   if(byId(config.file).files[0]===file){
+    const local=await localScan(kind,file,status);
+    if(!local.text.trim() && !Object.values(local.fields).some(Boolean) && !local.weights.length)throw new Error('\u0ab2\u0a96\u0abe\u0aa3 \u0ab5\u0abe\u0a82\u0a9a\u0ac0 \u0ab6\u0a95\u0abe\u0aaf\u0ac1\u0a82 \u0aa8\u0aa5\u0ac0.');
+    const note=applyScanDirect(kind,local,config);
+    status.textContent='\u26a0\ufe0f Server Scan \u0aa8 \u0ab8\u0abe\u0a82\u0aad\u0ab3\u0acd\u0aaf\u0ac1\u0a82, \u0aab\u0acb\u0aa8 \u0aaa\u0ab0 \u0ab5\u0abe\u0a82\u0a9a\u0acd\u0aaf\u0ac1\u0a82. \u0aac\u0aa7\u0ac0 \u0ab5\u0abf\u0a97\u0aa4 \u0a9a\u0ac7\u0a95 \u0a95\u0ab0\u0acb. '+note;
+    return;
+   }
+  }catch(fallbackError){message+=' | Phone reader: '+fallbackError.message;}
+  status.textContent='Scan: '+message;
+ }
  finally{scanBusy=false;button.disabled=false;}
 }
 function installScan(kind){
@@ -5206,7 +5247,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 
 </script>
 <style>
-.bi-v2-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 18px}.bi-v2-toolbar select{width:auto;min-width:150px;margin:0;padding:10px 14px}.bi-v2-toolbar label{margin:0;font-size:13px}.bi-v2-tag{display:inline-flex;align-items:center;padding:5px 10px;border-radius:8px;background:#edf7f7;color:#08676b;font-size:12px;font-weight:700}.bi-v2-tag.warn{background:#fff3dd;color:#905a06}.bi-v2-tag.closed{background:#eef0f4;color:#475569}.bi-v2-record{padding:18px;margin:12px 0;background:white;border:1px solid #dce7e8;border-radius:16px;box-shadow:0 3px 14px #17343806}.bi-v2-record header{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}.bi-v2-record h3{font-size:18px;line-height:1.4;margin:5px 0}.bi-v2-record p{margin:5px 0}.bi-v2-record dl,.bi-v2-modal dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:16px 0}.bi-v2-record dl div{background:#f7fafb;border-radius:10px;padding:10px}.bi-v2-record dt,.bi-v2-modal dt{font-size:12px;color:#63797c}.bi-v2-record dd,.bi-v2-modal dd{font-size:15px;margin:3px 0 0;overflow-wrap:anywhere;font-weight:600}.bi-v2-record footer{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;border-top:1px solid #edf1f2;padding-top:12px;font-size:12px;color:#63797c}.bi-v2-record button{width:auto;margin:0;padding:9px 14px;font-size:13px;border-radius:9px}.bi-v2-total{font-size:23px;font-weight:800;font-variant-numeric:tabular-nums;color:#08676b;white-space:nowrap}.bi-v2-group{border:1px solid #dce7e8;background:#f8fbfb;border-radius:14px;padding:12px;margin:12px 0}.bi-v2-group summary{cursor:pointer;font-weight:700;padding:8px}.bi-v2-filter{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.bi-v2-filter label{font-size:12px;color:#63797c;margin:0}.bi-v2-filter input,.bi-v2-filter select{margin:5px 0 0}.bi-v2-filter .wide{grid-column:1/-1}.bi-v2-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:16px 0}.bi-v2-summary div{border-radius:12px;background:#edf7f7;padding:13px}.bi-v2-summary strong{display:block;font-size:20px;overflow-wrap:anywhere}.bi-v2-summary span{font-size:12px;color:#63797c}.bi-v2-modal{position:fixed;inset:0;z-index:100005;background:#17343899;padding:20px;display:flex;align-items:center;justify-content:center}.bi-v2-modal>section{background:white;max-width:720px;width:100%;max-height:88dvh;overflow:auto;border-radius:20px;padding:22px;box-shadow:0 20px 60px #0003}.bi-v2-modal header{display:flex;justify-content:space-between;gap:16px;align-items:center}.bi-v2-modal h2{font-size:21px;margin:0}.bi-v2-modal header button{width:auto;margin:0;padding:9px 14px}.bi-v2-modal img{width:100%;max-height:60dvh;object-fit:contain;background:#f3f6f7;border-radius:12px;margin-top:15px}.bi-v2-modal .bi-v2-actions{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0}.bi-v2-actions button{width:auto;flex:1;margin:0;padding:12px}.bi-v2-audit{font-size:13px;padding:12px 0;border-bottom:1px solid #dce7e8}.bi-v2-audit pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;background:#f7fafb;padding:10px;border-radius:8px}.bi-v2-draft{padding:12px;background:#f7fafb;border:1px solid #dce7e8;border-radius:12px;margin:12px 0}.bi-v2-draft button{width:auto;margin:8px 5px 0 0;padding:9px 12px;font-size:12px}.bi-v2-note{font-size:12px;color:#63797c;line-height:1.6}.bi-v2-error{padding:12px;background:#fff3dd;border-radius:10px;color:#905a06}#admin .stat-glass{cursor:pointer;border:1px solid #dce7e8;background:white;color:#173438;box-shadow:0 4px 18px #17343808;transition:transform .15s}#admin .stat-glass:focus-visible{outline:3px solid #087f83;outline-offset:3px}#admin .stat-glass:hover{transform:translateY(-2px)}#admin .stat-icon{background:#edf7f7;border-radius:12px;padding:10px}#admin .stat-label{color:#63797c}#admin .stat-value{color:#173438}#admin .stats-grid{gap:12px}#admin .stat-glass::after{content:'&#8250;';margin-left:auto;font-size:25px;color:#087f83}.bi-v2-hidden{display:none!important}@media(max-width:520px){.bi-v2-summary{grid-template-columns:1fr 1fr}.bi-v2-record{padding:14px}.bi-v2-total{font-size:20px}.bi-v2-modal{padding:10px}.bi-v2-modal>section{padding:18px}.bi-v2-filter{gap:9px}}
+.bi-v2-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 18px}.bi-v2-toolbar select{width:auto;min-width:150px;margin:0;padding:10px 14px}.bi-v2-toolbar label{margin:0;font-size:13px}.bi-v2-tag{display:inline-flex;align-items:center;padding:5px 10px;border-radius:8px;background:#edf7f7;color:#08676b;font-size:12px;font-weight:700}.bi-v2-tag.warn{background:#fff3dd;color:#905a06}.bi-v2-tag.closed{background:#eef0f4;color:#475569}.bi-v2-record{padding:18px;margin:12px 0;background:white;border:1px solid #dce7e8;border-radius:16px;box-shadow:0 3px 14px #17343806}.bi-v2-record header{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}.bi-v2-record h3{font-size:18px;line-height:1.4;margin:5px 0}.bi-v2-record p{margin:5px 0}.bi-v2-record dl,.bi-v2-modal dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:16px 0}.bi-v2-record dl div{background:#f7fafb;border-radius:10px;padding:10px}.bi-v2-record dt,.bi-v2-modal dt{font-size:12px;color:#63797c}.bi-v2-record dd,.bi-v2-modal dd{font-size:15px;margin:3px 0 0;overflow-wrap:anywhere;font-weight:600}.bi-v2-record footer{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;border-top:1px solid #edf1f2;padding-top:12px;font-size:12px;color:#63797c}.bi-v2-record button{width:auto;margin:0;padding:9px 14px;font-size:13px;border-radius:9px}.bi-v2-total{font-size:23px;font-weight:800;font-variant-numeric:tabular-nums;color:#08676b;white-space:nowrap}.bi-v2-group{border:1px solid #dce7e8;background:#f8fbfb;border-radius:14px;padding:12px;margin:12px 0}.bi-v2-group summary{cursor:pointer;font-weight:700;padding:8px}.bi-v2-filter{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.bi-v2-filter label{font-size:12px;color:#63797c;margin:0}.bi-v2-filter input,.bi-v2-filter select{margin:5px 0 0}.bi-v2-filter .wide{grid-column:1/-1}.bi-v2-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:16px 0}.bi-v2-summary div{border-radius:12px;background:#edf7f7;padding:13px}.bi-v2-summary strong{display:block;font-size:20px;overflow-wrap:anywhere}.bi-v2-summary span{font-size:12px;color:#63797c}.bi-v2-modal{position:fixed;inset:0;z-index:100005;background:#17343899;padding:20px;display:flex;align-items:center;justify-content:center}.bi-v2-modal>section{background:white;max-width:720px;width:100%;max-height:88dvh;overflow:auto;border-radius:20px;padding:22px;box-shadow:0 20px 60px #0003}.bi-v2-modal header{display:flex;justify-content:space-between;gap:16px;align-items:center}.bi-v2-modal h2{font-size:21px;margin:0}.bi-v2-modal header button{width:auto;margin:0;padding:9px 14px}.bi-v2-modal img{width:100%;max-height:60dvh;object-fit:contain;background:#f3f6f7;border-radius:12px;margin-top:15px}.bi-v2-modal .bi-v2-actions{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0}.bi-v2-actions button{width:auto;flex:1;margin:0;padding:12px}.bi-v2-audit{font-size:13px;padding:12px 0;border-bottom:1px solid #dce7e8}.bi-v2-audit pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;background:#f7fafb;padding:10px;border-radius:8px}.bi-v2-draft{padding:12px;background:#f7fafb;border:1px solid #dce7e8;border-radius:12px;margin:12px 0}.bi-v2-draft button{width:auto;margin:8px 5px 0 0;padding:9px 12px;font-size:12px}.bi-v2-note{font-size:12px;color:#63797c;line-height:1.6}.bi-v2-error{padding:12px;background:#fff3dd;border-radius:10px;color:#905a06}#admin .stat-glass{cursor:pointer;border:1px solid #dce7e8;background:white;color:#173438;box-shadow:0 4px 18px #17343808;transition:transform .15s}#admin .stat-glass:focus-visible{outline:3px solid #087f83;outline-offset:3px}#admin .stat-glass:hover{transform:translateY(-2px)}#admin .stat-icon{background:#edf7f7;border-radius:12px;padding:10px}#admin .stat-label{color:#63797c}#admin .stat-value{color:#173438}#admin .stats-grid{gap:12px}#admin .stat-glass::after{content:'\203A';margin-left:auto;font-size:25px;color:#087f83}.bi-v2-hidden{display:none!important}@media(max-width:520px){.bi-v2-summary{grid-template-columns:1fr 1fr}.bi-v2-record{padding:14px}.bi-v2-total{font-size:20px}.bi-v2-modal{padding:10px}.bi-v2-modal>section{padding:18px}.bi-v2-filter{gap:9px}}
 
 .bi-v2-record header{flex-wrap:wrap}.bi-v2-total{white-space:normal;overflow-wrap:anywhere;max-width:100%}.bi-v2-group summary{overflow-wrap:anywhere}.bi-v2-modal label input{width:100%}
 
@@ -5437,6 +5478,142 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 })();
 
 </script>
+<!-- ===== Balaji v3 fixes: buttons, dashboard, bag-wise total ===== -->
+<style id="bi-v3-style">
+/* ---------- Buttons: one clear system ---------- */
+button{border-radius:12px;box-shadow:0 1px 2px rgba(6,94,98,.25);transition:background .15s,box-shadow .15s,transform .05s}
+button:active{transform:translateY(1px);box-shadow:none}
+button[onclick*="forgotPassword"],button[onclick*="Refresh"],button[onclick*="loadMy"],button[onclick*=".click()"],#me_lang_btn,
+.bi-staff-tabs button,.bi-scan-buttons button.scan-camera,.bi-scan-buttons button.scan-gallery,td button,.weight-row button,.scan-cancel,button[onclick*="logout"]{box-shadow:none}
+button[onclick*="forgotPassword"]{background:transparent!important;color:var(--dark)!important;border:1px solid #b9d8d9!important}
+button[onclick*="logout"]{width:auto;min-width:120px;margin-left:auto;padding:10px 16px;min-height:42px;font-size:14px}
+button[onclick*="delete"],#deleteYes{background:#fff;color:#b92d40;border:1px solid #efc2c8;box-shadow:none}
+button[onclick*="delete"]:hover,#deleteYes:hover{background:#b92d40;color:#fff}
+#who{display:flex;align-items:center;justify-content:space-between;gap:10px}
+/* Draft buttons in one row */
+.bi-v2-draft{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.bi-v2-draft .bi-v2-note{flex:1 1 100%;margin:0 0 4px;font-size:12px}
+.bi-v2-draft button{flex:1 1 30%;width:auto;min-width:92px;margin:0;min-height:42px;font-size:13px;padding:8px 6px;background:var(--soft);color:var(--dark);border:1px solid #c5dddd;box-shadow:none}
+.bi-v2-draft button:hover{background:#dff0f0}
+/* Scan tools: Scan is the main action */
+.bi-scan-buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.bi-scan-buttons button{margin:0;min-height:46px}
+.bi-scan-buttons button.scan-camera,.bi-scan-buttons button.scan-gallery{background:#fff;color:var(--dark);border:1px solid #bcd9da}
+.bi-scan-buttons button.scan-start{grid-column:1/-1;min-height:52px;font-size:16px;background:linear-gradient(135deg,#0a9297,#065e62)}
+.scan-progress{margin-top:10px;font-size:13px;color:var(--dark);overflow-wrap:anywhere}
+/* Main save buttons stand out */
+#worker>button[onclick*="saveChiththi"],#waybridge>button[onclick*="saveWaybridge"],#maal_entry>button[onclick*="saveMaalEntry"]{min-height:54px;font-size:16px;background:linear-gradient(135deg,#0a9297,#065e62);margin-top:18px}
+/* ---------- Admin dashboard tiles ---------- */
+#admin .stats-grid{gap:12px}
+#admin .stat-glass{display:grid!important;grid-template-columns:1fr auto;grid-template-rows:auto auto;gap:10px 6px;padding:14px!important;border-radius:16px;align-items:center;cursor:pointer;transition:box-shadow .15s,transform .05s}
+#admin .stat-glass:hover{box-shadow:0 6px 18px rgba(8,127,131,.14)}
+#admin .stat-glass:active{transform:scale(.99)}
+#admin .stat-glass>.stat-icon{grid-column:1;grid-row:1;justify-self:start;width:42px;height:42px;border-radius:13px;display:grid;place-items:center;font-size:21px;background:#e6f4f4}
+#admin .stat-glass::after{grid-column:2;grid-row:1;margin:0!important;font-size:24px!important;line-height:1}
+#admin .stat-glass>div:not(.stat-icon){grid-column:1/-1;grid-row:2;min-width:0}
+#admin .stat-label{font-size:12.5px;margin-bottom:2px}
+#admin .stat-value{font-size:clamp(18px,5.4vw,23px);white-space:nowrap;overflow-wrap:normal;word-break:normal}
+#admin .stats-grid>.stat-glass:nth-child(1)>.stat-icon{background:#e6f4f4}
+#admin .stats-grid>.stat-glass:nth-child(2)>.stat-icon{background:#fff3dc}
+#admin .stats-grid>.stat-glass:nth-child(3)>.stat-icon{background:#e5eefc}
+#admin .stats-grid>.stat-glass:nth-child(4)>.stat-icon{background:#e7f6e8}
+#admin .stats-grid>.stat-glass:nth-child(5)>.stat-icon{background:#f3e8fb}
+#admin .stats-grid>.stat-glass:nth-child(6)>.stat-icon{background:#fde8ea}
+.dash-welcome{background:linear-gradient(135deg,#e8f6f6,#f6fbfb)}
+/* ---------- Bag-wise weight calculator ---------- */
+.bag-calc{margin:6px 0 14px;padding:14px;border:1px dashed #9fcfd1;border-radius:14px;background:#f6fbfb}
+.bag-calc label{margin-top:0}
+.bag-calc textarea{min-height:110px;font-variant-numeric:tabular-nums;margin-bottom:8px}
+.bag-sum{display:inline-block;padding:7px 12px;border-radius:999px;background:#d8eeee;color:var(--dark);font-weight:750;font-size:14px}
+.bag-sum.bad{background:#fde8ea;color:#b42336}
+.bag-sum.pending{background:#fff3dc;color:#8a5a00}
+.bag-apply{margin:8px 0 0;min-height:44px;background:#fff;color:var(--dark);border:1px solid #bcd9da;box-shadow:none}
+.bag-apply[hidden]{display:none}
+.bi-share-btn{background:#fff;color:#128c4a;border:1px solid #b9e2cb;box-shadow:none;margin:0 0 14px}
+.bi-share-btn:hover{background:#eefaf3}
+.net-hint{margin:-4px 0 12px;font-size:13px;color:var(--muted)}
+.net-hint.warn{color:#b42336;font-weight:650}
+</style>
+<script id="bi-v3-script">
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const toAscii=t=>String(t).replace(/[\u0ae6-\u0aef]/g,c=>String(c.charCodeAt(0)-0xAE6)).replace(/[\u0966-\u096f]/g,c=>String(c.charCodeAt(0)-0x966));
+const fmt=n=>Number(n).toLocaleString('en-IN',{maximumFractionDigits:3});
+
+/* Bag-wise weights -> total goes into "Khedut nu vajan" automatically */
+function parseBags(text){
+  return toAscii(text).split(/[\s;+]+/).map(t=>t.replace(/,/g,'').trim()).filter(Boolean)
+    .map(t=>/^\d+(?:\.\d{1,3})?$/.test(t)?Number(t):NaN);
+}
+function refreshBags(auto){
+  if(auto===undefined)auto=true;
+  const ta=$('bag_weights'),out=$('bag_sum'),btn=$('bag_apply'); if(!ta||!out)return;
+  const all=parseBags(ta.value),good=all.filter(v=>Number.isFinite(v)&&v>0),bad=all.length-good.length;
+  const total=good.reduce((s,v)=>s+Math.round(v*1000),0)/1000;
+  const pending=!auto && good.length>0 && !bad;
+  out.textContent=good.length+' બેગ · કુલ '+fmt(total)+' KG'+(bad?' · ⚠ '+bad+' બેગ ખાલી/ખોટી':'')+(pending?' · ચકાસણી બાકી':'');
+  out.classList.toggle('bad',bad>0);
+  out.classList.toggle('pending',pending);
+  if(btn)btn.hidden=!pending;
+  if(good.length && !bad && auto){
+    const fw=$('farmer_weight'); if(fw){fw.value=String(total);fw.dispatchEvent(new Event('input',{bubbles:true}));}
+  }
+}
+window.BalajiBags={
+  set(list,opts){const ta=$('bag_weights'); if(!ta)return; ta.value=(list||[]).join('\n'); refreshBags(opts&&opts.apply===false?false:true);},
+  refresh:()=>refreshBags(true)
+};
+const ta=$('bag_weights'); if(ta)ta.addEventListener('input',()=>refreshBags(true));
+const applyBtn=$('bag_apply'); if(applyBtn)applyBtn.addEventListener('click',()=>refreshBags(true));
+
+/* Net weight: show the working and warn when deductions exceed weight */
+if(typeof window.calculateNetWeight==='function'){
+  const base=window.calculateNetWeight;
+  window.calculateNetWeight=function(){
+    base();
+    const w=parseFloat($('farmer_weight')?.value)||0,b=parseFloat($('bardan_kg')?.value)||0,k=parseFloat($('kardo_kg')?.value)||0;
+    const net=$('net_weight'); if(!net)return;
+    let hint=$('net_hint');
+    if(!hint){hint=document.createElement('p');hint.id='net_hint';hint.className='net-hint';net.after(hint);}
+    const over=w>0 && (b+k)>w;
+    hint.classList.toggle('warn',over);
+    hint.textContent=over?'⚠ બારદાન + કરડો, ખેડૂતના વજન કરતાં વધારે છે.':(w>0?(fmt(w)+' − '+fmt(b)+' − '+fmt(k)+' = '+net.value+' KG'):'');
+  };
+}
+
+/* Admin: share today's summary (WhatsApp / share sheet) */
+(function(){
+  const grid=document.querySelector('#admin .stats-grid'); if(!grid||$('bi-wa-summary'))return;
+  const btn=document.createElement('button');btn.type='button';btn.id='bi-wa-summary';btn.className='bi-share-btn';
+  btn.textContent='📤 આજનો સારાંશ શેર કરો';
+  const g=id=>(($(id)&&$(id).textContent)||'0').trim();
+  btn.addEventListener('click',async()=>{
+    const d=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric',timeZone:'Asia/Kolkata'});
+    const text=['*Balaji Industries — આજનો સારાંશ*','તારીખ: '+d,'','📝 ચિઠ્ઠી: '+g('stat_entries'),'⚖️ વજન: '+g('stat_weight'),'🚚 ગાડી: '+g('stat_vehicles'),'👨‍🌾 ખેડૂત: '+g('stat_farmers'),'📥 Unloading: '+g('stat_unloading'),'📤 Loading: '+g('stat_loading')].join('\n');
+    if(navigator.share){try{await navigator.share({text});return;}catch(err){if(err&&err.name==='AbortError')return;}}
+    window.open('https://wa.me/?text='+encodeURIComponent(text),'_blank','noopener');
+  });
+  grid.after(btn);
+})();
+
+/* Live data: don't poll while the tab is hidden or a request is still running */
+if(typeof window.loadLiveData==='function'){
+  const baseLive=window.loadLiveData;let busy=false;
+  window.loadLiveData=async function(){
+    if(busy||document.hidden)return; busy=true;
+    try{return await baseLive.apply(this,arguments);}finally{busy=false;}
+  };
+}
+
+/* Missing logo file should not show a broken-image icon */
+document.querySelectorAll('img[src="balaji-logo.png"]').forEach(img=>{
+  const swap=()=>{const d=document.createElement('div');d.textContent='🏭';d.setAttribute('aria-label','Balaji Industries');d.style.cssText='font-size:64px;line-height:1;margin:6px 0';img.replaceWith(d);};
+  if(img.complete&&img.naturalWidth===0)swap();else img.addEventListener('error',swap,{once:true});
+});
+})();
+</script>
+
 </body>
 </html>
 
