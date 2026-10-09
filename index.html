@@ -5072,7 +5072,8 @@ async function invokeScan(body){
  const r=await db.functions.invoke('scan-entry',{body});
  if(r.error){
   let message='Scan \u0ab8\u0ac7\u0ab5\u0abe \u0a9c\u0ab5\u0abe\u0aac \u0a86\u0aaa\u0ac0 \u0ab6\u0a95\u0ac0 \u0aa8\u0aa5\u0ac0. Internet \u0a85\u0aa8\u0ac7 Login \u0aa4\u0aaa\u0abe\u0ab8\u0acb.';
-  try{const details=await r.error.context.json();if(typeof details.error==='string')message=details.error;}catch(_){}
+  let st='';try{st=r.error.context&&r.error.context.status?(' [HTTP '+r.error.context.status+']'):'';const details=await r.error.context.json();if(typeof details.error==='string')message=details.error;else if(details.message)message=String(details.message);}catch(_){if(!st)st=' ['+String(r.error.message||'network').slice(0,80)+']';}
+  message+=st;
   throw new Error(message);
  }
  return validateScan(r.data,body.kind);
@@ -5120,9 +5121,15 @@ async function scan(kind, button, status) {
   try{
    if(byId(config.file).files[0]===file){
     const local=await localScan(kind,file,status);
-    if(!local.text.trim() && !Object.values(local.fields).some(Boolean) && !local.weights.length)throw new Error('\u0ab2\u0a96\u0abe\u0aa3 \u0ab5\u0abe\u0a82\u0a9a\u0ac0 \u0ab6\u0a95\u0abe\u0aaf\u0ac1\u0a82 \u0aa8\u0aa5\u0ac0.');
-    const note=applyScanDirect(kind,local,config);
-    status.textContent='\u26a0\ufe0f Server Scan \u0aa8 \u0ab8\u0abe\u0a82\u0aad\u0ab3\u0acd\u0aaf\u0ac1\u0a82, \u0aab\u0acb\u0aa8 \u0aaa\u0ab0 \u0ab5\u0abe\u0a82\u0a9a\u0acd\u0aaf\u0ac1\u0a82. \u0aac\u0aa7\u0ac0 \u0ab5\u0abf\u0a97\u0aa4 \u0a9a\u0ac7\u0a95 \u0a95\u0ab0\u0acb. '+note;
+    const safe=['vehicle_number','wb_vehicle','me_vehicle','farmer_mobile','wb_mobile'];
+    const filled=[];
+    safe.forEach(id=>{const v=local.fields[id];if(v&&byId(id)){changeField(id,v);filled.push(v);}});
+    status.innerHTML='';
+    const box=document.createElement('div');box.className='scan-fail';
+    const t=document.createElement('b');t.textContent='\u26a0\ufe0f Scan \u0aa5\u0a88 \u0ab6\u0a95\u0acd\u0aaf\u0ac1\u0a82 \u0aa8\u0aa5\u0ac0';
+    const m=document.createElement('div');m.textContent=message;
+    const h=document.createElement('div');h.textContent=filled.length?('\u0aab\u0acb\u0aa8 \u0aaa\u0ab0 \u0aab\u0a95\u0acd\u0aa4 \u0aa8\u0a82\u0aac\u0ab0 \u0ab5\u0abe\u0a82\u0a9a\u0acd\u0aaf\u0abe: '+filled.join(', ')+'. \u0aac\u0abe\u0a95\u0ac0 \u0ab5\u0abf\u0a97\u0aa4 \u0a9c\u0abe\u0aa4\u0ac7 \u0aad\u0ab0\u0acb.'):'\u0ab5\u0abf\u0a97\u0aa4 \u0a9c\u0abe\u0aa4\u0ac7 \u0aad\u0ab0\u0acb \u0a85\u0aa5\u0ab5\u0abe \u0aab\u0ab0\u0ac0 Scan \u0a95\u0ab0\u0acb.';
+    box.append(t,m,h);status.append(box);
     return;
    }
   }catch(fallbackError){message+=' | Phone reader: '+fallbackError.message;}
@@ -5631,6 +5638,10 @@ label.photo-label{margin-top:0}
 .dash-welcome{background:linear-gradient(135deg,#e8f6f6,#f6fbfb)}
 .bi-share-btn{background:#fff;color:#128c4a;border:1px solid #b9e2cb;margin:0 0 14px}
 .bi-share-btn:hover{background:#eefaf3}
+
+.scan-fail{padding:10px 12px;border-radius:12px;background:#fdecee;border:1px solid #efc2c8;color:#8f1d2c;font-size:13px;line-height:1.5;overflow-wrap:anywhere}
+.scan-fail b{display:block;margin-bottom:2px}
+.scan-fail div+div{margin-top:4px;color:#5b3a3f}
 </style>
 <script id="bi-v4-script">
 (function(){
