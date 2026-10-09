@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="gu"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="gu"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Balaji Industries</title>
 <style>
 :root {
@@ -787,11 +787,11 @@ placeholder="&#2710;&#2759;&#2721;&#2754;&#2724;&#2728;&#2763; &#2734;&#2763;&#2
 <div class="bag-calc">
 <div class="bag-head"><b>બેગ પ્રમાણે વજન</b><span class="bag-opt">વૈકલ્પિક</span></div>
 <textarea id="bag_weights" hidden></textarea>
-<table class="bag-table"><thead><tr><th>#</th><th style="text-align:right">વજન (KG)</th><th></th></tr></thead><tbody id="bag_rows"></tbody>
-<tfoot><tr><td colspan="3"><div class="bag-foot"><span id="bag_count">0 બેગ</span><b id="bag_total">0 KG</b></div></td></tr></tfoot></table>
+<div id="bag_rows" class="bag-grid" role="group" aria-label="Bag weights"></div>
+<div class="bag-foot"><span id="bag_count">0 બેગ</span><b id="bag_total">0 KG</b></div>
 <div id="bag_sum" class="bag-sum" hidden></div>
-<div class="bag-actions"><button type="button" id="bag_add" class="bag-add">＋ બેગ ઉમેરો</button><button type="button" id="bag_apply" class="bag-apply" hidden>✔ ચકાસ્યા પછી કુલ ભરો</button></div>
-<p class="muted bag-hint">બેગનું વજન ભરશો એટલે નીચે “ખેડૂતનું વજન” આપમેળે ભરાઈ જશે.</p>
+<div class="bag-actions"><button type="button" id="bag_clear" class="bag-clear">સાફ કરો</button><button type="button" id="bag_apply" class="bag-apply" hidden>✔ ચકાસ્યા પછી કુલ ભરો</button></div>
+<p class="muted bag-hint">ચિઠ્ઠીની જેમ એક પછી એક વજન લખો (Next દબાવો). કુલ આપમેળે “ખેડૂતનું વજન” માં ભરાશે.</p>
 </div>
 <label><b>&#2710;&#2759;&#2721;&#2754;&#2724;&#2728;&#2753;&#2690; &#2741;&#2716;&#2728; (KG) *</b></label>
 <input id="farmer_weight"
@@ -5116,6 +5116,7 @@ async function scan(kind, button, status) {
   if(!parsed.text.trim() && !Object.values(parsed.fields).some(Boolean) && !parsed.weights.length)throw new Error('\u0ab2\u0a96\u0abe\u0aa3 \u0ab5\u0abe\u0a82\u0a9a\u0ac0 \u0ab6\u0a95\u0abe\u0aaf\u0ac1\u0a82 \u0aa8\u0aa5\u0ac0. \u0ab8\u0abe\u0aab \u0aab\u0acb\u0a9f\u0acb \u0ab2\u0acb \u0a85\u0aa5\u0ab5\u0abe \u0a9c\u0abe\u0aa4\u0ac7 \u0ab5\u0abf\u0a97\u0aa4\u0acb \u0aad\u0ab0\u0acb.');
   const note=applyScanDirect(kind,parsed,config);
   status.textContent='Scan\u0aa8\u0ac0 \u0ab5\u0abf\u0a97\u0aa4\u0acb \u0aad\u0ab0\u0abe\u0a88 \u0a97\u0a88. \u0a85\u0ab9\u0ac0\u0a82 \u0a9c \u0ab8\u0ac1\u0aa7\u0abe\u0ab0\u0ac0 \u0ab6\u0a95\u0acb \u0a9b\u0acb. '+note;
+  try{window.BalajiAfterScan&&window.BalajiAfterScan(kind);}catch(_){}
  }catch(error){
   let message=error.message;
   try{
@@ -5464,11 +5465,11 @@ let language='gu';try{language=localStorage.getItem('balaji-app-language')==='en
 const normalize=s=>String(s).replace(/\s+/g,' ').trim(), guMap=new Map(),enMap=new Map();pairs.forEach(([gu,en])=>{enMap.set(normalize(gu),en);guMap.set(normalize(en),gu);});
 [['\u0aae\u0a97\u0aab\u0ab3\u0ac0','Groundnut'],['\u0a8f\u0ab0\u0a82\u0aa1\u0abe','Castor'],['\u0a98\u0a89\u0a82','Wheat'],['\u0a97\u0ab5\u0abe\u0ab0','Guar'],['\u0aae\u0a97\u0aab\u0ab3\u0ac0','Magfadi / \u092e\u0942\u0902\u0917\u092b\u0932\u0940'],['\u0a8f\u0ab0\u0a82\u0aa1\u0abe','Aeranda / \u0905\u0930\u0902\u0921\u0940'],['\u0a98\u0a89\u0a82','Gau / \u0917\u0947\u0939\u0942\u0902'],['\u0a97\u0ab5\u0abe\u0ab0','Govar / \u0917\u094d\u0935\u093e\u0930']].forEach(([gu,en])=>guMap.set(normalize(en),gu));
 [['\u0aae\u0a97\u0aab\u0ab3\u0ac0','Groundnut'],['\u0a8f\u0ab0\u0a82\u0aa1\u0abe','Castor'],['\u0a98\u0a89\u0a82','Wheat'],['\u0a97\u0ab5\u0abe\u0ab0','Guar'],['Magfadi / \u092e\u0942\u0902\u0917\u092b\u0932\u0940','Groundnut'],['Aeranda / \u0905\u0930\u0902\u0921\u0940','Castor'],['Gau / \u0917\u0947\u0939\u0942\u0902','Wheat'],['Govar / \u0917\u094d\u0935\u093e\u0930','Guar']].forEach(([gu,en])=>enMap.set(normalize(gu),en));
-[['\u0aae\u0ac1\u0a96\u0acd\u0aaf \u0aaa\u0ac3\u0ab7\u0acd\u0aa0','Home'],['\u0a8f\u0aa8\u0acd\u0a9f\u0acd\u0ab0\u0ac0\u0a93','Entries'],['\u0a85\u0ab9\u0ac7\u0ab5\u0abe\u0ab2\u0acb','Reports'],['\u0ab5\u0aaa\u0ab0\u0abe\u0ab6\u0a95\u0ab0\u0acd\u0aa4\u0abe','Users'],['\u0a9d\u0aa1\u0aaa\u0ac0 \u0a95\u0abe\u0aae','Quick actions'],['\u0a8f\u0aa1\u0aae\u0abf\u0aa8 \u0aa1\u0ac7\u0ab6\u0aac\u0acb\u0ab0\u0acd\u0aa1','Admin Dashboard'],['\u0aae\u0a9c\u0ac2\u0ab0 \u0aa1\u0ac7\u0ab6\u0aac\u0acb\u0ab0\u0acd\u0aa1','Worker Dashboard'],['\u0a95\u0abe\u0a82\u0a9f\u0abe \u0aa1\u0ac7\u0ab6\u0aac\u0acb\u0ab0\u0acd\u0aa1','Waybridge Dashboard'],['\u0aae\u0abe\u0ab2 \u0a8f\u0aa8\u0acd\u0a9f\u0acd\u0ab0\u0ac0 \u0aa1\u0ac7\u0ab6\u0aac\u0acb\u0ab0\u0acd\u0aa1','Maal Entry Dashboard'],['\u0aac\u0abe\u0a95\u0ac0 \u0aae\u0a82\u0a9c\u0ac2\u0ab0\u0ac0\u0a93','Pending users'],['\u0aaa\u0abe\u0ab8\u0ab5\u0ab0\u0acd\u0aa1 \u0aac\u0aa6\u0ab2\u0acb','Change password'],['\u0aaa\u0abe\u0ab8\u0ab5\u0ab0\u0acd\u0aa1\u0aa8\u0ac0 \u0ab5\u0abf\u0aa8\u0a82\u0aa4\u0ac0\u0a93','Password requests'],['\u0ab5\u0aaa\u0ab0\u0abe\u0ab6\u0a95\u0ab0\u0acd\u0aa4\u0abe / \u0aaa\u0abe\u0ab8\u0ab5\u0ab0\u0acd\u0aa1','Users / password']].forEach(([gu,en])=>{enMap.set(normalize(gu),en);guMap.set(normalize(en),gu);});
+[['\u0aae\u0ac1\u0a96\u0acd\u0aaf \u0aaa\u0ac3\u0ab7\u0acd\u0aa0','Home'],['\u0a8f\u0aa8\u0acd\u0a9f\u0acd\u0ab0\u0ac0\u0a93','Entries'],['\u0a85\u0ab9\u0ac7\u0ab5\u0abe\u0ab2\u0acb','Reports'],['\u0ab5\u0aaa\u0ab0\u0abe\u0ab6\u0a95\u0ab0\u0acd\u0aa4\u0abe','Users'],['\u0a9d\u0aa1\u0aaa\u0ac0 \u0a95\u0abe\u0aae','Quick actions'],['\u0a8f\u0aa1\u0aae\u0abf\u0aa8 \u0aa1\u0ac7\u0ab6\u0aac\u0acb\u0ab0\u0acd\u0aa1','Admin Dashboard'],['\u0aae\u0a9c\u0ac2\u0ab0 \u0aa1\u0ac7\u0ab6\u0aac\u0acb\u0ab0\u0acd\u0aa1','Worker Dashboard'],['\u0a95\u0abe\u0a82\u0a9f\u0abe \u0aa1\u0ac7\u0ab6\u0aac\u0acb\u0ab0\u0acd\u0aa1','Waybridge Dashboard'],['\u0aae\u0abe\u0ab2 \u0a8f\u0aa8\u0acd\u0a9f\u0acd\u0ab0\u0ac0 \u0aa1\u0ac7\u0ab6\u0aac\u0acb\u0ab0\u0acd\u0aa1','Maal Entry Dashboard'],['\u0aac\u0abe\u0a95\u0ac0 \u0aae\u0a82\u0a9c\u0ac2\u0ab0\u0ac0\u0a93','Pending users'],['\u0aaa\u0abe\u0ab8\u0ab5\u0ab0\u0acd\u0aa1 \u0aac\u0aa6\u0ab2\u0acb','Change password'],['\u0aaa\u0abe\u0ab8\u0ab5\u0ab0\u0acd\u0aa1\u0aa8\u0ac0 \u0ab5\u0abf\u0aa8\u0a82\u0aa4\u0ac0\u0a93','Password requests'],['\u0ab5\u0aaa\u0ab0\u0abe\u0ab6\u0a95\u0ab0\u0acd\u0aa4\u0abe / \u0aaa\u0abe\u0ab8\u0ab5\u0ab0\u0acd\u0aa1','Users / password'],['ચિઠ્ઠીનો ફોટો','Chit photo'],['કાંટાની પાવતીનો ફોટો','Weighbridge slip photo'],['ફોટો લો અને Scan દબાવો — નીચેની વિગતો આપમેળે ભરાશે. ફોટો જરૂરી છે.','Take a photo and press Scan — the details below fill in automatically. Photo is required.'],['ફોટો લો અને Scan દબાવો — RST, ગાડી નંબર અને NET વજન આપમેળે ભરાશે. ફોટો ફરજિયાત નથી.','Take a photo and press Scan — RST, vehicle number and NET weight fill in automatically. Photo is optional.'],['Camera અથવા Galleryમાંથી ફોટો ઉમેરો. ફોટો જરૂરી છે.','Add a photo from Camera or Gallery. Photo is required.'],['બેગ પ્રમાણે વજન','Weight per bag'],['વૈકલ્પિક','Optional'],['સાફ કરો','Clear all'],['કાઢો','Remove'],['✔ ચકાસ્યા પછી કુલ ભરો','✔ Apply total after checking'],['✔ વિગતો ભરાઈ ગઈ — ચકાસીને Save કરો','✔ Details filled — please check them'],['ચિઠ્ઠીની જેમ એક પછી એક વજન લખો (Next દબાવો). કુલ આપમેળે “ખેડૂતનું વજન” માં ભરાશે.','Type weights one after another like on the chit (press Next). The total fills “Farmer weight” automatically.']].forEach(([gu,en])=>{enMap.set(normalize(gu),en);guMap.set(normalize(en),gu);});
 [['Majur Dashboard','\u0aae\u0a9c\u0ac2\u0ab0 \u0aa1\u0ac7\u0ab6\u0aac\u0acb\u0ab0\u0acd\u0aa1'],['Pending Users','\u0aac\u0abe\u0a95\u0ac0 \u0aae\u0a82\u0a9c\u0ac2\u0ab0\u0ac0\u0a93'],['Password Change','\u0aaa\u0abe\u0ab8\u0ab5\u0ab0\u0acd\u0aa1 \u0aac\u0aa6\u0ab2\u0acb'],['Password Requests','\u0aaa\u0abe\u0ab8\u0ab5\u0ab0\u0acd\u0aa1\u0aa8\u0ac0 \u0ab5\u0abf\u0aa8\u0a82\u0aa4\u0ac0\u0a93'],['Quick Actions','\u0a9d\u0aa1\u0aaa\u0ac0 \u0a95\u0abe\u0aae'],['Users / Password','\u0ab5\u0aaa\u0ab0\u0abe\u0ab6\u0a95\u0ab0\u0acd\u0aa4\u0abe / \u0aaa\u0abe\u0ab8\u0ab5\u0ab0\u0acd\u0aa1']].forEach(([en,gu])=>guMap.set(normalize(en),gu));
 function translate(value){const text=normalize(value);const map=language==='en'?enMap:guMap;if(map.has(text))return map.get(text);
  const m=text.match(/^([\p{Extended_Pictographic}\uFE0F\s\u2190+*\ud83d\udd11\ud83d\udce6\ud83d\udd0d\ud83d\ude9a\ud83d\udcca\ud83d\udce5\ud83d\udd34\ud83d\udd04\ud83d\udcdd\u2696\ud83d\udc68\u200d\ud83c\udf3e\ud83d\udce4\ud83d\udc65\ud83d\udd14\ud83d\uddbc\ud83d\udcf7]*)(.*?)(\s*\*?)$/u);if(m&&map.has(m[2]))return m[1]+map.get(m[2])+m[3];
- const patterns=language==='en'?[
+ const patterns=language==='en'?[[/^(\d+) \u0aac\u0ac7\u0a97$/,'$1 bags'],
  [/^\u0a9a\u0abf\u0aa0\u0acd\u0aa0\u0ac0 Save \u0aa5\u0a88 \u0a97\u0a88\. Final \u0ab5\u0a9c\u0aa8: (.*)$/,'Chit saved. Final weight: $1'],[/^Password \u0ab8\u0aab\u0ab3\u0aa4\u0abe\u0aaa\u0ac2\u0ab0\u0acd\u0ab5\u0a95 \u0aac\u0aa6\u0ab2\u0abe\u0a88 \u0a97\u0aaf\u0acb\.$/,'Password changed successfully.'],[/^\u0aaa\u0ab8\u0a82\u0aa6 \u0a95\u0ab0\u0ac7\u0ab2\u0ac1\u0a82 \u0a95\u0ac1\u0ab2: (.*)$/,'Selected total: $1'],[/^\u0ab9\u0abe\u0ab2: (.*)$/,'Current: $1'],[/^Request \u0aae\u0acb\u0a95\u0ab2\u0abe\u0a88 \u0aa8\u0aa5\u0ac0: (.*)$/,'Request not sent: $1'],[/^\u0a9a\u0abf\u0aa0\u0acd\u0aa0\u0ac0\u0aa8\u0ac1\u0a82 Total: (.*)$/,'Printed chit total: $1'],[/^\u0aa4\u0aab\u0abe\u0ab5\u0aa4: (.*)$/,'Difference: $1'],[/^APK Notification token Supabase\u0aae\u0abe\u0a82 \u0ab8\u0ac7\u0ab5 \u0aa5\u0aaf\u0acb \u0a9b\u0ac7\.$/,'APK notification token saved in Supabase.'],[/^\u0ab5\u0abe\u0a82\u0a9a\u0ac7\u0ab2\u0ac0 (\d+) \u0ab5\u0a9c\u0aa8\u0aa8\u0ac0 \u0ab2\u0abe\u0a87\u0aa8\u0acb\u0aa8\u0ac1\u0a82 \u0a95\u0ac1\u0ab2: (.*)$/,'Total of $1 extracted weight lines: $2']
  ]:[[/^Chit saved\. Final weight: (.*)$/,'\u0a9a\u0abf\u0aa0\u0acd\u0aa0\u0ac0 Save \u0aa5\u0a88 \u0a97\u0a88. Final \u0ab5\u0a9c\u0aa8: $1'],[/^Selected total: (.*)$/,'\u0aaa\u0ab8\u0a82\u0aa6 \u0a95\u0ab0\u0ac7\u0ab2\u0ac1\u0a82 \u0a95\u0ac1\u0ab2: $1'],[/^Current: (.*)$/,'\u0ab9\u0abe\u0ab2: $1'],[/^Request not sent: (.*)$/,'Request \u0aae\u0acb\u0a95\u0ab2\u0abe\u0a88 \u0aa8\u0aa5\u0ac0: $1'],[/^APK notification token saved in Supabase\.$/,'APK Notification token Supabase\u0aae\u0abe\u0a82 \u0ab8\u0ac7\u0ab5 \u0aa5\u0aaf\u0acb \u0a9b\u0ac7.']];
  for(const [regex,result] of patterns)if(regex.test(text))return text.replace(regex,result);return value;
@@ -5565,20 +5566,6 @@ label.photo-label{margin-top:0}
 .bag-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .bag-head b{font-size:15px}
 .bag-opt{font-size:11px;font-weight:700;color:#5b7477;background:var(--bi-soft);padding:3px 9px;border-radius:999px}
-.bag-table{width:100%;border-collapse:separate;border-spacing:0;border:1px solid var(--bi-line);border-radius:12px;overflow:hidden;font-variant-numeric:tabular-nums}
-.bag-table th{background:#f1f8f8;color:#4a6568;font-size:12px;font-weight:800;text-align:left;padding:8px 10px;border-bottom:1px solid var(--bi-line)}
-.bag-table th:last-child,.bag-table td:last-child{width:46px;text-align:center}
-.bag-table th:first-child,.bag-table td:first-child{width:44px;text-align:center;color:#6a8084;font-weight:700}
-.bag-table td{padding:2px 6px!important;height:50px;vertical-align:middle!important;border-bottom:1px solid #edf3f3!important;line-height:1.2}
-.bag-table th{vertical-align:middle!important}
-.bag-table tbody tr:last-child td{border-bottom:0}
-.bag-table input{width:100%;margin:0!important;min-height:42px;border:1px solid transparent;background:transparent;font-size:16px;font-weight:700;padding:8px 6px;border-radius:8px;text-align:right}
-.bag-table input:focus{background:#fff;border-color:#0a9297;outline:0}
-.bag-table tr.bad input{background:#fdecee;border-color:#e9a9b1;color:#b42336}
-.bag-table td button.bag-del{width:34px;min-height:34px;height:34px;padding:0;margin:0;background:transparent;color:#a0a9ab;border:0;box-shadow:none;font-size:16px}
-.bag-table td button.bag-del:hover{background:#fdecee;color:#b42336}
-.bag-empty td{padding:16px 10px;text-align:center;color:#7d9093;font-size:13px}
-.bag-table tfoot td{padding:10px 12px;background:#eaf6f6;border-top:1px solid var(--bi-line)}
 .bag-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:14px;font-weight:700;color:var(--dark)}
 .bag-foot b{font-size:18px}
 .bag-actions{display:flex;gap:8px;margin-top:10px}
@@ -5642,6 +5629,48 @@ label.photo-label{margin-top:0}
 .scan-fail{padding:10px 12px;border-radius:12px;background:#fdecee;border:1px solid #efc2c8;color:#8f1d2c;font-size:13px;line-height:1.5;overflow-wrap:anywhere}
 .scan-fail b{display:block;margin-bottom:2px}
 .scan-fail div+div{margin-top:4px;color:#5b3a3f}
+
+/* ===== v5: chit-style bag grid, scan card on top, safe area ===== */
+:root{--bi-safe-top:max(env(safe-area-inset-top,0px),var(--bi-top,0px))}
+body::before{content:"";position:fixed;top:0;left:0;right:0;height:var(--bi-safe-top);background:var(--bg);z-index:50;pointer-events:none}
+main{padding-top:calc(20px + var(--bi-safe-top))!important}
+#app>.card:first-child{top:var(--bi-safe-top)}
+/* Bag grid */
+.bag-calc{margin:6px 0 14px;padding:14px;border:1px solid var(--bi-line);border-radius:16px;background:#fff}
+.bag-grid{display:grid;grid-template-columns:repeat(var(--bag-cols,4),minmax(0,1fr));gap:1px;background:#cfe0e1;border:1px solid #cfe0e1;border-radius:12px;overflow:hidden;font-variant-numeric:tabular-nums}
+.bag-cell{position:relative;background:#fff;height:54px;cursor:text;min-width:0}
+.bag-cell.filled{background:#f1f9f9}
+.bag-cell .bn{position:absolute;left:6px;top:4px;font-size:10px;line-height:1;color:#9db0b3;font-weight:700;pointer-events:none}
+.bag-cell input{display:block;width:100%;height:100%;min-height:0!important;margin:0!important;padding:15px 4px 4px!important;border:0!important;border-radius:0!important;background:transparent!important;text-align:center;font-size:17px;font-weight:800;color:var(--bi-ink);box-shadow:none}
+.bag-cell input:focus{outline:0!important;background:#fff!important;box-shadow:inset 0 0 0 2px #0a9297!important}
+.bag-cell input::placeholder{color:#c0a1a6;font-weight:700}
+.bag-cell.bad{background:#fdecee}
+.bag-cell.bad input{color:#b42336}
+.bag-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:10px;padding:10px 14px;border-radius:12px;background:#eaf6f6;font-size:14px;font-weight:700;color:var(--dark)}
+.bag-foot b{font-size:19px;font-variant-numeric:tabular-nums}
+.bag-actions{display:flex;gap:8px;margin-top:10px}
+.bag-clear{flex:0 0 auto;width:auto!important;min-height:44px;margin:0;padding:8px 16px;background:#fff;color:#b92d40;border:1px solid #efc2c8;box-shadow:none;font-size:14px}
+.bag-apply{flex:1}
+/* Scan / photo card at the top of every form */
+.bi-scan-tools{display:flex;flex-direction:column}
+.bi-scan-tools.on-top{margin:10px 0 20px;padding:16px;border:1px solid #bcd9da;border-radius:18px;background:linear-gradient(180deg,#f3fbfb,#fff);box-shadow:0 3px 14px rgba(8,127,131,.07)}
+.bi-scan-tools>h3{order:0;margin:0 0 2px;font-size:16px}
+.scan-sub{order:1;margin:0 0 12px!important;font-size:13px;line-height:1.45;color:var(--muted)}
+.bi-scan-tools>.bi-scan-buttons{order:2}
+.bi-scan-tools>.photo-chip{order:3}
+.bi-scan-tools>.scan-progress{order:4;margin:10px 0 0}
+.bi-scan-tools>.scan-progress:empty{display:none}
+.bi-scan-tools>label{order:5;display:flex;align-items:center;justify-content:space-between;gap:10px;margin:12px 0 0;font-size:12.5px;font-weight:600;color:#587074}
+.bi-scan-tools>label select{width:auto;min-width:130px;min-height:40px;margin:0;padding:6px 10px;font-size:14px}
+.bi-scan-tools>p.muted:not(.scan-progress){order:6;margin:8px 0 0}
+.scan-progress.ok{padding:10px 12px;border-radius:12px;background:#e6f6ea;border:1px solid #b9e2c6;color:#17683a;font-weight:650;font-size:13px;line-height:1.5}
+.flash{animation:biFlash 1.8s ease-out}
+@keyframes biFlash{0%{background-color:#cdeed6!important;box-shadow:0 0 0 3px #b5e6c3}100%{background-color:#fff}}
+@media (prefers-reduced-motion:reduce){.flash{animation:none}}
+
+.bi-toast{position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom,0px));transform:translate(-50%,16px);z-index:80;max-width:calc(100% - 32px);padding:11px 18px;border-radius:999px;background:#0e5c42;color:#fff;font-size:14px;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.22);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;text-align:center}
+.bi-toast.show{opacity:1;transform:translate(-50%,0)}
+#maal_entry .bi-scan-tools h3{display:block!important}
 </style>
 <script id="bi-v4-script">
 (function(){
@@ -5649,48 +5678,61 @@ label.photo-label{margin-top:0}
 const $=id=>document.getElementById(id);
 const toAscii=t=>String(t).replace(/[\u0ae6-\u0aef]/g,c=>String(c.charCodeAt(0)-0xAE6)).replace(/[\u0966-\u096f]/g,c=>String(c.charCodeAt(0)-0x966));
 const fmt=n=>Number(n).toLocaleString('en-IN',{maximumFractionDigits:3});
+try{const ua=navigator.userAgent||'';const standalone=(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone;if(/;\s*wv\)/.test(ua)||standalone)document.documentElement.style.setProperty('--bi-top','28px');}catch(_){}
 const el=(tag,cls,html)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(html!==undefined)e.innerHTML=html;return e;};
 
-/* ================= Bag-wise weight table ================= */
+/* ================= Bag-wise weight grid (chit style) ================= */
 const ta=$('bag_weights'),rowsBody=$('bag_rows');
 let lastMirror=null;
+const MIN_ROWS=3;
 const parseOne=t=>{const s=toAscii(t).replace(/,/g,'').trim();return /^\d+(?:\.\d{1,3})?$/.test(s)?Number(s):NaN;};
-function rowState(){return [...document.querySelectorAll('#bag_rows tr[data-row]')].map(tr=>({tr,input:tr.querySelector('input'),flag:tr.dataset.unread==='1'}));}
-function mirror(){ // table -> hidden textarea (drafts) 
-  const vals=rowState().map(r=>{const v=r.input.value.trim();return v?v:(r.flag?'?':'');}).filter((v,i,a)=>v!==''||false);
+const colsNow=()=>{const w=window.innerWidth||390;return w>=640?6:(w>=340?4:3);};
+const cells=()=>rowsBody?[...rowsBody.querySelectorAll('.bag-cell')]:[];
+const cellVal=c=>c.querySelector('input').value.trim();
+function mirror(){ // grid -> hidden textarea (used by drafts)
+  const vals=cells().map(c=>{const v=cellVal(c);return v?v:(c.dataset.unread==='1'?'?':'');}).filter(v=>v!=='');
   lastMirror=vals.join('\n');
   if(ta.value!==lastMirror){ta.value=lastMirror;ta.dispatchEvent(new Event('input',{bubbles:true}));}
 }
-function addRow(value,unread,focus){
-  const idx=document.querySelectorAll('#bag_rows tr[data-row]').length+1;
-  const tr=el('tr');tr.dataset.row='1';if(unread)tr.dataset.unread='1';
-  const num=el('td','',String(idx));
-  const td=el('td');const inp=el('input');inp.type='text';inp.inputMode='decimal';inp.autocomplete='off';inp.placeholder=unread?'?':'0.0';inp.value=value||'';inp.setAttribute('aria-label','Bag '+idx+' weight');
-  td.appendChild(inp);
-  const del=el('td');const b=el('button','bag-del','✕');b.type='button';b.setAttribute('aria-label','Remove bag '+idx);del.appendChild(b);
-  tr.append(num,td,del);rowsBody.appendChild(tr);
-  inp.addEventListener('input',()=>{tr.dataset.unread='';recalc(true);});
-  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addRow('',false,true);recalc(true);}});
-  inp.addEventListener('paste',e=>{const txt=(e.clipboardData||window.clipboardData).getData('text');const parts=toAscii(txt).split(/[\s;+]+/).filter(Boolean);if(parts.length>1){e.preventDefault();inp.value=parts[0];parts.slice(1).forEach(p=>addRow(p,false,false));recalc(true);}});
-  b.addEventListener('click',()=>{tr.remove();renumber();recalc(true);});
-  if(focus)inp.focus();
-  return tr;
+function makeCell(){
+  const c=el('div','bag-cell');
+  const n=el('span','bn');
+  const inp=el('input');inp.type='text';inp.inputMode='decimal';inp.autocomplete='off';inp.enterKeyHint='next';
+  c.append(n,inp);
+  c.addEventListener('click',e=>{if(e.target!==inp)inp.focus();});
+  inp.addEventListener('focus',()=>{try{inp.select();}catch(_){}});
+  inp.addEventListener('input',()=>{c.dataset.unread='';recalc(true);});
+  inp.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){e.preventDefault();const l=cells(),i=l.indexOf(c);if(l[i+1])l[i+1].querySelector('input').focus();}
+    if(e.key==='Backspace'&&inp.value===''){const l=cells(),i=l.indexOf(c);if(i>0){e.preventDefault();const p=l[i-1].querySelector('input');p.focus();}}
+  });
+  inp.addEventListener('paste',e=>{
+    const txt=(e.clipboardData||window.clipboardData).getData('text');
+    const parts=toAscii(txt).split(/[\s;+]+/).filter(Boolean);
+    if(parts.length>1){e.preventDefault();const i=cells().indexOf(c);parts.forEach((p,k)=>{while(!cells()[i+k])rowsBody.appendChild(makeCell());cells()[i+k].querySelector('input').value=p;});recalc(true);}
+  });
+  return c;
 }
-function renumber(){document.querySelectorAll('#bag_rows tr[data-row]').forEach((tr,i)=>{tr.firstChild.textContent=String(i+1);});}
-function ensureEmptyRow(){
-  const has=rowsBody.querySelector('tr[data-row]');
-  let empty=rowsBody.querySelector('tr.bag-empty');
-  if(!has&&!empty){empty=el('tr','bag-empty','<td colspan="3">હજુ કોઈ બેગ નથી — “＋ બેગ ઉમેરો” દબાવો અથવા ફોટો Scan કરો</td>');rowsBody.appendChild(empty);}
-  if(has&&empty)empty.remove();
+function layout(){ // always keep one free cell after the last filled one, in full rows
+  const cols=colsNow();rowsBody.style.setProperty('--bag-cols',cols);
+  let list=cells(),last=-1;
+  list.forEach((c,i)=>{if(cellVal(c)!==''||c.dataset.unread==='1')last=i;});
+  const need=Math.max(MIN_ROWS*cols,Math.ceil((last+2)/cols)*cols);
+  while(list.length<need){rowsBody.appendChild(makeCell());list=cells();}
+  while(list.length>need){const c=list[list.length-1];if(cellVal(c)!==''||c.dataset.unread==='1'||c.contains(document.activeElement))break;c.remove();list=cells();}
+  list.forEach((c,i)=>{c.querySelector('.bn').textContent=String(i+1);});
 }
 function recalc(auto){
   if(auto===undefined)auto=true;
-  ensureEmptyRow();
+  layout();
   let good=0,bad=0,grams=0;
-  rowState().forEach(r=>{
-    const v=r.input.value.trim();let isBad=false;
-    if(v===''){isBad=r.flag;} else {const n=parseOne(v);if(Number.isFinite(n)&&n>0){good++;grams+=Math.round(n*1000);}else isBad=true;}
-    if(isBad)bad++;r.tr.classList.toggle('bad',isBad);
+  cells().forEach(c=>{
+    const v=cellVal(c);let isBad=false;
+    if(v===''){isBad=c.dataset.unread==='1';}
+    else{const n=parseOne(v);if(Number.isFinite(n)&&n>0){good++;grams+=Math.round(n*1000);}else isBad=true;}
+    if(isBad)bad++;
+    c.classList.toggle('bad',isBad);c.classList.toggle('filled',v!==''&&!isBad);
+    c.querySelector('input').placeholder=c.dataset.unread==='1'?'?':'';
   });
   const total=grams/1000;
   $('bag_count').textContent=good+' બેગ';$('bag_total').textContent=fmt(total)+' KG';
@@ -5704,19 +5746,29 @@ function recalc(auto){
 }
 function loadList(list){
   rowsBody.innerHTML='';
-  (list||[]).forEach(v=>{const t=String(v).trim();if(t==='?'||t==='')addRow('',true,false);else addRow(t,false,false);});
-  renumber();
+  (list||[]).forEach(v=>{const t=String(v).trim(),c=makeCell();if(t==='?'||t==='')c.dataset.unread='1';else c.querySelector('input').value=t;rowsBody.appendChild(c);});
+  layout();
 }
 window.BalajiBags={
   set(list,opts){loadList(list);recalc(opts&&opts.apply===false?false:true);},
   refresh:()=>recalc(true)
 };
 if(ta&&rowsBody){
-  $('bag_add').addEventListener('click',()=>{addRow('',false,true);recalc(true);});
+  $('bag_clear').addEventListener('click',()=>{if(cells().some(c=>cellVal(c)!==''||c.dataset.unread==='1')&&!confirm('બધી બેગનું વજન કાઢી નાખવું છે?'))return;loadList([]);recalc(true);});
   $('bag_apply').addEventListener('click',()=>recalc(true));
+  window.addEventListener('resize',()=>layout());
   // draft restore writes straight into the hidden textarea: follow it
   setInterval(()=>{if(lastMirror!==null&&ta.value!==lastMirror){loadList(ta.value.split(/\r?\n/).filter(Boolean));recalc(true);}},700);
   lastMirror=ta.value||'';loadList(ta.value?ta.value.split(/\r?\n/).filter(Boolean):[]);recalc(true);
+  // after a successful save the form is emptied: empty the grid as well
+  const baseSave=window.saveChiththi;
+  if(typeof baseSave==='function'){
+    window.saveChiththi=async function(){
+      const r=await baseSave.apply(this,arguments);
+      const m=($('chiththi_msg')||{}).innerText||'';if(/Save \u0aa5\u0a88 \u0a97\u0a88|Chit saved/i.test(m)&&!$('chiththi_number').value.trim()&&!$('farmer_weight').value.trim()){loadList([]);recalc(true);}
+      return r;
+    };
+  }
 }
 
 /* Net weight: show the working and warn when deductions exceed weight */
@@ -5781,7 +5833,7 @@ function render(kind){
   if(c.url){URL.revokeObjectURL(c.url);c.url=null;}
   if(!f){c.chip.hidden=true;return;}
   c.url=URL.createObjectURL(f);c.chip.querySelector('img').src=c.url;
-  c.chip.querySelector('b').textContent=f.name||'photo';c.chip.querySelector('small').textContent=sizeText(f.size)+' • ફોટો પસંદ થયો';c.chip.hidden=false;
+  c.chip.querySelector('b').textContent=f.name||'photo';c.chip.querySelector('small').textContent=sizeText(f.size)+' • ✔';c.chip.hidden=false;
 }
 
 /* ================= App bar, nav, headings, record lists ================= */
@@ -5810,13 +5862,38 @@ function addTitle(before,text){
   if(!before||before.previousElementSibling&&before.previousElementSibling.classList&&before.previousElementSibling.classList.contains('sec-title'))return;
   before.before(el('div','sec-title',text));
 }
+/* Photo / scan card goes to the TOP of each form: take photo -> Scan -> details fill in below */
+const FORM_FIELDS={
+  worker:['chiththi_number','commodity_type','broker_select','village_name','vehicle_number','farmer_name','farmer_mobile','farmer_weight','bardan_kg','kardo_kg'],
+  waybridge:['wb_name','wb_mobile','wb_rst','wb_vehicle','wb_weight'],
+  maal_entry:[]
+};
+const TOOL_TEXT={
+  worker:['ચિઠ્ઠીનો ફોટો','ફોટો લો અને Scan દબાવો — નીચેની વિગતો આપમેળે ભરાશે. ફોટો જરૂરી છે.'],
+  waybridge:['કાંટાની પાવતીનો ફોટો','ફોટો લો અને Scan દબાવો — RST, ગાડી નંબર અને NET વજન આપમેળે ભરાશે. ફોટો ફરજિયાત નથી.'],
+  maal_entry:['કાંટાની પાવતીનો ફોટો','Camera અથવા Galleryમાંથી ફોટો ઉમેરો. ફોટો જરૂરી છે.']
+};
+function placeTools(kind){
+  const form=$(kind),tools=form&&form.querySelector('.bi-scan-tools');if(!tools||tools.dataset.top)return;
+  let anchor,after=false;
+  if(kind==='maal_entry'){anchor=$('me_hint');after=true;}
+  else anchor=[...form.children].find(e=>e.tagName==='H3');
+  if(!anchor)return;
+  if(after)anchor.after(tools);else anchor.before(tools);
+  tools.dataset.top='1';tools.classList.add('on-top');
+  const h=tools.querySelector('h3');if(h)h.textContent=TOOL_TEXT[kind][0];
+  let sub=tools.querySelector('.scan-sub');if(!sub){sub=el('p','scan-sub');(h||tools).after(sub);}
+  sub.textContent=TOOL_TEXT[kind][1];
+}
 function enhanceForms(){
   const bag=document.querySelector('#worker .bag-calc');if(bag)addTitle(bag,'વજન');
   Object.entries(PHOTO_INPUTS).forEach(([kind,id])=>{
     const inp=$(id);if(!inp)return;
     const lab=inp.previousElementSibling;
-    if(lab&&lab.tagName==='LABEL'){lab.classList.add('photo-label');addTitle(lab,kind==='maal_entry'?'સ્લિપનો ફોટો':'ફોટો');lab.style.display='none';}
-    ensureChip(kind);render(kind);
+    if(lab&&lab.tagName==='LABEL'){lab.classList.add('photo-label');lab.style.display='none';}
+    const form=$(kind);
+    if(form)form.querySelectorAll(':scope>p.muted').forEach(p=>{if(/Camera|Gallery/.test(p.textContent))p.style.display='none';});
+    placeTools(kind);ensureChip(kind);render(kind);
   });
   // saved-list heading + refresh in one row
   ['my_chiththis','bi-staff-waybridge-list','my_maal_entries'].forEach(id=>{
@@ -5828,6 +5905,21 @@ function enhanceForms(){
     const hr=head.previousElementSibling;if(hr&&hr.tagName==='HR')hr.style.margin='22px 0 14px';
   });
 }
+/* after a successful scan: mark the card green, flash the filled fields and scroll to them */
+window.BalajiAfterScan=function(kind){
+  const form=$(kind),tools=form&&form.querySelector('.bi-scan-tools');if(!tools)return;
+  const prog=tools.querySelector('.scan-progress');if(prog)prog.classList.add('ok');
+  (FORM_FIELDS[kind]||[]).forEach(id=>{const e=$(id);if(e&&String(e.value||'').trim()){e.classList.remove('flash');void e.offsetWidth;e.classList.add('flash');}});
+  try{
+    let en=false;try{en=localStorage.getItem('balaji-app-language')==='en';}catch(_){}
+    let t=$('bi-toast');if(!t){t=el('div','bi-toast');t.id='bi-toast';t.setAttribute('role','status');document.body.appendChild(t);}
+    t.textContent=en?'✔ Details filled — please check them':'✔ વિગતો ભરાઈ ગઈ — ચકાસીને Save કરો';
+    t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),3500);
+  }catch(_){}
+  const target=tools.nextElementSibling;
+  if(target){target.style.scrollMarginTop='calc(86px + var(--bi-safe-top,0px))';setTimeout(()=>{try{target.scrollIntoView({behavior:'smooth',block:'start'});}catch(_){target.scrollIntoView();}},300);}
+};
+document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('.scan-start'))document.querySelectorAll('.scan-progress.ok').forEach(p=>p.classList.remove('ok'));},true);
 function numFrom(t){const m=String(t).replace(/,/g,'').match(/-?\d+(?:\.\d+)?/);return m?Number(m[0]):0;}
 function enhanceRecords(){
   ['my_chiththis','bi-staff-waybridge-list','my_maal_entries'].forEach(id=>{
