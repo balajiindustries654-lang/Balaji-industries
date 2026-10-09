@@ -789,6 +789,10 @@ placeholder="&#2710;&#2759;&#2721;&#2754;&#2724;&#2728;&#2763; &#2734;&#2763;&#2
 <textarea id="bag_weights" hidden></textarea>
 <div id="bag_rows" class="bag-grid" role="group" aria-label="Bag weights"></div>
 <div class="bag-foot"><span id="bag_count">0 બેગ</span><b id="bag_total">0 KG</b></div>
+<div class="bag-chk"><label for="bag_chk">ચિઠ્ઠી પર લખેલું ટોટલ (મેળવવા માટે)</label><input id="bag_chk" type="text" inputmode="decimal" autocomplete="off" placeholder="દા.ત. 3930.4"><button type="button" id="bag_use_chk" class="bag-usechk" hidden>ચિઠ્ઠીનું ટોટલ વાપરો</button></div>
+<div id="bag_chk_note" class="bag-chk-note" hidden></div>
+<div id="bag_blocks" class="bag-blocks" hidden></div>
+<p id="bag_chk_tip" class="bag-chk-tip" hidden>ખોટી કે વધારાની બેગ હોય તો તે ખાનું ખાલી કરો; ખૂટતી બેગ છેલ્લા ખાલી ખાનામાં ઉમેરો.</p>
 <div id="bag_sum" class="bag-sum" hidden></div>
 <div class="bag-actions"><button type="button" id="bag_clear" class="bag-clear">સાફ કરો</button><button type="button" id="bag_apply" class="bag-apply" hidden>✔ ચકાસ્યા પછી કુલ ભરો</button></div>
 <p class="muted bag-hint">ચિઠ્ઠીની જેમ એક પછી એક વજન લખો (Next દબાવો). કુલ આપમેળે “ખેડૂતનું વજન” માં ભરાશે.</p>
@@ -5030,6 +5034,8 @@ function applyScanDirect(kind, parsed, config) {
    if(positive(String(printed)) && Math.abs(total-Number(printed))>0.001)notes.push(`\u0a9a\u0abf\u0aa0\u0acd\u0aa0\u0ac0\u0aae\u0abe\u0a82 \u0ab2\u0a96\u0ac7\u0ab2\u0ac1\u0a82 \u0a95\u0ac1\u0ab2: ${printed} KG; \u0aa4\u0aab\u0abe\u0ab5\u0aa4: ${Math.abs(total-Number(printed)).toFixed(3)} KG`);
   }else if(count && !incomplete){
    fields.farmer_weight='';
+   const bc0=parsed.bag_check;
+   if(bc0&&(bc0.status==='mismatch'||bc0.status==='partial'))notes.push(bagNote(bc0));else
    notes.push('\u26a0\ufe0f \u0aac\u0ac7\u0a97\u0aa8\u0ac0 \u0aaf\u0abe\u0aa6\u0ac0 \u0a9a\u0a95\u0abe\u0ab8\u0ac0 \u0aa8\u0aa5\u0ac0. \u0aaf\u0abe\u0aa6\u0ac0 \u0aae\u0ac7\u0ab3\u0ab5\u0acd\u0aaf\u0abe \u0aaa\u0a9b\u0ac0 "\u0a95\u0ac1\u0ab2 \u0ab5\u0a9c\u0aa8 \u0aad\u0ab0\u0acb" \u0aa6\u0aac\u0abe\u0ab5\u0acb.');
   }else if(count){
    fields.farmer_weight='';
@@ -5042,11 +5048,20 @@ function applyScanDirect(kind, parsed, config) {
  if(kind==='worker'){
   const unverified=parsed.weight_summary?.verified===false;
   const list=parsed.weights.map(w=>positive(String(w.value))?w.value:'?');
-  if(window.BalajiBags)window.BalajiBags.set(list,{apply:!unverified});
+  const bc=parsed.bag_check,wtp=parsed.weight_summary&&parsed.weight_summary.written_total;
+  const chitTotal=(bc&&bc.written_total!==null&&bc.written_total!==undefined)?Number(bc.written_total):(positive(String(wtp===undefined||wtp===null?'':wtp))?Number(wtp):null);
+  if(window.BalajiBags)window.BalajiBags.set(list,{apply:!unverified,blocks:(bc&&Array.isArray(bc.blocks))?bc.blocks:[],total:chitTotal});
   calculateNetWeight();
  }
  notes.push(...(parsed.warnings || []));
  return notes.join(' \u2022 ');
+}
+function bagNote(bc){
+ const w=bc.written_total,s=Number(bc.sum);
+ if(w!==null&&w!==undefined&&Number.isFinite(Number(w))){
+  return '⚠ ચિઠ્ઠી પર '+Number(w)+' KG, વાંચેલું '+(Math.round(s*1000)/1000)+' KG (ફરક '+(Math.round(Math.abs(Number(w)-s)*1000)/1000)+' KG). નારંગી ખાનાં ચેક કરો.';
+ }
+ return '⚠ બેગનો સરવાળો ચિઠ્ઠીના સબટોટલ સાથે મેળ ખાતો નથી. નારંગી ખાનાં ચેક કરો.';
 }
 function sumWeights(weights){
  return weights.reduce((sum,x)=>sum+(positive(String(x.value))?Math.round(Number(x.value)*1000):0),0)/1000;
@@ -5066,7 +5081,7 @@ function validateScan(data,kind){
  const toWeight=v=>toText(v).replace(/,/g,'');
  const weights=kind==='worker'?rawWeights.slice(0,200).filter(x=>x!==null && x!==undefined).map(x=>(typeof x==='object')?{value:toWeight(x.value),source:String(x.source||'').slice(0,200)}:{value:toWeight(x),source:''}):[];
  const text=typeof data.text==='string'?data.text:'';
- return {fields,weights,weight_summary:data.weight_summary,text,warnings:Array.isArray(data.warnings)?data.warnings.filter(x=>typeof x==='string'):[]};
+ return {fields,weights,weight_summary:data.weight_summary,bag_check:(data.bag_check&&typeof data.bag_check==='object')?data.bag_check:null,text,warnings:Array.isArray(data.warnings)?data.warnings.filter(x=>typeof x==='string'):[]};
 }
 async function invokeScan(body){
  const r=await db.functions.invoke('scan-entry',{body});
@@ -5465,11 +5480,11 @@ let language='gu';try{language=localStorage.getItem('balaji-app-language')==='en
 const normalize=s=>String(s).replace(/\s+/g,' ').trim(), guMap=new Map(),enMap=new Map();pairs.forEach(([gu,en])=>{enMap.set(normalize(gu),en);guMap.set(normalize(en),gu);});
 [['\u0aae\u0a97\u0aab\u0ab3\u0ac0','Groundnut'],['\u0a8f\u0ab0\u0a82\u0aa1\u0abe','Castor'],['\u0a98\u0a89\u0a82','Wheat'],['\u0a97\u0ab5\u0abe\u0ab0','Guar'],['\u0aae\u0a97\u0aab\u0ab3\u0ac0','Magfadi / \u092e\u0942\u0902\u0917\u092b\u0932\u0940'],['\u0a8f\u0ab0\u0a82\u0aa1\u0abe','Aeranda / \u0905\u0930\u0902\u0921\u0940'],['\u0a98\u0a89\u0a82','Gau / \u0917\u0947\u0939\u0942\u0902'],['\u0a97\u0ab5\u0abe\u0ab0','Govar / \u0917\u094d\u0935\u093e\u0930']].forEach(([gu,en])=>guMap.set(normalize(en),gu));
 [['\u0aae\u0a97\u0aab\u0ab3\u0ac0','Groundnut'],['\u0a8f\u0ab0\u0a82\u0aa1\u0abe','Castor'],['\u0a98\u0a89\u0a82','Wheat'],['\u0a97\u0ab5\u0abe\u0ab0','Guar'],['Magfadi / \u092e\u0942\u0902\u0917\u092b\u0932\u0940','Groundnut'],['Aeranda / \u0905\u0930\u0902\u0921\u0940','Castor'],['Gau / \u0917\u0947\u0939\u0942\u0902','Wheat'],['Govar / \u0917\u094d\u0935\u093e\u0930','Guar']].forEach(([gu,en])=>enMap.set(normalize(gu),en));
-[['\u0aae\u0ac1\u0a96\u0acd\u0aaf \u0aaa\u0ac3\u0ab7\u0acd\u0aa0','Home'],['\u0a8f\u0aa8\u0acd\u0a9f\u0acd\u0ab0\u0ac0\u0a93','Entries'],['\u0a85\u0ab9\u0ac7\u0ab5\u0abe\u0ab2\u0acb','Reports'],['\u0ab5\u0aaa\u0ab0\u0abe\u0ab6\u0a95\u0ab0\u0acd\u0aa4\u0abe','Users'],['\u0a9d\u0aa1\u0aaa\u0ac0 \u0a95\u0abe\u0aae','Quick actions'],['\u0a8f\u0aa1\u0aae\u0abf\u0aa8 \u0aa1\u0ac7\u0ab6\u0aac\u0acb\u0ab0\u0acd\u0aa1','Admin Dashboard'],['\u0aae\u0a9c\u0ac2\u0ab0 \u0aa1\u0ac7\u0ab6\u0aac\u0acb\u0ab0\u0acd\u0aa1','Worker Dashboard'],['\u0a95\u0abe\u0a82\u0a9f\u0abe \u0aa1\u0ac7\u0ab6\u0aac\u0acb\u0ab0\u0acd\u0aa1','Waybridge Dashboard'],['\u0aae\u0abe\u0ab2 \u0a8f\u0aa8\u0acd\u0a9f\u0acd\u0ab0\u0ac0 \u0aa1\u0ac7\u0ab6\u0aac\u0acb\u0ab0\u0acd\u0aa1','Maal Entry Dashboard'],['\u0aac\u0abe\u0a95\u0ac0 \u0aae\u0a82\u0a9c\u0ac2\u0ab0\u0ac0\u0a93','Pending users'],['\u0aaa\u0abe\u0ab8\u0ab5\u0ab0\u0acd\u0aa1 \u0aac\u0aa6\u0ab2\u0acb','Change password'],['\u0aaa\u0abe\u0ab8\u0ab5\u0ab0\u0acd\u0aa1\u0aa8\u0ac0 \u0ab5\u0abf\u0aa8\u0a82\u0aa4\u0ac0\u0a93','Password requests'],['\u0ab5\u0aaa\u0ab0\u0abe\u0ab6\u0a95\u0ab0\u0acd\u0aa4\u0abe / \u0aaa\u0abe\u0ab8\u0ab5\u0ab0\u0acd\u0aa1','Users / password'],['ચિઠ્ઠીનો ફોટો','Chit photo'],['કાંટાની પાવતીનો ફોટો','Weighbridge slip photo'],['ફોટો લો અને Scan દબાવો — નીચેની વિગતો આપમેળે ભરાશે. ફોટો જરૂરી છે.','Take a photo and press Scan — the details below fill in automatically. Photo is required.'],['ફોટો લો અને Scan દબાવો — RST, ગાડી નંબર અને NET વજન આપમેળે ભરાશે. ફોટો ફરજિયાત નથી.','Take a photo and press Scan — RST, vehicle number and NET weight fill in automatically. Photo is optional.'],['Camera અથવા Galleryમાંથી ફોટો ઉમેરો. ફોટો જરૂરી છે.','Add a photo from Camera or Gallery. Photo is required.'],['બેગ પ્રમાણે વજન','Weight per bag'],['વૈકલ્પિક','Optional'],['સાફ કરો','Clear all'],['કાઢો','Remove'],['✔ ચકાસ્યા પછી કુલ ભરો','✔ Apply total after checking'],['✔ વિગતો ભરાઈ ગઈ — ચકાસીને Save કરો','✔ Details filled — please check them'],['ચિઠ્ઠીની જેમ એક પછી એક વજન લખો (Next દબાવો). કુલ આપમેળે “ખેડૂતનું વજન” માં ભરાશે.','Type weights one after another like on the chit (press Next). The total fills “Farmer weight” automatically.']].forEach(([gu,en])=>{enMap.set(normalize(gu),en);guMap.set(normalize(en),gu);});
+[['\u0aae\u0ac1\u0a96\u0acd\u0aaf \u0aaa\u0ac3\u0ab7\u0acd\u0aa0','Home'],['\u0a8f\u0aa8\u0acd\u0a9f\u0acd\u0ab0\u0ac0\u0a93','Entries'],['\u0a85\u0ab9\u0ac7\u0ab5\u0abe\u0ab2\u0acb','Reports'],['\u0ab5\u0aaa\u0ab0\u0abe\u0ab6\u0a95\u0ab0\u0acd\u0aa4\u0abe','Users'],['\u0a9d\u0aa1\u0aaa\u0ac0 \u0a95\u0abe\u0aae','Quick actions'],['\u0a8f\u0aa1\u0aae\u0abf\u0aa8 \u0aa1\u0ac7\u0ab6\u0aac\u0acb\u0ab0\u0acd\u0aa1','Admin Dashboard'],['\u0aae\u0a9c\u0ac2\u0ab0 \u0aa1\u0ac7\u0ab6\u0aac\u0acb\u0ab0\u0acd\u0aa1','Worker Dashboard'],['\u0a95\u0abe\u0a82\u0a9f\u0abe \u0aa1\u0ac7\u0ab6\u0aac\u0acb\u0ab0\u0acd\u0aa1','Waybridge Dashboard'],['\u0aae\u0abe\u0ab2 \u0a8f\u0aa8\u0acd\u0a9f\u0acd\u0ab0\u0ac0 \u0aa1\u0ac7\u0ab6\u0aac\u0acb\u0ab0\u0acd\u0aa1','Maal Entry Dashboard'],['\u0aac\u0abe\u0a95\u0ac0 \u0aae\u0a82\u0a9c\u0ac2\u0ab0\u0ac0\u0a93','Pending users'],['\u0aaa\u0abe\u0ab8\u0ab5\u0ab0\u0acd\u0aa1 \u0aac\u0aa6\u0ab2\u0acb','Change password'],['\u0aaa\u0abe\u0ab8\u0ab5\u0ab0\u0acd\u0aa1\u0aa8\u0ac0 \u0ab5\u0abf\u0aa8\u0a82\u0aa4\u0ac0\u0a93','Password requests'],['\u0ab5\u0aaa\u0ab0\u0abe\u0ab6\u0a95\u0ab0\u0acd\u0aa4\u0abe / \u0aaa\u0abe\u0ab8\u0ab5\u0ab0\u0acd\u0aa1','Users / password'],['ચિઠ્ઠીનો ફોટો','Chit photo'],['કાંટાની પાવતીનો ફોટો','Weighbridge slip photo'],['ફોટો લો અને Scan દબાવો — નીચેની વિગતો આપમેળે ભરાશે. ફોટો જરૂરી છે.','Take a photo and press Scan — the details below fill in automatically. Photo is required.'],['ફોટો લો અને Scan દબાવો — RST, ગાડી નંબર અને NET વજન આપમેળે ભરાશે. ફોટો ફરજિયાત નથી.','Take a photo and press Scan — RST, vehicle number and NET weight fill in automatically. Photo is optional.'],['Camera અથવા Galleryમાંથી ફોટો ઉમેરો. ફોટો જરૂરી છે.','Add a photo from Camera or Gallery. Photo is required.'],['બેગ પ્રમાણે વજન','Weight per bag'],['વૈકલ્પિક','Optional'],['સાફ કરો','Clear all'],['કાઢો','Remove'],['✔ ચકાસ્યા પછી કુલ ભરો','✔ Apply total after checking'],['✔ વિગતો ભરાઈ ગઈ — ચકાસીને Save કરો','✔ Details filled — please check them'],['ચિઠ્ઠીની જેમ એક પછી એક વજન લખો (Next દબાવો). કુલ આપમેળે “ખેડૂતનું વજન” માં ભરાશે.','Type weights one after another like on the chit (press Next). The total fills “Farmer weight” automatically.'],['ચિઠ્ઠી પર લખેલું ટોટલ (મેળવવા માટે)','Total written on the chit (to compare)'],['ચિઠ્ઠીનું ટોટલ વાપરો','Use the chit total'],['ખોટી કે વધારાની બેગ હોય તો તે ખાનું ખાલી કરો; ખૂટતી બેગ છેલ્લા ખાલી ખાનામાં ઉમેરો.','If a bag is wrong or extra, empty that cell; add a missing bag in the last free cell.'],['ચિઠ્ઠીના ભાગ (સબટોટલ સાથે મેળવો)','Chit columns (compare with the subtotals)'],['દા.ત. 3930.4','e.g. 3930.4'],['ચકાસણી બાકી — દરેક વજન ચિઠ્ઠી સાથે મેળવો','Check pending — match every weight with the chit']].forEach(([gu,en])=>{enMap.set(normalize(gu),en);guMap.set(normalize(en),gu);});
 [['Majur Dashboard','\u0aae\u0a9c\u0ac2\u0ab0 \u0aa1\u0ac7\u0ab6\u0aac\u0acb\u0ab0\u0acd\u0aa1'],['Pending Users','\u0aac\u0abe\u0a95\u0ac0 \u0aae\u0a82\u0a9c\u0ac2\u0ab0\u0ac0\u0a93'],['Password Change','\u0aaa\u0abe\u0ab8\u0ab5\u0ab0\u0acd\u0aa1 \u0aac\u0aa6\u0ab2\u0acb'],['Password Requests','\u0aaa\u0abe\u0ab8\u0ab5\u0ab0\u0acd\u0aa1\u0aa8\u0ac0 \u0ab5\u0abf\u0aa8\u0a82\u0aa4\u0ac0\u0a93'],['Quick Actions','\u0a9d\u0aa1\u0aaa\u0ac0 \u0a95\u0abe\u0aae'],['Users / Password','\u0ab5\u0aaa\u0ab0\u0abe\u0ab6\u0a95\u0ab0\u0acd\u0aa4\u0abe / \u0aaa\u0abe\u0ab8\u0ab5\u0ab0\u0acd\u0aa1']].forEach(([en,gu])=>guMap.set(normalize(en),gu));
 function translate(value){const text=normalize(value);const map=language==='en'?enMap:guMap;if(map.has(text))return map.get(text);
  const m=text.match(/^([\p{Extended_Pictographic}\uFE0F\s\u2190+*\ud83d\udd11\ud83d\udce6\ud83d\udd0d\ud83d\ude9a\ud83d\udcca\ud83d\udce5\ud83d\udd34\ud83d\udd04\ud83d\udcdd\u2696\ud83d\udc68\u200d\ud83c\udf3e\ud83d\udce4\ud83d\udc65\ud83d\udd14\ud83d\uddbc\ud83d\udcf7]*)(.*?)(\s*\*?)$/u);if(m&&map.has(m[2]))return m[1]+map.get(m[2])+m[3];
- const patterns=language==='en'?[[/^(\d+) \u0aac\u0ac7\u0a97$/,'$1 bags'],
+ const patterns=language==='en'?[[/^✔ ચિઠ્ઠીના ટોટલ \((.*)\) સાથે મેળ ખાય છે$/,'✔ Matches the chit total ($1)'],[/^⚠ ચિઠ્ઠી પર (.*) KG, અહીં (.*) KG — ફરક (.*) KG$/,'⚠ Chit says $1 KG, here $2 KG — difference $3 KG'],[/^⚠ (\d+) બેગનું વજન ખાલી\/ખોટું છે — સુધારો$/,'⚠ $1 bag weight(s) empty/invalid — please fix'],[/^(\d+) \u0aac\u0ac7\u0a97$/,'$1 bags'],
  [/^\u0a9a\u0abf\u0aa0\u0acd\u0aa0\u0ac0 Save \u0aa5\u0a88 \u0a97\u0a88\. Final \u0ab5\u0a9c\u0aa8: (.*)$/,'Chit saved. Final weight: $1'],[/^Password \u0ab8\u0aab\u0ab3\u0aa4\u0abe\u0aaa\u0ac2\u0ab0\u0acd\u0ab5\u0a95 \u0aac\u0aa6\u0ab2\u0abe\u0a88 \u0a97\u0aaf\u0acb\.$/,'Password changed successfully.'],[/^\u0aaa\u0ab8\u0a82\u0aa6 \u0a95\u0ab0\u0ac7\u0ab2\u0ac1\u0a82 \u0a95\u0ac1\u0ab2: (.*)$/,'Selected total: $1'],[/^\u0ab9\u0abe\u0ab2: (.*)$/,'Current: $1'],[/^Request \u0aae\u0acb\u0a95\u0ab2\u0abe\u0a88 \u0aa8\u0aa5\u0ac0: (.*)$/,'Request not sent: $1'],[/^\u0a9a\u0abf\u0aa0\u0acd\u0aa0\u0ac0\u0aa8\u0ac1\u0a82 Total: (.*)$/,'Printed chit total: $1'],[/^\u0aa4\u0aab\u0abe\u0ab5\u0aa4: (.*)$/,'Difference: $1'],[/^APK Notification token Supabase\u0aae\u0abe\u0a82 \u0ab8\u0ac7\u0ab5 \u0aa5\u0aaf\u0acb \u0a9b\u0ac7\.$/,'APK notification token saved in Supabase.'],[/^\u0ab5\u0abe\u0a82\u0a9a\u0ac7\u0ab2\u0ac0 (\d+) \u0ab5\u0a9c\u0aa8\u0aa8\u0ac0 \u0ab2\u0abe\u0a87\u0aa8\u0acb\u0aa8\u0ac1\u0a82 \u0a95\u0ac1\u0ab2: (.*)$/,'Total of $1 extracted weight lines: $2']
  ]:[[/^Chit saved\. Final weight: (.*)$/,'\u0a9a\u0abf\u0aa0\u0acd\u0aa0\u0ac0 Save \u0aa5\u0a88 \u0a97\u0a88. Final \u0ab5\u0a9c\u0aa8: $1'],[/^Selected total: (.*)$/,'\u0aaa\u0ab8\u0a82\u0aa6 \u0a95\u0ab0\u0ac7\u0ab2\u0ac1\u0a82 \u0a95\u0ac1\u0ab2: $1'],[/^Current: (.*)$/,'\u0ab9\u0abe\u0ab2: $1'],[/^Request not sent: (.*)$/,'Request \u0aae\u0acb\u0a95\u0ab2\u0abe\u0a88 \u0aa8\u0aa5\u0ac0: $1'],[/^APK notification token saved in Supabase\.$/,'APK Notification token Supabase\u0aae\u0abe\u0a82 \u0ab8\u0ac7\u0ab5 \u0aa5\u0aaf\u0acb \u0a9b\u0ac7.']];
  for(const [regex,result] of patterns)if(regex.test(text))return text.replace(regex,result);return value;
@@ -5651,6 +5666,36 @@ main{padding-top:calc(20px + var(--bi-safe-top))!important}
 .bag-actions{display:flex;gap:8px;margin-top:10px}
 .bag-clear{flex:0 0 auto;width:auto!important;min-height:44px;margin:0;padding:8px 16px;background:#fff;color:#b92d40;border:1px solid #efc2c8;box-shadow:none;font-size:14px}
 .bag-apply{flex:1}
+
+/* chit total check + column subtotals */
+.bag-chk{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 8px;align-items:center;margin-top:12px}
+.bag-chk label{grid-column:1/-1;margin:0!important;font-size:13px;font-weight:700;color:#35575b}
+.bag-chk input{margin:0!important;min-height:46px}
+.bag-usechk{width:auto!important;min-height:46px;margin:0!important;padding:8px 14px!important;background:#fff7e5!important;color:#8a5a00!important;border:1px solid #f0d49a!important;box-shadow:none!important;font-size:13.5px!important}
+.bag-usechk[hidden]{display:none!important}
+.bag-chk-note{margin-top:8px;padding:9px 12px;border-radius:10px;font-size:13px;font-weight:700;line-height:1.45}
+.bag-chk-note[hidden],.bag-chk-tip[hidden],.bag-blocks[hidden]{display:none}
+.bag-chk-note.ok{background:#e6f6ea;color:#17683a}
+.bag-chk-note.bad{background:#fde8ea;color:#b42336}
+.bag-chk-tip{margin:8px 0 0;font-size:12.5px;color:#7a5400;background:#fff8e8;border:1px dashed #f0d49a;border-radius:10px;padding:8px 10px}
+.bag-blocks{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;align-items:center}
+.bag-blocks .bk-title{flex:0 0 100%;font-size:12px;font-weight:700;color:#5b7377}
+.bk{width:auto!important;min-height:0!important;margin:0!important;padding:5px 10px!important;border-radius:999px!important;font-size:12.5px!important;font-weight:700!important;border:1px solid #cfe0e1!important;background:#fff!important;color:#35575b!important;box-shadow:none!important;display:inline-flex;gap:5px;align-items:center;font-variant-numeric:tabular-nums}
+.bk b{color:#0a7f84}
+.bk.ok{background:#e9f7ef!important;border-color:#bfe3cc!important;color:#1d6a3a!important}
+.bk.bad{background:#fff3dc!important;border-color:#e8b95a!important;color:#8a5a00!important}
+.bk s{text-decoration:none;opacity:.9}
+.bk i{font-style:normal;font-weight:800}
+.bag-cell.blk-bad{background:#fff3dc}
+.bag-cell.blk-bad input{color:#8a5a00}
+.bag-cell.bad.blk-bad{background:#fdecee}
+.bag-cell.bad.blk-bad input{color:#b42336}
+.bag-cell.blk-start{box-shadow:inset 3px 0 0 #0a9297}
+.bag-cell.blk-hl{animation:bkFlash 1.8s ease-out}
+@keyframes bkFlash{0%,60%{background:#ffd98a}100%{}}
+.scan-progress.warn{padding:10px 12px;border-radius:12px;background:#fff3dc;border:1px solid #f0d49a;color:#7a5400;font-weight:650;font-size:13px;line-height:1.5}
+.bi-toast.warn{background:#8a5a00}
+@media (prefers-reduced-motion:reduce){.bag-cell.blk-hl{animation:none;background:#ffd98a}}
 /* Scan / photo card at the top of every form */
 .bi-scan-tools{display:flex;flex-direction:column}
 .bi-scan-tools.on-top{margin:10px 0 20px;padding:16px;border:1px solid #bcd9da;border-radius:18px;background:linear-gradient(180deg,#f3fbfb,#fff);box-shadow:0 3px 14px rgba(8,127,131,.07)}
@@ -5722,50 +5767,114 @@ function layout(){ // always keep one free cell after the last filled one, in fu
   while(list.length>need){const c=list[list.length-1];if(cellVal(c)!==''||c.dataset.unread==='1'||c.contains(document.activeElement))break;c.remove();list=cells();}
   list.forEach((c,i)=>{c.querySelector('.bn').textContent=String(i+1);});
 }
-function recalc(auto){
+let blocks=[];     // chit columns read by the scan, by position: [{start,count,subtotal}]
+let lastAuto=null; // last total this grid wrote into "farmer weight"
+let needsCheck=false;
+const chk=$('bag_chk'),chkNote=$('bag_chk_note'),blkBox=$('bag_blocks'),useChk=$('bag_use_chk'),chkTip=$('bag_chk_tip');
+const chkVal=()=>{const t=toAscii(chk?chk.value:'').replace(/,/g,'').trim();return /^\d+(?:\.\d{1,3})?$/.test(t)?Number(t):NaN;};
+const tolFor=n=>Number.isInteger(n)?0.5:0.1; // a whole-number total was probably rounded
+const r3=x=>Math.round(x*1000)/1000;
+function writeFarmer(v){const fw=$('farmer_weight');if(!fw)return;fw.value=(v===''||v===null)?'':String(v);fw.dispatchEvent(new Event('input',{bubbles:true}));}
+function jumpBlock(b){
+  const l=cells(),first=l[b.start];if(!first)return;
+  try{first.scrollIntoView({behavior:'smooth',block:'center'});}catch(_){first.scrollIntoView();}
+  for(let i=b.start;i<b.start+b.count&&i<l.length;i++)l[i].classList.add('blk-hl');
+  setTimeout(()=>l.forEach(c=>c.classList.remove('blk-hl')),1900);
+}
+function recalc(auto,force){
   if(auto===undefined)auto=true;
   layout();
-  let good=0,bad=0,grams=0;
-  cells().forEach(c=>{
-    const v=cellVal(c);let isBad=false;
+  const list=cells();let good=0,bad=0,grams=0;
+  const st=list.map(c=>{
+    const v=cellVal(c);let g=null,isBad=false;
     if(v===''){isBad=c.dataset.unread==='1';}
-    else{const n=parseOne(v);if(Number.isFinite(n)&&n>0){good++;grams+=Math.round(n*1000);}else isBad=true;}
+    else{const n=parseOne(v);if(Number.isFinite(n)&&n>0){g=Math.round(n*1000);good++;grams+=g;}else isBad=true;}
     if(isBad)bad++;
-    c.classList.toggle('bad',isBad);c.classList.toggle('filled',v!==''&&!isBad);
-    c.querySelector('input').placeholder=c.dataset.unread==='1'?'?':'';
+    return {g,isBad,v};
   });
   const total=grams/1000;
+  // 1) total written on the chit
+  const ct=chkVal();let cstate='';
+  if(Number.isFinite(ct)&&good&&!bad)cstate=Math.abs(total-ct)<=tolFor(ct)+1e-9?'ok':'bad';
+  // 2) column subtotals written on the chit (from the scan)
+  const bi=blocks.map(b=>{
+    let s=0,badc=0;
+    for(let i=b.start;i<b.start+b.count&&i<list.length;i++){if(st[i].g!==null)s+=st[i].g;else if(st[i].isBad)badc++;}
+    const ok=b.subtotal===null?null:(badc===0&&Math.abs(s-Math.round(b.subtotal*1000))<=50);
+    return {start:b.start,count:b.count,subtotal:b.subtotal,sum:s/1000,ok};
+  });
+  const blockBad=bi.some(b=>b.ok===false);
+  const starts=new Set(bi.length>1?bi.map(b=>b.start):[]);
+  list.forEach((c,i)=>{
+    c.classList.toggle('bad',st[i].isBad);c.classList.toggle('filled',st[i].v!==''&&!st[i].isBad);
+    c.classList.remove('blk-bad');c.classList.toggle('blk-start',starts.has(i));
+    c.querySelector('input').placeholder=c.dataset.unread==='1'?'?':'';
+  });
+  if(cstate!=='ok')bi.forEach(b=>{if(b.ok===false)for(let i=b.start;i<b.start+b.count&&i<list.length;i++)list[i].classList.add('blk-bad');});
+  if(blkBox){
+    blkBox.hidden=!bi.length;blkBox.textContent='';
+    if(bi.length){
+      blkBox.append(el('span','bk-title','ચિઠ્ઠીના ભાગ (સબટોટલ સાથે મેળવો)'));
+      bi.forEach((b,i)=>{
+        const chip=el('button','bk '+(b.ok===true?'ok':b.ok===false?'bad':'na'));chip.type='button';
+        chip.innerHTML='<b>'+(i+1)+'</b> '+fmt(b.sum)+(b.ok===false&&b.subtotal!==null?' <s>≠ '+fmt(b.subtotal)+'</s>':'')+'<i>'+(b.ok===true?'✔':b.ok===false?'!':'')+'</i>';
+        chip.addEventListener('click',()=>jumpBlock(b));blkBox.append(chip);
+      });
+    }
+  }
   $('bag_count').textContent=good+' બેગ';$('bag_total').textContent=fmt(total)+' KG';
   const pending=!auto&&good>0&&!bad;
+  if(chkNote){
+    let msg='',cls='';
+    if(cstate==='ok'){msg='✔ ચિઠ્ઠીના ટોટલ ('+fmt(ct)+') સાથે મેળ ખાય છે';cls='ok';}
+    else if(cstate==='bad'){msg='⚠ ચિઠ્ઠી પર '+fmt(ct)+' KG, અહીં '+fmt(total)+' KG — ફરક '+fmt(r3(Math.abs(total-ct)))+' KG';cls='bad';}
+    chkNote.hidden=!msg;chkNote.textContent=msg;chkNote.className='bag-chk-note '+cls;
+  }
+  if(useChk)useChk.hidden=cstate!=='bad';
+  if(chkTip)chkTip.hidden=!(cstate==='bad'||(blockBad&&cstate!=='ok'));
   const note=$('bag_sum');
   const msg=bad?('⚠ '+bad+' બેગનું વજન ખાલી/ખોટું છે — સુધારો'):(pending?'ચકાસણી બાકી — દરેક વજન ચિઠ્ઠી સાથે મેળવો':'');
   note.hidden=!msg;note.textContent=msg;note.classList.toggle('bad',!!bad);note.classList.toggle('pending',pending&&!bad);
-  const btn=$('bag_apply');if(btn)btn.hidden=!pending;
-  if(good&&!bad&&auto){const fw=$('farmer_weight');if(fw){fw.value=String(total);fw.dispatchEvent(new Event('input',{bubbles:true}));}}
+  const btn=$('bag_apply');if(btn)btn.hidden=!(pending||cstate==='bad');
+  needsCheck=!!(bad||pending||cstate==='bad'||(blockBad&&cstate!=='ok'));
+  const fw=$('farmer_weight');
+  if(good&&!bad){
+    if(force||(auto&&cstate!=='bad')){writeFarmer(total);lastAuto=String(total);}
+    else if(auto&&cstate==='bad'&&fw&&lastAuto!==null&&fw.value===lastAuto){writeFarmer('');lastAuto=null;} // never leave a total that disagrees with the chit
+  }
   mirror();
 }
+function resetAll(){loadList([]);blocks=[];if(chk)chk.value='';lastAuto=null;recalc(true);}
 function loadList(list){
   rowsBody.innerHTML='';
   (list||[]).forEach(v=>{const t=String(v).trim(),c=makeCell();if(t==='?'||t==='')c.dataset.unread='1';else c.querySelector('input').value=t;rowsBody.appendChild(c);});
   layout();
 }
 window.BalajiBags={
-  set(list,opts){loadList(list);recalc(opts&&opts.apply===false?false:true);},
-  refresh:()=>recalc(true)
+  set(list,opts){
+    opts=opts||{};loadList(list);
+    blocks=(Array.isArray(opts.blocks)?opts.blocks:[]).filter(b=>b&&Number.isFinite(Number(b.start))&&Number(b.count)>0).map(b=>({start:Number(b.start),count:Number(b.count),subtotal:(b.subtotal===null||b.subtotal===undefined||!Number.isFinite(Number(b.subtotal)))?null:Number(b.subtotal)}));
+    if(chk)chk.value=(opts.total!==null&&opts.total!==undefined&&Number(opts.total)>0)?String(Number(opts.total)):'';
+    lastAuto=null;recalc(opts.apply===false?false:true);
+  },
+  refresh:()=>recalc(true),
+  warn:()=>needsCheck
 };
 if(ta&&rowsBody){
-  $('bag_clear').addEventListener('click',()=>{if(cells().some(c=>cellVal(c)!==''||c.dataset.unread==='1')&&!confirm('બધી બેગનું વજન કાઢી નાખવું છે?'))return;loadList([]);recalc(true);});
-  $('bag_apply').addEventListener('click',()=>recalc(true));
+  $('bag_clear').addEventListener('click',()=>{if(cells().some(c=>cellVal(c)!==''||c.dataset.unread==='1')&&!confirm('બધી બેગનું વજન કાઢી નાખવું છે?'))return;resetAll();});
+  $('bag_apply').addEventListener('click',()=>recalc(true,true));
+  if(chk){let tm;chk.addEventListener('input',()=>{clearTimeout(tm);tm=setTimeout(()=>recalc(true),550);});chk.addEventListener('change',()=>{clearTimeout(tm);recalc(true);});}
+  if(useChk)useChk.addEventListener('click',()=>{const v=chkVal();if(Number.isFinite(v)){writeFarmer(v);lastAuto=null;useChk.hidden=true;}});
   window.addEventListener('resize',()=>layout());
   // draft restore writes straight into the hidden textarea: follow it
-  setInterval(()=>{if(lastMirror!==null&&ta.value!==lastMirror){loadList(ta.value.split(/\r?\n/).filter(Boolean));recalc(true);}},700);
+  setInterval(()=>{if(lastMirror!==null&&ta.value!==lastMirror){blocks=[];loadList(ta.value.split(/\r?\n/).filter(Boolean));recalc(true);}},700);
   lastMirror=ta.value||'';loadList(ta.value?ta.value.split(/\r?\n/).filter(Boolean):[]);recalc(true);
   // after a successful save the form is emptied: empty the grid as well
   const baseSave=window.saveChiththi;
   if(typeof baseSave==='function'){
     window.saveChiththi=async function(){
       const r=await baseSave.apply(this,arguments);
-      const m=($('chiththi_msg')||{}).innerText||'';if(/Save \u0aa5\u0a88 \u0a97\u0a88|Chit saved/i.test(m)&&!$('chiththi_number').value.trim()&&!$('farmer_weight').value.trim()){loadList([]);recalc(true);}
+      const m=($('chiththi_msg')||{}).innerText||'';if(/Save \u0aa5\u0a88 \u0a97\u0a88|Chit saved/i.test(m)&&!$('chiththi_number').value.trim()&&!$('farmer_weight').value.trim()){resetAll();}
       return r;
     };
   }
@@ -5908,18 +6017,19 @@ function enhanceForms(){
 /* after a successful scan: mark the card green, flash the filled fields and scroll to them */
 window.BalajiAfterScan=function(kind){
   const form=$(kind),tools=form&&form.querySelector('.bi-scan-tools');if(!tools)return;
-  const prog=tools.querySelector('.scan-progress');if(prog)prog.classList.add('ok');
+  const warn=kind==='worker'&&window.BalajiBags&&window.BalajiBags.warn&&window.BalajiBags.warn();
+  const prog=tools.querySelector('.scan-progress');if(prog){prog.classList.remove('ok','warn');prog.classList.add(warn?'warn':'ok');}
   (FORM_FIELDS[kind]||[]).forEach(id=>{const e=$(id);if(e&&String(e.value||'').trim()){e.classList.remove('flash');void e.offsetWidth;e.classList.add('flash');}});
   try{
     let en=false;try{en=localStorage.getItem('balaji-app-language')==='en';}catch(_){}
     let t=$('bi-toast');if(!t){t=el('div','bi-toast');t.id='bi-toast';t.setAttribute('role','status');document.body.appendChild(t);}
-    t.textContent=en?'✔ Details filled — please check them':'✔ વિગતો ભરાઈ ગઈ — ચકાસીને Save કરો';
-    t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),3500);
+    t.textContent=warn?(en?'⚠ Please match the bag weights with the chit':'⚠ બેગનું વજન ચિઠ્ઠી સાથે મેળવો'):(en?'✔ Details filled — please check them':'✔ વિગતો ભરાઈ ગઈ — ચકાસીને Save કરો');
+    t.classList.toggle('warn',!!warn);t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),3500);
   }catch(_){}
-  const target=tools.nextElementSibling;
+  const target=warn?(form.querySelector('.bag-calc')||tools.nextElementSibling):tools.nextElementSibling;
   if(target){target.style.scrollMarginTop='calc(86px + var(--bi-safe-top,0px))';setTimeout(()=>{try{target.scrollIntoView({behavior:'smooth',block:'start'});}catch(_){target.scrollIntoView();}},300);}
 };
-document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('.scan-start'))document.querySelectorAll('.scan-progress.ok').forEach(p=>p.classList.remove('ok'));},true);
+document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('.scan-start'))document.querySelectorAll('.scan-progress.ok,.scan-progress.warn').forEach(p=>p.classList.remove('ok','warn'));},true);
 function numFrom(t){const m=String(t).replace(/,/g,'').match(/-?\d+(?:\.\d+)?/);return m?Number(m[0]):0;}
 function enhanceRecords(){
   ['my_chiththis','bi-staff-waybridge-list','my_maal_entries'].forEach(id=>{
