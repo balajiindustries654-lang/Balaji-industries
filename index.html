@@ -785,11 +785,13 @@ inputmode="numeric"
 placeholder="&#2710;&#2759;&#2721;&#2754;&#2724;&#2728;&#2763; &#2734;&#2763;&#2732;&#2750;&#2695;&#2738; &#2728;&#2690;&#2732;&#2736;">
 
 <div class="bag-calc">
-<label for="bag_weights"><b>બેગ પ્રમાણે વજન (ઓપ્શનલ)</b></label>
-<textarea id="bag_weights" inputmode="decimal" rows="4" placeholder="દરેક લાઇનમાં એક બેગનું વજન&#10;62.5&#10;61.8&#10;63"></textarea>
-<div id="bag_sum" class="bag-sum">0 બેગ · કુલ 0 KG</div>
-<button type="button" id="bag_apply" class="bag-apply" hidden>✔ ચકાસ્યા પછી કુલ વજન ભરો</button>
-<p class="muted" style="margin:6px 0 0">બેગનું વજન લખશો એટલે નીચે “ખેડૂતનું વજન” આપમેળે ભરાઈ જશે.</p>
+<div class="bag-head"><b>બેગ પ્રમાણે વજન</b><span class="bag-opt">વૈકલ્પિક</span></div>
+<textarea id="bag_weights" hidden></textarea>
+<table class="bag-table"><thead><tr><th>#</th><th style="text-align:right">વજન (KG)</th><th></th></tr></thead><tbody id="bag_rows"></tbody>
+<tfoot><tr><td colspan="3"><div class="bag-foot"><span id="bag_count">0 બેગ</span><b id="bag_total">0 KG</b></div></td></tr></tfoot></table>
+<div id="bag_sum" class="bag-sum" hidden></div>
+<div class="bag-actions"><button type="button" id="bag_add" class="bag-add">＋ બેગ ઉમેરો</button><button type="button" id="bag_apply" class="bag-apply" hidden>✔ ચકાસ્યા પછી કુલ ભરો</button></div>
+<p class="muted bag-hint">બેગનું વજન ભરશો એટલે નીચે “ખેડૂતનું વજન” આપમેળે ભરાઈ જશે.</p>
 </div>
 <label><b>&#2710;&#2759;&#2721;&#2754;&#2724;&#2728;&#2753;&#2690; &#2741;&#2716;&#2728; (KG) *</b></label>
 <input id="farmer_weight"
@@ -5055,6 +5057,11 @@ function validateScan(data,kind){
  const src=(data.fields && typeof data.fields==='object')?data.fields:{};
  const toText=v=>(typeof v==='string'||typeof v==='number')?String(v).trim().slice(0,200):'';
  const fields={};configurations[kind].fields.forEach(([id])=>{fields[id]=toText(src[id]);});
+ const num=v=>{const m=normalizeDigits(v).replace(/,/g,'').match(/\d+(?:\.\d+)?/);return m?m[0]:'';};
+ ['wb_weight','farmer_weight','bardan_kg','kardo_kg'].forEach(id=>{if(fields[id])fields[id]=num(fields[id]);});
+ if(fields.me_bags)fields.me_bags=String(parseInt(num(fields.me_bags),10)||'');
+ ['wb_vehicle','me_vehicle','vehicle_number'].forEach(id=>{if(fields[id])fields[id]=fields[id].toUpperCase().replace(/[\s-]/g,'');});
+ ['wb_mobile','farmer_mobile'].forEach(id=>{if(fields[id]){const d=normalizeDigits(fields[id]).replace(/\D/g,'');fields[id]=d.length>=10?d.slice(-10):d;}});
  const rawWeights=Array.isArray(data.weights)?data.weights:[];
  const toWeight=v=>toText(v).replace(/,/g,'');
  const weights=kind==='worker'?rawWeights.slice(0,200).filter(x=>x!==null && x!==undefined).map(x=>(typeof x==='object')?{value:toWeight(x.value),source:String(x.source||'').slice(0,200)}:{value:toWeight(x),source:''}):[];
@@ -5478,31 +5485,133 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 })();
 
 </script>
-<!-- ===== Balaji v3 fixes: buttons, dashboard, bag-wise total ===== -->
-<style id="bi-v3-style">
+<!-- ===== Balaji v4: professional layout, bag table, photo picker, records ===== -->
+<style id="bi-v4-style">
+:root{--bi-radius:14px;--bi-ink:#173438;--bi-line:#dbe7e8;--bi-soft:#eef7f7}
 /* ---------- Buttons: one clear system ---------- */
 button{border-radius:12px;box-shadow:0 1px 2px rgba(6,94,98,.25);transition:background .15s,box-shadow .15s,transform .05s}
 button:active{transform:translateY(1px);box-shadow:none}
-button[onclick*="forgotPassword"],button[onclick*="Refresh"],button[onclick*="loadMy"],button[onclick*=".click()"],#me_lang_btn,
-.bi-staff-tabs button,.bi-scan-buttons button.scan-camera,.bi-scan-buttons button.scan-gallery,td button,.weight-row button,.scan-cancel,button[onclick*="logout"]{box-shadow:none}
-button[onclick*="forgotPassword"]{background:transparent!important;color:var(--dark)!important;border:1px solid #b9d8d9!important}
-button[onclick*="logout"]{width:auto;min-width:120px;margin-left:auto;padding:10px 16px;min-height:42px;font-size:14px}
+button[onclick*="forgotPassword"]{background:transparent!important;color:var(--dark)!important;border:1px solid #b9d8d9!important;box-shadow:none}
 button[onclick*="delete"],#deleteYes{background:#fff;color:#b92d40;border:1px solid #efc2c8;box-shadow:none}
 button[onclick*="delete"]:hover,#deleteYes:hover{background:#b92d40;color:#fff}
-#who{display:flex;align-items:center;justify-content:space-between;gap:10px}
-/* Draft buttons in one row */
-.bi-v2-draft{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.bi-v2-draft .bi-v2-note{flex:1 1 100%;margin:0 0 4px;font-size:12px}
-.bi-v2-draft button{flex:1 1 30%;width:auto;min-width:92px;margin:0;min-height:42px;font-size:13px;padding:8px 6px;background:var(--soft);color:var(--dark);border:1px solid #c5dddd;box-shadow:none}
-.bi-v2-draft button:hover{background:#dff0f0}
-/* Scan tools: Scan is the main action */
+.btn-soft,.bag-add,.bag-apply,.list-head button,.rec-actions button,.bi-v2-draft button,.bi-scan-buttons button.scan-camera,.bi-scan-buttons button.scan-gallery,.bi-share-btn{box-shadow:none}
+
+/* ---------- App bar (staff) ---------- */
+#app>.card:first-child{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;margin-bottom:12px;border-radius:0 0 18px 18px;box-shadow:0 4px 18px rgba(8,127,131,.10)}
+#who{display:flex;align-items:center;gap:10px;min-width:0}
+.who-avatar{flex:none;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#0a9297,#065e62);color:#fff;font-weight:800;font-size:16px}
+.who-text{display:flex;flex-direction:column;min-width:0;line-height:1.25}
+.who-text b{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.who-text small{font-size:12px;color:var(--muted);font-weight:600}
+.bi-account-actions button[onclick*="logout"]{width:auto;min-width:0;min-height:40px;padding:8px 14px;font-size:13px;margin:0;background:#fff;color:var(--dark);border:1px solid #bcd9da;box-shadow:none}
+
+/* ---------- Bottom navigation (staff) ---------- */
+body.bi-staff #app{padding-bottom:92px}
+#bi-staff-dashboard:not(.hide):not([hidden]){display:contents}
+#bi-staff-dashboard>h2,#bi-staff-dashboard>p{display:none}
+body.bi-staff .bi-staff-tabs{position:fixed;left:0;right:0;bottom:0;z-index:40;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));background:rgba(255,255,255,.96);backdrop-filter:blur(10px);border-top:1px solid var(--bi-line);box-shadow:0 -6px 20px rgba(8,127,131,.10)}
+body.bi-staff .bi-staff-tabs button{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0;min-height:56px;padding:6px 4px;font-size:12px;font-weight:700;background:transparent;color:#5b7477;border:0;box-shadow:none;border-radius:14px}
+body.bi-staff .bi-staff-tabs button .nav-ico{font-size:20px;line-height:1}
+body.bi-staff .bi-staff-tabs button.active{background:var(--bi-soft);color:var(--dark)}
+
+/* ---------- Form cards ---------- */
+#worker,#waybridge,#maal_entry{padding:18px 16px 20px}
+#worker>h2,#waybridge>h2,#maal_entry>div:first-child h2{font-size:20px}
+#worker>h3:first-of-type,#waybridge>h3:first-of-type{font-size:17px}
+.sec-title{display:flex;align-items:center;gap:8px;margin:22px 0 4px;padding-top:14px;border-top:1px solid var(--bi-line);font-size:14px;font-weight:800;color:var(--dark);letter-spacing:.2px}
+.sec-title::before{content:"";width:4px;height:16px;border-radius:2px;background:#0a9297}
+label.photo-label{margin-top:0}
+#chiththi_photo,#wb_slip,#me_slip{display:none}
+#maal_entry>div:first-child{flex-direction:column!important;align-items:stretch!important;gap:4px!important}
+/* Draft: compact, one row */
+.bi-v2-draft{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0 6px;padding:0;border:0;background:transparent}
+.bi-v2-draft .bi-v2-note:first-child{display:none}
+.bi-v2-draft button{flex:1 1 30%;width:auto;min-width:88px;margin:0;min-height:38px;font-size:12.5px;padding:6px;background:#fff;color:#4a6568;border:1px dashed #b4d3d4}
+.bi-v2-draft button:hover{background:var(--bi-soft)}
+.bi-v2-draft p.bi-v2-note{flex:1 1 100%;margin:0;font-size:12px}
+/* Photo picker */
+.bi-scan-tools{margin:8px 0 14px;padding:14px;border:1px solid var(--bi-line);border-radius:16px;background:#fff}
+.bi-scan-tools h3{margin:0 0 10px;font-size:15px}
+.bi-scan-tools>label{font-size:13px}
 .bi-scan-buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.bi-scan-buttons button{margin:0;min-height:46px}
-.bi-scan-buttons button.scan-camera,.bi-scan-buttons button.scan-gallery{background:#fff;color:var(--dark);border:1px solid #bcd9da}
+.bi-scan-buttons button{margin:0;min-height:48px;font-size:14px}
+.bi-scan-buttons button.scan-camera,.bi-scan-buttons button.scan-gallery{background:var(--bi-soft);color:var(--dark);border:1px solid #bcd9da}
+.bi-scan-buttons button.scan-camera::before{content:"📷 "}
+.bi-scan-buttons button.scan-gallery::before{content:"🖼️ "}
 .bi-scan-buttons button.scan-start{grid-column:1/-1;min-height:52px;font-size:16px;background:linear-gradient(135deg,#0a9297,#065e62)}
-.scan-progress{margin-top:10px;font-size:13px;color:var(--dark);overflow-wrap:anywhere}
-/* Main save buttons stand out */
-#worker>button[onclick*="saveChiththi"],#waybridge>button[onclick*="saveWaybridge"],#maal_entry>button[onclick*="saveMaalEntry"]{min-height:54px;font-size:16px;background:linear-gradient(135deg,#0a9297,#065e62);margin-top:18px}
+.bi-scan-buttons button.scan-start::before{content:"✨ "}
+.bi-scan-tools .muted{font-size:12.5px;margin:8px 0 0}
+.scan-progress{overflow-wrap:anywhere}
+.photo-chip{display:flex;align-items:center;gap:12px;margin-top:10px;padding:8px;border:1px solid var(--bi-line);border-radius:12px;background:#f8fbfb}
+.photo-chip[hidden]{display:none}
+.photo-chip img{width:54px;height:54px;object-fit:cover;border-radius:10px;border:1px solid var(--bi-line);background:#fff}
+.photo-chip .pc-meta{flex:1;min-width:0;line-height:1.3}
+.photo-chip .pc-meta b{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.photo-chip .pc-meta small{color:var(--muted);font-size:12px}
+.photo-chip button{width:auto;min-height:36px;padding:6px 12px;font-size:12px;margin:0;background:#fff;color:#b92d40;border:1px solid #efc2c8;box-shadow:none}
+/* Maal entry: photo only, no scanning */
+#maal_entry .bi-scan-tools h3,#maal_entry .bi-scan-tools>label,#maal_entry .bi-scan-tools .scan-start,#maal_entry .bi-scan-tools .muted{display:none!important}
+/* Save buttons */
+#worker>button[onclick*="saveChiththi"],#waybridge>button[onclick*="saveWaybridge"],#maal_entry>button[onclick*="saveMaalEntry"]{min-height:54px;font-size:16px;margin-top:6px;background:linear-gradient(135deg,#0a9297,#065e62)}
+/* ---------- Bag weight table ---------- */
+.bag-calc{margin:6px 0 14px;padding:14px;border:1px solid var(--bi-line);border-radius:16px;background:#fff}
+.bag-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.bag-head b{font-size:15px}
+.bag-opt{font-size:11px;font-weight:700;color:#5b7477;background:var(--bi-soft);padding:3px 9px;border-radius:999px}
+.bag-table{width:100%;border-collapse:separate;border-spacing:0;border:1px solid var(--bi-line);border-radius:12px;overflow:hidden;font-variant-numeric:tabular-nums}
+.bag-table th{background:#f1f8f8;color:#4a6568;font-size:12px;font-weight:800;text-align:left;padding:8px 10px;border-bottom:1px solid var(--bi-line)}
+.bag-table th:last-child,.bag-table td:last-child{width:46px;text-align:center}
+.bag-table th:first-child,.bag-table td:first-child{width:44px;text-align:center;color:#6a8084;font-weight:700}
+.bag-table td{padding:2px 6px!important;height:50px;vertical-align:middle!important;border-bottom:1px solid #edf3f3!important;line-height:1.2}
+.bag-table th{vertical-align:middle!important}
+.bag-table tbody tr:last-child td{border-bottom:0}
+.bag-table input{width:100%;margin:0!important;min-height:42px;border:1px solid transparent;background:transparent;font-size:16px;font-weight:700;padding:8px 6px;border-radius:8px;text-align:right}
+.bag-table input:focus{background:#fff;border-color:#0a9297;outline:0}
+.bag-table tr.bad input{background:#fdecee;border-color:#e9a9b1;color:#b42336}
+.bag-table td button.bag-del{width:34px;min-height:34px;height:34px;padding:0;margin:0;background:transparent;color:#a0a9ab;border:0;box-shadow:none;font-size:16px}
+.bag-table td button.bag-del:hover{background:#fdecee;color:#b42336}
+.bag-empty td{padding:16px 10px;text-align:center;color:#7d9093;font-size:13px}
+.bag-table tfoot td{padding:10px 12px;background:#eaf6f6;border-top:1px solid var(--bi-line)}
+.bag-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:14px;font-weight:700;color:var(--dark)}
+.bag-foot b{font-size:18px}
+.bag-actions{display:flex;gap:8px;margin-top:10px}
+.bag-add{flex:1;min-height:44px;margin:0;background:var(--bi-soft);color:var(--dark);border:1px solid #bcd9da;font-size:14px}
+.bag-apply{flex:1.4;min-height:44px;margin:0;background:#fff7e5;color:#8a5a00;border:1px solid #f0d49a;font-size:14px}
+.bag-apply[hidden]{display:none}
+.bag-sum{margin-top:10px;padding:8px 12px;border-radius:10px;background:#eef7f7;color:var(--dark);font-size:13px;font-weight:650}
+.bag-sum[hidden]{display:none}
+.bag-sum.bad{background:#fde8ea;color:#b42336}
+.bag-sum.pending{background:#fff3dc;color:#8a5a00}
+.bag-hint{margin:8px 0 0;font-size:12.5px}
+.net-hint{margin:-4px 0 12px;font-size:13px;color:var(--muted)}
+.net-hint.warn{color:#b42336;font-weight:650}
+/* ---------- Saved entries ---------- */
+.list-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:6px 0 10px}
+.list-head h3{margin:0;font-size:17px}
+.list-head button{width:auto;min-height:38px;padding:6px 14px;font-size:13px;margin:0;background:var(--bi-soft);color:var(--dark);border:1px solid #bcd9da}
+.rec-tools{display:flex;flex-direction:column;gap:10px;margin:0 0 6px}
+.rec-sum{display:flex;gap:8px}
+.rec-sum span{flex:1;padding:10px 12px;border-radius:12px;background:var(--bi-soft);font-size:12px;color:#587074;font-weight:700}
+.rec-sum span b{display:block;font-size:19px;color:var(--bi-ink);margin-top:2px;font-variant-numeric:tabular-nums}
+.rec-search{margin:0!important;min-height:44px;font-size:15px}
+.bi-v2-record{padding:0!important;overflow:hidden;border-radius:16px!important;border:1px solid var(--bi-line)!important;box-shadow:0 2px 10px rgba(23,52,56,.05)!important}
+.bi-v2-record>header{display:grid!important;grid-template-columns:minmax(0,1fr) auto;gap:8px 12px;padding:14px 14px 10px;align-items:center!important}
+.bi-v2-record>header>div:first-child{display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-width:0}
+.bi-v2-record h3{margin:0!important}
+.bi-v2-record h3{display:inline-block;padding:3px 10px;border:1.5px solid #1e3c3f;border-radius:7px;background:#fffdf3;font-size:15px!important;letter-spacing:1.2px;font-weight:800;font-family:ui-monospace,Menlo,Consolas,monospace}
+.bi-v2-tag{display:inline-block;padding:3px 10px;border-radius:999px;background:#e3f3f3;color:#0a6d71;font-size:12px;font-weight:800}
+.bi-v2-record[data-record="wb"] .bi-v2-tag{background:#e5eefc;color:#2b5aa8}
+.bi-v2-record[data-record="maal"] .bi-v2-tag{background:#fff0d6;color:#9a6200}
+.bi-v2-tag.closed{background:#fde8ea!important;color:#b42336!important}
+.bi-v2-total{white-space:nowrap;text-align:right;font-size:24px;font-weight:800;color:var(--bi-ink);font-variant-numeric:tabular-nums;line-height:1.1}
+.bi-v2-total small{display:block;margin-top:2px;font-size:12px;font-weight:700;color:#5b7477}
+.bi-v2-record dl{margin:0!important;padding:0 14px 12px;gap:8px!important}
+.bi-v2-record dl div{background:#f6fafa!important;padding:8px 10px!important;border-radius:10px!important}
+.bi-v2-record dt{font-size:11px!important;text-transform:uppercase;letter-spacing:.4px}
+.bi-v2-record dd{font-size:14px!important}
+.bi-v2-record footer{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;background:#f8fbfb;border-top:1px solid #e8f0f0;font-size:12px;color:#657c80}
+.rec-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.rec-actions button,.bi-v2-record footer button{width:auto;min-height:34px;margin:0;padding:6px 12px;font-size:12.5px;background:#fff;color:var(--dark);border:1px solid #bcd9da;box-shadow:none}
 /* ---------- Admin dashboard tiles ---------- */
 #admin .stats-grid{gap:12px}
 #admin .stat-glass{display:grid!important;grid-template-columns:1fr auto;grid-template-rows:auto auto;gap:10px 6px;padding:14px!important;border-radius:16px;align-items:center;cursor:pointer;transition:box-shadow .15s,transform .05s}
@@ -5520,52 +5629,84 @@ button[onclick*="delete"]:hover,#deleteYes:hover{background:#b92d40;color:#fff}
 #admin .stats-grid>.stat-glass:nth-child(5)>.stat-icon{background:#f3e8fb}
 #admin .stats-grid>.stat-glass:nth-child(6)>.stat-icon{background:#fde8ea}
 .dash-welcome{background:linear-gradient(135deg,#e8f6f6,#f6fbfb)}
-/* ---------- Bag-wise weight calculator ---------- */
-.bag-calc{margin:6px 0 14px;padding:14px;border:1px dashed #9fcfd1;border-radius:14px;background:#f6fbfb}
-.bag-calc label{margin-top:0}
-.bag-calc textarea{min-height:110px;font-variant-numeric:tabular-nums;margin-bottom:8px}
-.bag-sum{display:inline-block;padding:7px 12px;border-radius:999px;background:#d8eeee;color:var(--dark);font-weight:750;font-size:14px}
-.bag-sum.bad{background:#fde8ea;color:#b42336}
-.bag-sum.pending{background:#fff3dc;color:#8a5a00}
-.bag-apply{margin:8px 0 0;min-height:44px;background:#fff;color:var(--dark);border:1px solid #bcd9da;box-shadow:none}
-.bag-apply[hidden]{display:none}
-.bi-share-btn{background:#fff;color:#128c4a;border:1px solid #b9e2cb;box-shadow:none;margin:0 0 14px}
+.bi-share-btn{background:#fff;color:#128c4a;border:1px solid #b9e2cb;margin:0 0 14px}
 .bi-share-btn:hover{background:#eefaf3}
-.net-hint{margin:-4px 0 12px;font-size:13px;color:var(--muted)}
-.net-hint.warn{color:#b42336;font-weight:650}
 </style>
-<script id="bi-v3-script">
+<script id="bi-v4-script">
 (function(){
 'use strict';
 const $=id=>document.getElementById(id);
 const toAscii=t=>String(t).replace(/[\u0ae6-\u0aef]/g,c=>String(c.charCodeAt(0)-0xAE6)).replace(/[\u0966-\u096f]/g,c=>String(c.charCodeAt(0)-0x966));
 const fmt=n=>Number(n).toLocaleString('en-IN',{maximumFractionDigits:3});
+const el=(tag,cls,html)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(html!==undefined)e.innerHTML=html;return e;};
 
-/* Bag-wise weights -> total goes into "Khedut nu vajan" automatically */
-function parseBags(text){
-  return toAscii(text).split(/[\s;+]+/).map(t=>t.replace(/,/g,'').trim()).filter(Boolean)
-    .map(t=>/^\d+(?:\.\d{1,3})?$/.test(t)?Number(t):NaN);
+/* ================= Bag-wise weight table ================= */
+const ta=$('bag_weights'),rowsBody=$('bag_rows');
+let lastMirror=null;
+const parseOne=t=>{const s=toAscii(t).replace(/,/g,'').trim();return /^\d+(?:\.\d{1,3})?$/.test(s)?Number(s):NaN;};
+function rowState(){return [...document.querySelectorAll('#bag_rows tr[data-row]')].map(tr=>({tr,input:tr.querySelector('input'),flag:tr.dataset.unread==='1'}));}
+function mirror(){ // table -> hidden textarea (drafts) 
+  const vals=rowState().map(r=>{const v=r.input.value.trim();return v?v:(r.flag?'?':'');}).filter((v,i,a)=>v!==''||false);
+  lastMirror=vals.join('\n');
+  if(ta.value!==lastMirror){ta.value=lastMirror;ta.dispatchEvent(new Event('input',{bubbles:true}));}
 }
-function refreshBags(auto){
+function addRow(value,unread,focus){
+  const idx=document.querySelectorAll('#bag_rows tr[data-row]').length+1;
+  const tr=el('tr');tr.dataset.row='1';if(unread)tr.dataset.unread='1';
+  const num=el('td','',String(idx));
+  const td=el('td');const inp=el('input');inp.type='text';inp.inputMode='decimal';inp.autocomplete='off';inp.placeholder=unread?'?':'0.0';inp.value=value||'';inp.setAttribute('aria-label','Bag '+idx+' weight');
+  td.appendChild(inp);
+  const del=el('td');const b=el('button','bag-del','✕');b.type='button';b.setAttribute('aria-label','Remove bag '+idx);del.appendChild(b);
+  tr.append(num,td,del);rowsBody.appendChild(tr);
+  inp.addEventListener('input',()=>{tr.dataset.unread='';recalc(true);});
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addRow('',false,true);recalc(true);}});
+  inp.addEventListener('paste',e=>{const txt=(e.clipboardData||window.clipboardData).getData('text');const parts=toAscii(txt).split(/[\s;+]+/).filter(Boolean);if(parts.length>1){e.preventDefault();inp.value=parts[0];parts.slice(1).forEach(p=>addRow(p,false,false));recalc(true);}});
+  b.addEventListener('click',()=>{tr.remove();renumber();recalc(true);});
+  if(focus)inp.focus();
+  return tr;
+}
+function renumber(){document.querySelectorAll('#bag_rows tr[data-row]').forEach((tr,i)=>{tr.firstChild.textContent=String(i+1);});}
+function ensureEmptyRow(){
+  const has=rowsBody.querySelector('tr[data-row]');
+  let empty=rowsBody.querySelector('tr.bag-empty');
+  if(!has&&!empty){empty=el('tr','bag-empty','<td colspan="3">હજુ કોઈ બેગ નથી — “＋ બેગ ઉમેરો” દબાવો અથવા ફોટો Scan કરો</td>');rowsBody.appendChild(empty);}
+  if(has&&empty)empty.remove();
+}
+function recalc(auto){
   if(auto===undefined)auto=true;
-  const ta=$('bag_weights'),out=$('bag_sum'),btn=$('bag_apply'); if(!ta||!out)return;
-  const all=parseBags(ta.value),good=all.filter(v=>Number.isFinite(v)&&v>0),bad=all.length-good.length;
-  const total=good.reduce((s,v)=>s+Math.round(v*1000),0)/1000;
-  const pending=!auto && good.length>0 && !bad;
-  out.textContent=good.length+' બેગ · કુલ '+fmt(total)+' KG'+(bad?' · ⚠ '+bad+' બેગ ખાલી/ખોટી':'')+(pending?' · ચકાસણી બાકી':'');
-  out.classList.toggle('bad',bad>0);
-  out.classList.toggle('pending',pending);
-  if(btn)btn.hidden=!pending;
-  if(good.length && !bad && auto){
-    const fw=$('farmer_weight'); if(fw){fw.value=String(total);fw.dispatchEvent(new Event('input',{bubbles:true}));}
-  }
+  ensureEmptyRow();
+  let good=0,bad=0,grams=0;
+  rowState().forEach(r=>{
+    const v=r.input.value.trim();let isBad=false;
+    if(v===''){isBad=r.flag;} else {const n=parseOne(v);if(Number.isFinite(n)&&n>0){good++;grams+=Math.round(n*1000);}else isBad=true;}
+    if(isBad)bad++;r.tr.classList.toggle('bad',isBad);
+  });
+  const total=grams/1000;
+  $('bag_count').textContent=good+' બેગ';$('bag_total').textContent=fmt(total)+' KG';
+  const pending=!auto&&good>0&&!bad;
+  const note=$('bag_sum');
+  const msg=bad?('⚠ '+bad+' બેગનું વજન ખાલી/ખોટું છે — સુધારો'):(pending?'ચકાસણી બાકી — દરેક વજન ચિઠ્ઠી સાથે મેળવો':'');
+  note.hidden=!msg;note.textContent=msg;note.classList.toggle('bad',!!bad);note.classList.toggle('pending',pending&&!bad);
+  const btn=$('bag_apply');if(btn)btn.hidden=!pending;
+  if(good&&!bad&&auto){const fw=$('farmer_weight');if(fw){fw.value=String(total);fw.dispatchEvent(new Event('input',{bubbles:true}));}}
+  mirror();
+}
+function loadList(list){
+  rowsBody.innerHTML='';
+  (list||[]).forEach(v=>{const t=String(v).trim();if(t==='?'||t==='')addRow('',true,false);else addRow(t,false,false);});
+  renumber();
 }
 window.BalajiBags={
-  set(list,opts){const ta=$('bag_weights'); if(!ta)return; ta.value=(list||[]).join('\n'); refreshBags(opts&&opts.apply===false?false:true);},
-  refresh:()=>refreshBags(true)
+  set(list,opts){loadList(list);recalc(opts&&opts.apply===false?false:true);},
+  refresh:()=>recalc(true)
 };
-const ta=$('bag_weights'); if(ta)ta.addEventListener('input',()=>refreshBags(true));
-const applyBtn=$('bag_apply'); if(applyBtn)applyBtn.addEventListener('click',()=>refreshBags(true));
+if(ta&&rowsBody){
+  $('bag_add').addEventListener('click',()=>{addRow('',false,true);recalc(true);});
+  $('bag_apply').addEventListener('click',()=>recalc(true));
+  // draft restore writes straight into the hidden textarea: follow it
+  setInterval(()=>{if(lastMirror!==null&&ta.value!==lastMirror){loadList(ta.value.split(/\r?\n/).filter(Boolean));recalc(true);}},700);
+  lastMirror=ta.value||'';loadList(ta.value?ta.value.split(/\r?\n/).filter(Boolean):[]);recalc(true);
+}
 
 /* Net weight: show the working and warn when deductions exceed weight */
 if(typeof window.calculateNetWeight==='function'){
@@ -5573,20 +5714,18 @@ if(typeof window.calculateNetWeight==='function'){
   window.calculateNetWeight=function(){
     base();
     const w=parseFloat($('farmer_weight')?.value)||0,b=parseFloat($('bardan_kg')?.value)||0,k=parseFloat($('kardo_kg')?.value)||0;
-    const net=$('net_weight'); if(!net)return;
+    const net=$('net_weight');if(!net)return;
     let hint=$('net_hint');
-    if(!hint){hint=document.createElement('p');hint.id='net_hint';hint.className='net-hint';net.after(hint);}
-    const over=w>0 && (b+k)>w;
-    hint.classList.toggle('warn',over);
+    if(!hint){hint=el('p','net-hint');hint.id='net_hint';net.after(hint);}
+    const over=w>0&&(b+k)>w;hint.classList.toggle('warn',over);
     hint.textContent=over?'⚠ બારદાન + કરડો, ખેડૂતના વજન કરતાં વધારે છે.':(w>0?(fmt(w)+' − '+fmt(b)+' − '+fmt(k)+' = '+net.value+' KG'):'');
   };
 }
 
-/* Admin: share today's summary (WhatsApp / share sheet) */
+/* Admin: share today's summary */
 (function(){
-  const grid=document.querySelector('#admin .stats-grid'); if(!grid||$('bi-wa-summary'))return;
-  const btn=document.createElement('button');btn.type='button';btn.id='bi-wa-summary';btn.className='bi-share-btn';
-  btn.textContent='📤 આજનો સારાંશ શેર કરો';
+  const grid=document.querySelector('#admin .stats-grid');if(!grid||$('bi-wa-summary'))return;
+  const btn=el('button','bi-share-btn','📤 આજનો સારાંશ શેર કરો');btn.type='button';btn.id='bi-wa-summary';
   const g=id=>(($(id)&&$(id).textContent)||'0').trim();
   btn.addEventListener('click',async()=>{
     const d=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric',timeZone:'Asia/Kolkata'});
@@ -5597,20 +5736,123 @@ if(typeof window.calculateNetWeight==='function'){
   grid.after(btn);
 })();
 
-/* Live data: don't poll while the tab is hidden or a request is still running */
+/* Live data: skip polling while hidden/busy */
 if(typeof window.loadLiveData==='function'){
   const baseLive=window.loadLiveData;let busy=false;
-  window.loadLiveData=async function(){
-    if(busy||document.hidden)return; busy=true;
-    try{return await baseLive.apply(this,arguments);}finally{busy=false;}
-  };
+  window.loadLiveData=async function(){if(busy||document.hidden)return;busy=true;try{return await baseLive.apply(this,arguments);}finally{busy=false;}};
+}
+/* Missing logo: swap the picture, keep the <img> element (header layout depends on it) */
+(function(){
+  const svg="data:image/svg+xml;charset=utf-8,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#e6f4f4"/><text x="50" y="66" font-size="52" text-anchor="middle">🏭</text></svg>');
+  document.querySelectorAll('img[src="balaji-logo.png"]').forEach(img=>{
+    const swap=()=>{img.onerror=null;img.style.content='url("'+svg+'")';};
+    if(img.complete&&img.naturalWidth===0)swap();else img.addEventListener('error',swap,{once:true});
+  });
+})();
+
+/* ================= Photo picker chips (all three forms) ================= */
+const PHOTO_INPUTS={worker:'chiththi_photo',waybridge:'wb_slip',maal_entry:'me_slip'};
+const chips={};
+function sizeText(b){return b>1048576?(b/1048576).toFixed(1)+' MB':Math.max(1,Math.round(b/1024))+' KB';}
+function ensureChip(kind){
+  const inp=$(PHOTO_INPUTS[kind]);if(!inp)return;
+  const tools=inp.parentElement.querySelector('.bi-scan-tools');if(!tools)return;
+  if(tools.querySelector('.photo-chip')&&chips[kind]&&chips[kind].chip.isConnected)return;
+  const chip=el('div','photo-chip','<img alt=""><div class="pc-meta"><b></b><small></small></div>');chip.hidden=true;
+  const rm=el('button','','કાઢો');rm.type='button';chip.appendChild(rm);
+  tools.querySelector('.bi-scan-buttons').after(chip);
+  rm.addEventListener('click',()=>{inp.value='';inp.dispatchEvent(new Event('change',{bubbles:true}));render(kind);});
+  chips[kind]={chip,file:null,url:null,init:false};
+}
+function render(kind){
+  const c=chips[kind];if(!c||!c.chip.isConnected)return;const inp=$(PHOTO_INPUTS[kind]);const f=inp&&inp.files&&inp.files[0]||null;
+  if(c.init&&f===c.file)return;c.init=true;c.file=f;
+  if(c.url){URL.revokeObjectURL(c.url);c.url=null;}
+  if(!f){c.chip.hidden=true;return;}
+  c.url=URL.createObjectURL(f);c.chip.querySelector('img').src=c.url;
+  c.chip.querySelector('b').textContent=f.name||'photo';c.chip.querySelector('small').textContent=sizeText(f.size)+' • ફોટો પસંદ થયો';c.chip.hidden=false;
 }
 
-/* Missing logo file should not show a broken-image icon */
-document.querySelectorAll('img[src="balaji-logo.png"]').forEach(img=>{
-  const swap=()=>{const d=document.createElement('div');d.textContent='🏭';d.setAttribute('aria-label','Balaji Industries');d.style.cssText='font-size:64px;line-height:1;margin:6px 0';img.replaceWith(d);};
-  if(img.complete&&img.naturalWidth===0)swap();else img.addEventListener('error',swap,{once:true});
-});
+/* ================= App bar, nav, headings, record lists ================= */
+const ROLE_NAME={worker:'મજૂર',waybridge:'Waybridge',maal_entry:'માલ Entry',admin:'Admin'};
+function enhanceWho(){
+  const who=$('who');if(!who||who.querySelector('.who-text'))return;
+  const raw=who.textContent.trim();if(!raw)return;
+  const parts=raw.split(/\s+[—-]\s+/);const name=parts[0]||raw,role=parts[1]||'';
+  who.textContent='';
+  who.append(el('span','who-avatar',(name.trim()[0]||'B').toUpperCase()));
+  const t=el('span','who-text');const b=el('b');b.textContent=name;const s=el('small');s.textContent=ROLE_NAME[role.trim().toLowerCase()]||role;t.append(b,s);who.append(t);
+}
+const NAV_ICON=['📝','⚖️','📦'];
+function enhanceNav(){
+  const tabs=document.querySelector('.bi-staff-tabs');
+  const staffVisible=!!tabs&&tabs.getClientRects().length>0;
+  document.body.classList.toggle('bi-staff',!!staffVisible);
+  if(!tabs)return;
+  tabs.querySelectorAll('button').forEach((b,i)=>{
+    if(b.querySelector('.nav-ico'))return;
+    const label=b.textContent.replace(/^[^\p{L}\p{N}]+/u,'').trim();
+    b.textContent='';b.append(el('span','nav-ico',NAV_ICON[i]||'•'),el('span','',label));
+  });
+}
+function addTitle(before,text){
+  if(!before||before.previousElementSibling&&before.previousElementSibling.classList&&before.previousElementSibling.classList.contains('sec-title'))return;
+  before.before(el('div','sec-title',text));
+}
+function enhanceForms(){
+  const bag=document.querySelector('#worker .bag-calc');if(bag)addTitle(bag,'વજન');
+  Object.entries(PHOTO_INPUTS).forEach(([kind,id])=>{
+    const inp=$(id);if(!inp)return;
+    const lab=inp.previousElementSibling;
+    if(lab&&lab.tagName==='LABEL'){lab.classList.add('photo-label');addTitle(lab,kind==='maal_entry'?'સ્લિપનો ફોટો':'ફોટો');lab.style.display='none';}
+    ensureChip(kind);render(kind);
+  });
+  // saved-list heading + refresh in one row
+  ['my_chiththis','bi-staff-waybridge-list','my_maal_entries'].forEach(id=>{
+    const box=$(id);if(!box)return;
+    const btn=box.previousElementSibling;if(!btn||btn.tagName!=='BUTTON'||btn.dataset.enh)return;
+    const h=btn.previousElementSibling;if(!h||!/^H[23]$/.test(h.tagName))return;
+    btn.dataset.enh='1';const head=el('div','list-head');h.before(head);head.append(h,btn);
+    btn.textContent='↻ Refresh';
+    const hr=head.previousElementSibling;if(hr&&hr.tagName==='HR')hr.style.margin='22px 0 14px';
+  });
+}
+function numFrom(t){const m=String(t).replace(/,/g,'').match(/-?\d+(?:\.\d+)?/);return m?Number(m[0]):0;}
+function enhanceRecords(){
+  ['my_chiththis','bi-staff-waybridge-list','my_maal_entries'].forEach(id=>{
+    const box=$(id);if(!box)return;
+    const arts=[...box.querySelectorAll(':scope>article.bi-v2-record')];
+    arts.forEach(a=>{
+      if(a.dataset.enh)return;a.dataset.enh='1';
+      const tot=a.querySelector('.bi-v2-total');
+      if(tot&&!tot.querySelector('small')){const m=tot.textContent.trim().match(/^(.*?)\s+(\S+)$/);if(m){tot.textContent=m[1];tot.append(el('small','',m[2]));}}
+      let foot=a.querySelector('footer');if(!foot){foot=el('footer');a.append(foot);}
+      const next=a.nextElementSibling;
+      if(next&&next.tagName==='BUTTON'&&next.dataset.action==='photo'){
+        let act=foot.querySelector('.rec-actions');if(!act){act=el('div','rec-actions');foot.append(act);}
+        next.textContent='🖼 ફોટો';act.append(next);
+      }
+    });
+    if(arts.length&&!box.querySelector(':scope>.rec-tools')){
+      const unit=(arts[0].querySelector('.bi-v2-total small')||{}).textContent||'';
+      const total=arts.reduce((s,a)=>s+numFrom((a.querySelector('.bi-v2-total')||{}).firstChild?.textContent||''),0);
+      const tools=el('div','rec-tools');
+      tools.innerHTML='<div class="rec-sum"><span>Entries<b>'+arts.length+'</b></span><span>કુલ<b>'+fmt(total)+' '+unit+'</b></span></div>';
+      const q=el('input','rec-search');q.type='search';q.placeholder='🔍 ગાડી નંબર / નામ શોધો';q.autocomplete='off';
+      q.addEventListener('input',()=>{const s=q.value.trim().toLowerCase();box.querySelectorAll(':scope>article.bi-v2-record').forEach(a=>{a.style.display=(!s||a.textContent.toLowerCase().includes(s))?'':'none';});});
+      tools.append(q);
+      const note=box.querySelector(':scope>.bi-v2-note');if(note)note.remove();
+      box.prepend(tools);
+    }
+  });
+}
+let raf=0;
+function enhanceAll(){raf=0;obs.disconnect();try{enhanceWho();enhanceNav();enhanceForms();enhanceRecords();}finally{start();}}
+const obs=new MutationObserver(()=>{if(!raf)raf=requestAnimationFrame(enhanceAll);});
+function start(){const app=$('app')||document.body;obs.observe(app,{childList:true,subtree:true,attributes:true,attributeFilter:['class','hidden']});}
+enhanceAll();
+document.addEventListener('change',e=>{const id=e.target&&e.target.id;Object.entries(PHOTO_INPUTS).forEach(([k,v])=>{if(v===id)render(k);});},true);
+setInterval(()=>Object.keys(chips).forEach(render),1000);
 })();
 </script>
 
