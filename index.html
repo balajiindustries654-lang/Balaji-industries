@@ -779,7 +779,7 @@ autocomplete="off">
 placeholder="&#2710;&#2759;&#2721;&#2754;&#2724;&#2728;&#2753;&#2690; &#2728;&#2750;&#2734; &#2738;&#2710;&#2763;"
 autocomplete="off">
 
-<label><b>&#2734;&#2763;&#2732;&#2750;&#2695;&#2738; &#2728;&#2690;&#2732;&#2736;</b></label>
+<label><b>મોબાઇલ નંબર</b> <span class="bag-opt">વૈકલ્પિક</span></label>
 <input id="farmer_mobile"
 inputmode="numeric"
 placeholder="&#2710;&#2759;&#2721;&#2754;&#2724;&#2728;&#2763; &#2734;&#2763;&#2732;&#2750;&#2695;&#2738; &#2728;&#2690;&#2732;&#2736;">
@@ -885,7 +885,7 @@ placeholder="Automatic &#2694;&#2741;&#2742;&#2759;">
          placeholder="&#2728;&#2750;&#2734; &#2738;&#2710;&#2763;"
          autocomplete="off">
 
-  <label for="wb_mobile"><b>Mobile Number</b></label>
+  <label for="wb_mobile"><b>Mobile Number</b> <span class="bag-opt">વૈકલ્પિક</span></label>
   <input id="wb_mobile"
          type="tel"
          inputmode="numeric"
@@ -1669,13 +1669,17 @@ weight-bardan-kardo;
 const photo=
 $("chiththi_photo").files[0];
 
+if(mobile && mobile.length!==10){
+$("chiththi_msg").innerText="\u0aae\u0acb\u0aac\u0abe\u0a87\u0ab2 \u0aa8\u0a82\u0aac\u0ab0 \u0a96\u0abe\u0ab2\u0ac0 \u0ab0\u0abe\u0a96\u0ac0 \u0ab6\u0a95\u0abe\u0aaf \u0a9b\u0ac7; \u0ab2\u0a96\u0acb \u0aa4\u0acb 10 \u0a85\u0a82\u0a95\u0aa8\u0acb \u0ab2\u0a96\u0acb.";
+return;
+}
+
 if(
 !chiththiNumber ||
 !commodity ||
 !village ||
 !vehicle ||
 !farmer ||
-mobile.length<10 ||
 !Number.isFinite(weight) ||
 weight<=0
 ){
@@ -1755,7 +1759,7 @@ broker_name:broker||null,
 village_name:village,
 vehicle_number:vehicle,
 farmer_name:farmer,
-farmer_mobile:mobile,
+farmer_mobile:mobile||null,
 gross_weight_kg:weight,
 bardan_kg:bardan,
 kardo_kg:kardo,
@@ -1767,7 +1771,7 @@ created_by:user.id
 
 if(r.error){
 $("chiththi_msg").innerText=
-(r.error.code === "23505" ? "\u0a86 \u0aa8\u0a82\u0aac\u0ab0\u0aa8\u0ac0 Entry \u0aaa\u0ab9\u0ac7\u0ab2\u0ac7\u0aa5\u0ac0 Save \u0a9b\u0ac7. \u0aa8\u0a82\u0aac\u0ab0 \u0a9a\u0ac7\u0a95 \u0a95\u0ab0\u0acb." : "Save Error: " + r.error.message);
+(/farmer_mobile/.test(r.error.message||"") ? "Supabase \u0aae\u0abe\u0a82 \u0aae\u0acb\u0aac\u0abe\u0a87\u0ab2 \u0a96\u0abe\u0ab2\u0ac0 \u0ab0\u0abe\u0a96\u0ab5\u0abe \u0aae\u0abe\u0a9f\u0ac7 allow-empty-mobile.sql \u0a9a\u0ab2\u0abe\u0ab5\u0acb." : r.error.code === "23505" ? "\u0a86 \u0aa8\u0a82\u0aac\u0ab0\u0aa8\u0ac0 Entry \u0aaa\u0ab9\u0ac7\u0ab2\u0ac7\u0aa5\u0ac0 Save \u0a9b\u0ac7. \u0aa8\u0a82\u0aac\u0ab0 \u0a9a\u0ac7\u0a95 \u0a95\u0ab0\u0acb." : "Save Error: " + r.error.message);
 return;
 }
   try {
@@ -2947,7 +2951,7 @@ chiththi_number:chiththi.trim(),
 village_name:village.trim(),
 vehicle_number:vehicle.trim().toUpperCase(),
 farmer_name:farmer.trim(),
-farmer_mobile:cleanMobile(mobile),
+farmer_mobile:cleanMobile(mobile)||null,
 gross_weight_kg:gross,
 bardan_kg:bardan,
 kardo_kg:kardo,
@@ -5076,7 +5080,7 @@ function validateScan(data,kind){
  ['wb_weight','farmer_weight','bardan_kg','kardo_kg'].forEach(id=>{if(fields[id])fields[id]=num(fields[id]);});
  if(fields.me_bags)fields.me_bags=String(parseInt(num(fields.me_bags),10)||'');
  ['wb_vehicle','me_vehicle','vehicle_number'].forEach(id=>{if(fields[id])fields[id]=fields[id].toUpperCase().replace(/[\s-]/g,'');});
- ['wb_mobile','farmer_mobile'].forEach(id=>{if(fields[id]){const d=normalizeDigits(fields[id]).replace(/\D/g,'');fields[id]=d.length>=10?d.slice(-10):d;}});
+ ['wb_mobile','farmer_mobile'].forEach(id=>{if(fields[id]){const d=normalizeDigits(fields[id]).replace(/\D/g,'');fields[id]=d.length>=10?d.slice(-10):'';}});
  const rawWeights=Array.isArray(data.weights)?data.weights:[];
  const toWeight=v=>toText(v).replace(/,/g,'');
  const weights=kind==='worker'?rawWeights.slice(0,200).filter(x=>x!==null && x!==undefined).map(x=>(typeof x==='object')?{value:toWeight(x.value),source:String(x.source||'').slice(0,200)}:{value:toWeight(x),source:''}):[];
@@ -5298,6 +5302,8 @@ const stamp=v=>v?new Date(v).toLocaleString(language==='en'?'en-IN':'gu-IN',{tim
 const sum=(rows,field)=>Math.round(rows.reduce((s,x)=>s+number(x[field]),0)*1000)/1000;
 const material=v=>({Magfadi:T('\u0aae\u0a97\u0aab\u0ab3\u0ac0','Groundnut'),Aeranda:T('\u0a8f\u0ab0\u0a82\u0aa1\u0abe','Castor'),Gau:T('\u0a98\u0a89\u0a82','Wheat'),Govar:T('\u0a97\u0ab5\u0abe\u0ab0','Guar')})[v]||v||'\u2014';
 const table={chit:'chiththis',wb:'waybridge_entries',maal:'maal_entries'};
+const recs=new Map(); // every entry shown on screen (type:id -> row) so it can be shared
+
 let data={chit:[],wb:[],maal:[],profiles:[],closures:[]}, profileMap=new Map(), loading=null, activeView='chit', activePanel=null, requestSerial=0, dataGeneration=0, modal=null;
 const titles={chit:['\u0a9a\u0abf\u0aa0\u0acd\u0aa0\u0ac0\u0a93','Chits'],weight:['\u0a95\u0abe\u0a82\u0a9f\u0abe\u0aa8\u0ac1\u0a82 \u0ab5\u0a9c\u0aa8','Waybridge weights'],vehicles:['\u0a97\u0abe\u0aa1\u0ac0\u0a93','Vehicles'],farmers:['\u0a96\u0ac7\u0aa1\u0ac2\u0aa4\u0acb','Farmers'],unloading:['\u0aae\u0abe\u0ab2 \u0a86\u0ab5\u0acd\u0aaf\u0acb \u00b7 Unloading','Incoming \u00b7 Unloading'],loading:['\u0aae\u0abe\u0ab2 \u0a97\u0aaf\u0acb \u00b7 Loading','Outgoing \u00b7 Loading'],maal:['\u0aae\u0abe\u0ab2\u0aa8\u0ac0 Entries','Material entries'],all:['\u0aa4\u0aae\u0abe\u0aae Entries','All entries']};
 function title(v){return T(...(titles[v]||titles.all));}
@@ -5317,6 +5323,7 @@ function closed(x,type){return data.closures.find(c=>c.vehicle_key===key(x.vehic
 function label(gu,en,v){return `<div><dt>${E(T(gu,en))}</dt><dd>${E(v??'\u2014')}</dd></div>`;}
 function warning(x,type){const w=number(type==='chit'?x.gross_weight_kg:x.net_weight_kg);return type!=='maal'&&w>100000?`<p class="bi-v2-error">${E(T('\u0ab5\u0a9c\u0aa8 \u0a85\u0ab8\u0abe\u0aae\u0abe\u0aa8\u0acd\u0aaf \u0ab0\u0ac0\u0aa4\u0ac7 \u0aae\u0acb\u0a9f\u0ac1\u0a82 \u0a9b\u0ac7. \u0aae\u0ac2\u0ab3 \u0aaa\u0abe\u0ab5\u0aa4\u0ac0 \u0ab8\u0abe\u0aa5\u0ac7 \u0a9a\u0a95\u0abe\u0ab8\u0acb.','Unusually large weight. Check the original slip.'))}</p>`:'';}
 function card(x,type,detail=false){
+ recs.set(type+':'+x.id,x);
  const isM=type==='maal',isW=type==='wb',name=isM?x.owner_name:isW?x.name||x.farmer_name:x.farmer_name;
  const badge=isM?(x.entry_type==='unloading'?T('\u0aae\u0abe\u0ab2 \u0a86\u0ab5\u0acd\u0aaf\u0acb','Unloading'):x.entry_type==='loading'?T('\u0aae\u0abe\u0ab2 \u0a97\u0aaf\u0acb','Loading'):T('\u0aae\u0abe\u0ab2','Material')):isW?'Waybridge':T('\u0a9a\u0abf\u0aa0\u0acd\u0aa0\u0ac0','Chit');
  const id=isM?'':isW?x.rst_no:x.chiththi_number;
@@ -5324,7 +5331,7 @@ function card(x,type,detail=false){
  const fields=isM?label('\u0aae\u0abe\u0ab2','Material',material(x.material_type))+label('\u0aa4\u0abe\u0ab0\u0ac0\u0a96','Date',businessDay(x,type))+label('\u0aae\u0abe\u0ab2\u0abf\u0a95 / \u0ab8\u0aaa\u0acd\u0ab2\u0abe\u0aaf\u0ab0','Owner / Supplier',name||'\u2014'):
  isW?label('RST \u0aa8\u0a82\u0aac\u0ab0','RST number',id||'\u2014')+label('\u0aa4\u0abe\u0ab0\u0ac0\u0a96','Date',businessDay(x,type))+label('\u0aa8\u0abe\u0aae','Name',name||'\u2014'):
  label('\u0a96\u0ac7\u0aa1\u0ac2\u0aa4','Farmer',name||'\u2014')+label('\u0a97\u0abe\u0aae','Village',x.village_name||'\u2014')+label('\u0aae\u0abe\u0ab2','Material',material(x.commodity_type))+label('\u0aae\u0acb\u0aac\u0abe\u0a87\u0ab2','Mobile',x.farmer_mobile||'\u2014');
- return `<article class="bi-v2-record" data-record="${E(type)}"><header><div><span class="bi-v2-tag">${E(badge)}${id?' \u00b7 '+E(id):''}</span><h3>${E(x.vehicle_number||'\u2014')}</h3></div><div class="bi-v2-total">${E(amount)}</div></header>${warning(x,type)}<dl>${fields}</dl><footer><span>${E(T('Entry \u0a95\u0ab0\u0ac0: ','Submitted by: ')+staff(x.created_by))}<br>${E(stamp(x.created_at))}</span>${closed(x,type)?`<span class="bi-v2-tag closed">${E(T('\u0ab9\u0abf\u0ab8\u0abe\u0aac \u0aac\u0a82\u0aa7','Closed'))}</span>`:''}${!detail?`<button type="button" data-action="detail" data-type="${E(type)}" data-id="${E(x.id)}">${E(T('\u0ab5\u0abf\u0a97\u0aa4\u0acb \u0a9c\u0ac1\u0a93','View details'))} \u2197</button>`:''}</footer></article>`;
+ return `<article class="bi-v2-record" data-record="${E(type)}"><header><div><span class="bi-v2-tag">${E(badge)}${id?' \u00b7 '+E(id):''}</span><h3>${E(x.vehicle_number||'\u2014')}</h3></div><div class="bi-v2-total">${E(amount)}</div></header>${warning(x,type)}<dl>${fields}</dl><footer><span>${E(T('Entry \u0a95\u0ab0\u0ac0: ','Submitted by: ')+staff(x.created_by))}<br>${E(stamp(x.created_at))}</span>${closed(x,type)?`<span class="bi-v2-tag closed">${E(T('\u0ab9\u0abf\u0ab8\u0abe\u0aac \u0aac\u0a82\u0aa7','Closed'))}</span>`:''}<div class="rec-actions"><button type="button" class="rec-share" data-action="share" data-type="${E(type)}" data-id="${E(x.id)}">📤 ${E(T('શેર','Share'))}</button>${!detail?`<button type="button" data-action="detail" data-type="${E(type)}" data-id="${E(x.id)}">${E(T('\u0ab5\u0abf\u0a97\u0aa4\u0acb \u0a9c\u0ac1\u0a93','View details'))} \u2197</button>`:''}</div></footer></article>`;
 }
 function groups(rows,by,type){const map=new Map();rows.forEach(x=>{const k=by==='date'?businessDay(x,type):by==='staff'?(x.created_by||'legacy'):by==='material'?material(x.material_type||x.commodity_type):key(x.vehicle_number)||'\u2014';if(!map.has(k))map.set(k,[]);map.get(k).push(x);});return [...map].map(([k,r])=>`<details class="bi-v2-group" open><summary>${E(by==='staff'?staff(k):k)} \u00b7 ${fmt(r.length)} ${E(T('Entries','entries'))} \u00b7 ${fmt(sum(r,type==='maal'?'bags':type==='wb'?'net_weight_kg':'weight_kg'))} ${type==='maal'?E(T('\u0aac\u0ac7\u0a97','Bags')):'KG'}</summary>${r.map(x=>card(x,type)).join('')}</details>`).join('');}
 function rangeRows(rows,type,from,to,search,person,mat){return rows.filter(x=>{const d=businessDay(x,type);if(from&&d<from||to&&d>to)return false;if(person&&x.created_by!==person)return false;if(mat&&(x.material_type||x.commodity_type)!==mat)return false;
@@ -5377,6 +5384,7 @@ function dialog(heading,content){if(modal)modal.remove();const focus=document.ac
  document.addEventListener('keydown',onKey);modal.cleanup=()=>{document.removeEventListener('keydown',onKey);focus?.focus?.();};modal.querySelector('button').focus();return modal;
 }
 function closeModal(){modal?.cleanup?.();modal?.remove();modal=null;}
+window.__biV2={recs,T,E,fmt,staff,material,businessDay,stamp,dialog,closeModal,safeUrl};
 function photo(url,heading){const u=safeUrl(url);if(!u)return;dialog(heading,`<img src="${E(u)}" alt="${E(T('Entry\u0aa8\u0acb \u0aab\u0acb\u0a9f\u0acb','Entry photo'))}"><a href="${E(u)}" target="_blank" rel="noopener noreferrer">${E(T('\u0aae\u0ac2\u0ab3 \u0aab\u0acb\u0a9f\u0acb \u0a96\u0acb\u0ab2\u0acb','Open original photo'))} \u2197</a>`);}
 function detail(type,id){const x=data[type].find(x=>String(x.id)===String(id));if(!x)return;const url=type==='chit'?x.chiththi_photo_url:x.slip_url;const cl=closed(x,type);
  dialog(T('Entry\u0aa8\u0ac0 \u0ab5\u0abf\u0a97\u0aa4\u0acb','Entry details'),card(x,type,true)+`<dl>${type==='chit'?label('\u0aae\u0ac2\u0ab3 \u0ab5\u0a9c\u0aa8','Gross weight',fmt(x.gross_weight_kg)+' KG')+label('\u0aac\u0abe\u0ab0\u0aa6\u0abe\u0aa8','Bag deduction',fmt(x.bardan_kg)+' KG')+label('\u0a95\u0ab0\u0aa1\u0acb','Other deduction',fmt(x.kardo_kg)+' KG')+label('\u0aa6\u0ab2\u0abe\u0ab2','Broker',x.broker_name||'\u2014'):''}${label('Entry\u0aa8\u0acb \u0ab8\u0aae\u0aaf','Submitted at',stamp(x.created_at))}</dl><div class="bi-v2-actions">${safeUrl(url)?`<button data-action="photo" data-url="${E(url)}">${E(T('\u0aab\u0acb\u0a9f\u0acb \u0aae\u0acb\u0a9f\u0acb \u0a9c\u0ac1\u0a93','Enlarge photo'))}</button>`:''}${type==='chit'&&!cl?`<button data-action="edit" data-id="${E(id)}">${E(T('Entry \u0ab8\u0ac1\u0aa7\u0abe\u0ab0\u0acb','Edit entry'))}</button>`:''}<button data-action="audit" data-type="${E(type)}" data-id="${E(id)}">${E(T('\u0aab\u0ac7\u0ab0\u0aab\u0abe\u0ab0\u0aa8\u0acb \u0ab0\u0ac7\u0a95\u0acb\u0ab0\u0acd\u0aa1','Change history'))}</button></div><div id="bi-v2-audit" role="status"></div>`);
@@ -5385,7 +5393,8 @@ function editEntry(id){const x=data.chit.find(x=>String(x.id)===String(id));if(!
  const fields=[['chiththi_number','\u0a9a\u0abf\u0aa0\u0acd\u0aa0\u0ac0 \u0aa8\u0a82\u0aac\u0ab0','Chit number'],['village_name','\u0a97\u0abe\u0aae','Village'],['vehicle_number','\u0a97\u0abe\u0aa1\u0ac0 \u0aa8\u0a82\u0aac\u0ab0','Vehicle'],['farmer_name','\u0a96\u0ac7\u0aa1\u0ac2\u0aa4','Farmer'],['farmer_mobile','\u0aae\u0acb\u0aac\u0abe\u0a87\u0ab2','Mobile'],['gross_weight_kg','\u0aae\u0ac2\u0ab3 \u0ab5\u0a9c\u0aa8 KG','Gross weight KG'],['bardan_kg','\u0aac\u0abe\u0ab0\u0aa6\u0abe\u0aa8 KG','Bag deduction KG'],['kardo_kg','\u0a95\u0ab0\u0aa1\u0acb KG','Other deduction KG']];
  dialog(T('Entry \u0ab8\u0ac1\u0aa7\u0abe\u0ab0\u0acb','Edit entry'),`<form id="bi-v2-edit"><div class="bi-v2-filter">${fields.map(([k,gu,en])=>`<label>${E(T(gu,en))}<input name="${k}" value="${E(x[k]??'')}" ${k.includes('_kg')?'inputmode="decimal"':k==='farmer_mobile'?'inputmode="tel"':''}></label>`).join('')}</div><p id="bi-v2-edit-status" role="status"></p><button type="submit">${E(T('\u0aab\u0ac7\u0ab0\u0aab\u0abe\u0ab0 Save \u0a95\u0ab0\u0acb','Save changes'))}</button></form>`);
  $v('bi-v2-edit').onsubmit=async e=>{e.preventDefault();const form=e.target,status=$v('bi-v2-edit-status'),v=Object.fromEntries(new FormData(form));for(const k of Object.keys(v))v[k]=v[k].trim();v.vehicle_number=key(v.vehicle_number);v.farmer_mobile=cleanMobile(v.farmer_mobile);
- if(!v.chiththi_number||!v.village_name||!v.vehicle_number||!v.farmer_name||v.farmer_mobile.length!==10){status.textContent=T('\u0a9c\u0ab0\u0ac2\u0ab0\u0ac0 \u0ab5\u0abf\u0a97\u0aa4\u0acb \u0a85\u0aa8\u0ac7 10 \u0a85\u0a82\u0a95\u0aa8\u0acb \u0aae\u0acb\u0aac\u0abe\u0a87\u0ab2 \u0ab2\u0a96\u0acb.','Enter required details and a 10 digit mobile.');return;}
+ if(!v.chiththi_number||!v.village_name||!v.vehicle_number||!v.farmer_name||(v.farmer_mobile&&v.farmer_mobile.length!==10)){status.textContent=T('\u0a9c\u0ab0\u0ac2\u0ab0\u0ac0 \u0ab5\u0abf\u0a97\u0aa4\u0acb \u0a85\u0aa8\u0ac7 10 \u0a85\u0a82\u0a95\u0aa8\u0acb \u0aae\u0acb\u0aac\u0abe\u0a87\u0ab2 \u0ab2\u0a96\u0acb.','Enter the required details. Mobile can stay empty; if entered it must be 10 digits.');return;}
+ if(!v.farmer_mobile)v.farmer_mobile=null;
  for(const k of ['gross_weight_kg','bardan_kg','kardo_kg'])v[k]=strictNumber(v[k]||'0');v.weight_kg=Math.round((v.gross_weight_kg-v.bardan_kg-v.kardo_kg)*1000)/1000;
  if(!['gross_weight_kg','bardan_kg','kardo_kg','weight_kg'].every(k=>Number.isFinite(v[k])&&v[k]>=0)||v.weight_kg<=0){status.textContent=T('\u0ab5\u0a9c\u0aa8 \u0a9a\u0a95\u0abe\u0ab8\u0acb. Final \u0ab5\u0a9c\u0aa8 0\u0aa5\u0ac0 \u0ab5\u0aa7\u0abe\u0ab0\u0ac7 \u0ab9\u0acb\u0ab5\u0ac1\u0a82 \u0a9c\u0acb\u0a88\u0a8f.','Check weights. Final weight must be positive.');return;}
  if(v.gross_weight_kg>100000&&!confirm(T('\u0aae\u0acb\u0a9f\u0ac1\u0a82 \u0ab5\u0a9c\u0aa8 \u0aae\u0ac2\u0ab3 \u0aaa\u0abe\u0ab5\u0aa4\u0ac0 \u0aaa\u0acd\u0ab0\u0aae\u0abe\u0aa3\u0ac7 \u0ab8\u0abe\u0a9a\u0ac1\u0a82 \u0a9b\u0ac7?','Is the large weight correct according to the original slip?')))return;
@@ -5402,7 +5411,7 @@ async function closure(button){if(data.closureError){alert(T('\u0aaa\u0ab9\u0ac7
  button.disabled=true;try{const r=await db.rpc('balaji_set_vehicle_closed',{p_vehicle:vehicle,p_date:date,p_closed:next,p_reason:reason});if(r.error)throw r.error;await refresh();render();}catch(e){alert(e.message);}finally{button.disabled=false;}
 }
 async function handleClick(e){const b=e.target.closest('[data-action]');if(!b)return;const a=b.dataset.action;
- if(a==='home')home();else if(a==='detail')detail(b.dataset.type,b.dataset.id);else if(a==='photo')photo(b.dataset.url,T('\u0aaa\u0abe\u0ab5\u0aa4\u0ac0\u0aa8\u0acb \u0aab\u0acb\u0a9f\u0acb','Slip photo'));else if(a==='audit')await audit(b.dataset.type,b.dataset.id);else if(a==='closure')await closure(b);else if(a==='edit'){editEntry(b.dataset.id);}else if(a==='allDates'){$v('bi-v2-from').value='';$v('bi-v2-to').value='';render();}else if(a==='refresh'){b.disabled=true;try{await refresh();options();render();}catch(e){$v('bi-v2-status').textContent=e.message;}finally{b.disabled=false;}}
+ if(a==='home')home();else if(a==='share'){if(window.BalajiShare)window.BalajiShare.open(b.dataset.type,b.dataset.id);}else if(a==='detail')detail(b.dataset.type,b.dataset.id);else if(a==='photo')photo(b.dataset.url,T('\u0aaa\u0abe\u0ab5\u0aa4\u0ac0\u0aa8\u0acb \u0aab\u0acb\u0a9f\u0acb','Slip photo'));else if(a==='audit')await audit(b.dataset.type,b.dataset.id);else if(a==='closure')await closure(b);else if(a==='edit'){editEntry(b.dataset.id);}else if(a==='allDates'){$v('bi-v2-from').value='';$v('bi-v2-to').value='';render();}else if(a==='refresh'){b.disabled=true;try{await refresh();options();render();}catch(e){$v('bi-v2-status').textContent=e.message;}finally{b.disabled=false;}}
 }
 async function myRecords(type,boxId){const box=$v(boxId);if(!box)return;box.textContent=T('\u0ab2\u0acb\u0aa1 \u0aa5\u0a88 \u0ab0\u0ab9\u0acd\u0aaf\u0ac1\u0a82 \u0a9b\u0ac7\u2026','Loading\u2026');try{const a=await db.auth.getUser();if(!a.data.user){box.textContent=T('\u0aab\u0ab0\u0ac0 Login \u0a95\u0ab0\u0acb.','Please log in again.');return;}const p=await db.from('user_profiles').select('id,full_name,mobile').eq('id',a.data.user.id).single();if(p.data)profileMap.set(p.data.id,p.data);
  const r=await db.from(table[type]).select('*').eq('created_by',a.data.user.id).order('created_at',{ascending:false}).limit(50);if(r.error)throw r.error;const current=await db.auth.getUser();if(current.data.user?.id!==a.data.user.id)return;
@@ -6069,6 +6078,456 @@ setInterval(()=>Object.keys(chips).forEach(render),1000);
 })();
 </script>
 
+<style id="bi-v7-style">
+/* ===== calculator button + sheet ===== */
+#app button.bi-calc-btn{display:grid;place-items:center;width:42px!important;height:42px;min-height:42px!important;padding:0!important;margin:0!important;font-size:21px;line-height:1;background:var(--soft,#eef7f7);color:var(--dark,#0b4a4d);border:1px solid var(--line,#cfe0e1);border-radius:12px;box-shadow:none}
+.bi-calc[hidden]{display:none}
+.bi-calc{position:fixed;inset:0;z-index:100010;display:flex;align-items:flex-end;justify-content:center}
+.bi-calc .bc-backdrop{position:absolute;inset:0;background:#17343899}
+.bc-sheet{position:relative;width:100%;max-width:460px;max-height:94dvh;overflow:auto;background:#fff;border-radius:24px 24px 0 0;padding:8px 14px calc(16px + env(safe-area-inset-bottom,0px));box-shadow:0 -10px 40px #0004;animation:bcUp .22s ease-out}
+@keyframes bcUp{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+.bc-grab{width:44px;height:5px;border-radius:3px;background:#cfdcdd;margin:4px auto 10px}
+.bc-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.bc-tabs{display:flex;gap:6px;flex:1;min-width:0}
+.bi-calc button{width:auto!important;margin:0!important;min-height:0!important;box-shadow:none!important;font-family:inherit}
+.bc-tabs button{flex:1;padding:10px 6px!important;border-radius:12px!important;border:1px solid #cfe0e1!important;background:#fff!important;color:#35575b!important;font-size:13.5px!important;font-weight:700!important}
+.bc-tabs button.on{background:#0a9297!important;border-color:#0a9297!important;color:#fff!important}
+.bc-x{flex:0 0 auto;width:40px!important;height:40px;border-radius:50%!important;border:1px solid #cfe0e1!important;background:#fff!important;color:#35575b!important;font-size:22px!important;line-height:1;padding:0!important}
+.bc-pane[hidden]{display:none}
+.bc-screen{background:#f1f9f9;border:1px solid #d5e7e8;border-radius:16px;padding:10px 16px;text-align:right;min-height:84px;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden}
+.bc-expr{font-size:16px;color:#5b7377;min-height:22px;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.bc-res{font-size:38px;font-weight:800;color:#173438;line-height:1.15;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.bc-res.neg{color:#b42336}
+.bc-hist{display:flex;gap:6px;overflow-x:auto;padding:8px 0 2px;min-height:6px}
+.bc-hist .bc-h{flex:0 0 auto;padding:5px 10px!important;border-radius:999px!important;border:1px solid #dbe8e9!important;background:#fff!important;color:#5b7377!important;font-size:12px!important;font-weight:600!important;white-space:nowrap}
+.bc-keys{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}
+.bi-calc .bk-key{height:58px;border-radius:16px!important;border:1px solid #e1ecec!important;background:#f7fbfb!important;color:#173438!important;font-size:24px!important;font-weight:700!important;width:100%!important}
+.bi-calc .bk-key:active{background:#dcefef!important}
+.bi-calc .bk-key.fn{background:#eef3f4!important;color:#35575b!important;font-size:21px!important}
+.bi-calc .bk-key.red{color:#b42336!important}
+.bi-calc .bk-key.op{background:#e3f4f4!important;color:#0a7f84!important;font-size:27px!important}
+.bi-calc .bk-key.eq{background:#0a9297!important;border-color:#0a9297!important;color:#fff!important;font-size:28px!important}
+.bc-tools{display:flex;gap:8px;margin-top:10px}
+.bc-tools button{flex:1;min-height:46px!important;border-radius:14px!important;border:1px solid #bcd9da!important;background:#fff!important;color:#0b4a4d!important;font-size:14px!important;font-weight:700!important}
+.bc-tools button:disabled{opacity:.45}
+.bc-pane[data-pane=rate] label{display:block;margin:10px 0 0;font-size:13px;font-weight:700;color:#35575b}
+.bc-pane input{display:block;width:100%;margin:5px 0 0!important;min-height:48px;font-size:18px!important;font-weight:700}
+.bc-row{display:flex;gap:8px;align-items:center}
+.bc-row input{flex:1}
+.bc-row button{flex:0 0 auto;min-height:48px!important;margin-top:5px!important;padding:0 12px!important;border-radius:12px!important;border:1px solid #bcd9da!important;background:#fff!important;color:#0b4a4d!important;font-size:13px!important;font-weight:700!important}
+.bc-unit{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;font-weight:700;color:#35575b}
+.bc-unit button{padding:8px 14px!important;border-radius:999px!important;border:1px solid #cfe0e1!important;background:#fff!important;color:#35575b!important;font-size:13px!important;font-weight:700!important}
+.bc-unit button.on{background:#0a9297!important;border-color:#0a9297!important;color:#fff!important}
+.bc-out{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.bc-out>div{background:#f1f9f9;border:1px solid #d5e7e8;border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.bc-out span{font-size:12px;color:#5b7377;font-weight:600}
+.bc-out b{font-size:19px;color:#173438;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.bc-out .amt{grid-column:1/-1;background:#e6f6ea;border-color:#bfe3cc}
+.bc-out .amt b{font-size:28px;color:#0e5c42}
+html.bc-open{overflow:hidden}
+/* ===== share-as-bill sheet ===== */
+.bi-v2-modal .sh-bill{border:1px solid #cfe0e1;border-radius:16px;overflow:hidden;background:#fff;margin-top:14px}
+.sb-head{background:linear-gradient(135deg,#0a9297,#065e62);color:#fff;padding:12px 16px}
+.sb-co{font-weight:800;font-size:16px}.sb-sub{font-size:12.5px;opacity:.92;margin-top:2px}
+.sb-name{padding:14px 16px 4px;font-size:21px;font-weight:800;color:#173438;overflow-wrap:anywhere}
+.sb-rows{padding:0 16px 6px}
+.sb-row{display:flex;justify-content:space-between;gap:14px;padding:7px 0;border-bottom:1px dashed #dbe8e9;font-size:14px}
+.sb-row span{color:#5b7377}.sb-row b{text-align:right;overflow-wrap:anywhere}
+.sb-total{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:8px 16px;padding:11px 14px;border-radius:12px;background:#e6f6ea;color:#0e5c42;font-weight:800}
+.sb-total b{font-size:20px}.sb-total.amt{background:#fff3dc;color:#7a5400}
+.bi-v2-modal .sb-photo img{width:calc(100% - 32px);max-height:200px;margin:8px 16px 4px;object-fit:contain;background:#f3f6f7;border-radius:10px;display:block}
+.sb-by{padding:8px 16px 14px;font-size:12px;color:#7b9094}
+.sh-opts{display:grid;gap:10px;margin-top:14px}
+.sh-opts label{margin:0;font-size:13px;font-weight:700;color:#35575b}
+.sh-opts input[type=text]{margin-top:5px;min-height:46px}
+.sh-opts label.sh-chk{display:flex;align-items:center;gap:10px;font-size:14px}
+.sh-opts .sh-chk input{width:20px!important;height:20px;min-height:0!important;margin:0!important;flex:none}
+.sh-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.bi-v2-modal .sh-actions button{flex:1 1 40%;width:auto;margin:0;min-height:48px;font-size:14.5px}
+.bi-v2-modal .sh-actions .sh-primary{flex:1 1 100%;background:#1fa855;color:#fff;border:0;font-size:16px;font-weight:800}
+.sh-status{margin:10px 2px 0;font-size:12.5px;color:#7a5400;min-height:0}
+.sh-status:empty{display:none}
+.bi-v2-record footer .rec-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.bi-v2-record .rec-share{background:#e8f8ee!important;border-color:#b9e2c6!important;color:#17683a!important;font-weight:700}
+</style>
+<script id="bi-v7-script">
+/* ================= Share an entry as a bill (WhatsApp) ================= */
+(function(){
+'use strict';
+const V=()=>window.__biV2;
+const EN=()=>{try{return localStorage.getItem('balaji-app-language')==='en';}catch(_){return false;}};
+const T=(gu,en)=>EN()?en:gu;
+const E=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clean=v=>String(v??'').replace(/[*_~`]/g,'').replace(/\s+/g,' ').trim();
+const num=v=>{const n=Number(v);return Number.isFinite(n)?n:0;};
+const fmt=(v,d)=>num(v).toLocaleString('en-IN',{maximumFractionDigits:d===undefined?3:d});
+const dmy=iso=>{const m=String(iso||'').match(/^(\d{4})-(\d{2})-(\d{2})/);return m?m[3]+'-'+m[2]+'-'+m[1]:'';};
+const unitKg=()=>{try{const u=Number(localStorage.getItem('bi-mann-kg'));return u===20||u===40?u:40;}catch(_){return 40;}};
+const COMPANY=()=>T('બાલાજી ઇન્ડસ્ટ્રીઝ','Balaji Industries');
+const has=v=>v!==undefined&&v!==null&&String(v).trim()!=='';
+const toAscii=t=>String(t).replace(/[૦-૯]/g,c=>String(c.charCodeAt(0)-0xAE6)).replace(/[०-९]/g,c=>String(c.charCodeAt(0)-0x966));
+const el=(tag,cls,html)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(html!==undefined)e.innerHTML=html;return e;};
+function toast(msg){
+  let t=document.getElementById('bi-toast');if(!t){t=el('div','bi-toast');t.id='bi-toast';t.setAttribute('role','status');document.body.appendChild(t);}
+  t.textContent=msg;t.classList.remove('warn');t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2600);
+}
+
+/* ---------- the bill data ---------- */
+function model(type,x,o){
+  const v=V();const isM=type==='maal',isW=type==='wb';
+  const raw=isM?x.owner_name:isW?(x.name||x.farmer_name):x.farmer_name;
+  const m={type,name:clean(o.name)||clean(raw)||clean(x.vehicle_number)||'—',rows:[],weights:[],total:null,amount:[],grand:null,photo:'',number:'',kind:'',netKg:0,
+    date:dmy(v.businessDay(x,type)),by:T('Entry: ','Entry: ')+v.staff(x.created_by)+' • '+v.stamp(x.created_at)};
+  const add=(arr,k,val)=>{if(has(val))arr.push([k,clean(val)]);};
+  if(type==='chit'){
+    m.kind=T('ચિઠ્ઠી','Chit');m.number=clean(x.chiththi_number);
+    add(m.rows,T('ગામ','Village'),x.village_name);
+    add(m.rows,T('ગાડી નં.','Vehicle'),x.vehicle_number);
+    add(m.rows,T('દલાલ','Broker'),x.broker_name);
+    add(m.rows,T('માલ','Material'),v.material(x.commodity_type));
+    if(o.mobile)add(m.rows,T('મોબાઇલ','Mobile'),x.farmer_mobile);
+    m.weights.push([T('ખેડૂતનું વજન','Gross weight'),fmt(x.gross_weight_kg)+' KG']);
+    if(num(x.bardan_kg)>0)m.weights.push([T('બારદાન','Bag deduction'),'− '+fmt(x.bardan_kg)+' KG']);
+    if(num(x.kardo_kg)>0)m.weights.push([T('કરડો','Other deduction'),'− '+fmt(x.kardo_kg)+' KG']);
+    m.total={label:T('ચોખ્ખું વજન','Net weight'),value:fmt(x.weight_kg)+' KG'};m.netKg=num(x.weight_kg);m.photo=x.chiththi_photo_url||'';
+  }else if(isW){
+    m.kind=T('કાંટાની પાવતી','Weighbridge slip');m.number=clean(x.rst_no);
+    add(m.rows,T('ગાડી નં.','Vehicle'),x.vehicle_number);
+    if(o.mobile)add(m.rows,T('મોબાઇલ','Mobile'),x.mobile||x.farmer_mobile);
+    m.total={label:T('ચોખ્ખું વજન (NET)','Net weight'),value:fmt(x.net_weight_kg)+' KG'};m.netKg=num(x.net_weight_kg);m.photo=x.slip_url||'';
+  }else{
+    m.kind=T('માલ એન્ટ્રી','Material entry');
+    add(m.rows,T('પ્રકાર','Type'),x.entry_type==='unloading'?T('માલ આવ્યો','Unloading'):x.entry_type==='loading'?T('માલ ગયો','Loading'):'');
+    add(m.rows,T('ગાડી નં.','Vehicle'),x.vehicle_number);
+    add(m.rows,T('માલ','Material'),v.material(x.material_type));
+    m.total={label:T('બેગ','Bags'),value:fmt(x.bags,0)};m.photo=x.slip_url||'';
+  }
+  if(!v.safeUrl(m.photo))m.photo='';
+  const rate=num(toAscii(o.rate||'').replace(/,/g,''));
+  if(!isM&&rate>0&&m.netKg>0){
+    const unit=unitKg(),mann=m.netKg/unit;
+    m.amount=[[T('મણ','Mann')+' ('+unit+' KG)',fmt(mann,2)],[T('ભાવ (₹ / મણ)','Rate (₹ / mann)'),'₹ '+fmt(rate,2)]];
+    m.grand={label:T('કુલ રકમ','Total amount'),value:'₹ '+fmt(Math.round(mann*rate),0)};
+  }
+  return m;
+}
+function billText(m){
+  const line='━━━━━━━━━━━━━━';
+  const out=['🧾 *'+m.name+'*',m.kind+(m.number?' '+T('નં.','No.')+' '+m.number:'')+' • '+m.date,line];
+  m.rows.forEach(([k,v])=>out.push(k+': '+v));
+  if(m.weights.length){out.push(line);m.weights.forEach(([k,v])=>out.push(k+': '+v));}
+  if(m.total)out.push((m.weights.length?'':line+'\n')+'*'+m.total.label+': '+m.total.value+'*');
+  if(m.amount.length){m.amount.forEach(([k,v])=>out.push(k+': '+v));out.push('*'+m.grand.label+': '+m.grand.value+'*');}
+  out.push(line,m.by,'— *'+COMPANY()+'*');
+  return out.join('\n');
+}
+function billHtml(m,showPhoto){
+  const rows=[...m.rows,...m.weights].map(([k,v])=>`<div class="sb-row"><span>${E(k)}</span><b>${E(v)}</b></div>`).join('');
+  return `<div class="sb-head"><div class="sb-co">${E(COMPANY())}</div><div class="sb-sub">${E(m.kind)}${m.number?' • '+E(m.number):''} • ${E(m.date)}</div></div>
+  <div class="sb-name">${E(m.name)}</div><div class="sb-rows">${rows}</div>
+  ${m.total?`<div class="sb-total"><span>${E(m.total.label)}</span><b>${E(m.total.value)}</b></div>`:''}
+  ${m.amount.length?`<div class="sb-rows">${m.amount.map(([k,v])=>`<div class="sb-row"><span>${E(k)}</span><b>${E(v)}</b></div>`).join('')}</div><div class="sb-total amt"><span>${E(m.grand.label)}</span><b>${E(m.grand.value)}</b></div>`:''}
+  ${showPhoto&&m.photo?`<div class="sb-photo"><img src="${E(m.photo)}" alt="" loading="lazy"></div>`:''}
+  <div class="sb-by">${E(m.by)}</div>`;
+}
+
+/* ---------- bill as a picture ---------- */
+function loadImg(blob){return new Promise((res,rej)=>{const u=URL.createObjectURL(blob),i=new Image();i.onload=()=>{res(i);setTimeout(()=>URL.revokeObjectURL(u),3000);};i.onerror=()=>{URL.revokeObjectURL(u);rej(new Error('img'));};i.src=u;});}
+async function billPng(m,photoBlob){
+  const W=900,P=44,IW=W-2*P,FONT='"Noto Sans Gujarati","Noto Sans","Shruti","Segoe UI",system-ui,sans-serif';
+  const f=(w,s)=>w+' '+s+'px '+FONT;
+  const c=document.createElement('canvas');c.width=W;c.height=3600;const g=c.getContext('2d');
+  g.fillStyle='#fff';g.fillRect(0,0,W,c.height);g.textBaseline='top';
+  const grad=g.createLinearGradient(0,0,W,0);grad.addColorStop(0,'#0a9297');grad.addColorStop(1,'#065e62');
+  g.fillStyle=grad;g.fillRect(0,0,W,132);
+  g.fillStyle='#fff';g.font=f('800',42);g.fillText(COMPANY(),P,24);
+  g.font=f('600',27);g.globalAlpha=.92;g.fillText(m.kind+(m.number?' • '+m.number:'')+' • '+m.date,P,82);g.globalAlpha=1;
+  const wrap=(text,x,y,maxW,lh)=>{const words=String(text).split(' ');let line='';for(const w of words){const t=line?line+' '+w:w;if(g.measureText(t).width>maxW&&line){g.fillText(line,x,y);y+=lh;line=w;}else line=t;}if(line){g.fillText(line,x,y);y+=lh;}return y;};
+  let y=166;g.fillStyle='#173438';g.font=f('800',50);y=wrap(m.name,P,y,IW,62)+6;
+  const row=(k,v,bold)=>{
+    g.font=f('500',28);g.fillStyle='#5b7377';g.fillText(k,P,y+4);
+    g.font=f(bold?'800':'700',30);g.fillStyle='#173438';g.textAlign='right';g.fillText(v,W-P,y+3);g.textAlign='left';
+    y+=52;g.strokeStyle='#dbe8e9';g.setLineDash([6,6]);g.beginPath();g.moveTo(P,y-8);g.lineTo(W-P,y-8);g.stroke();g.setLineDash([]);
+  };
+  const strip=(label,value,bg,fg)=>{
+    y+=10;g.fillStyle=bg;g.beginPath();g.roundRect?g.roundRect(P,y,IW,84,18):g.rect(P,y,IW,84);g.fill();
+    g.fillStyle=fg;g.font=f('700',28);g.fillText(label,P+24,y+27);g.font=f('800',40);g.textAlign='right';g.fillText(value,W-P-24,y+21);g.textAlign='left';y+=104;
+  };
+  y+=8;m.rows.forEach(([k,v])=>row(k,v));m.weights.forEach(([k,v])=>row(k,v));
+  if(m.total)strip(m.total.label,m.total.value,'#e6f6ea','#0e5c42');
+  if(m.amount.length){m.amount.forEach(([k,v])=>row(k,v));strip(m.grand.label,m.grand.value,'#fff3dc','#7a5400');}
+  if(photoBlob){
+    try{
+      const img=await loadImg(photoBlob),s=Math.min(IW/img.width,1400/img.height),w=img.width*s,h=img.height*s;
+      y+=6;g.fillStyle='#f3f6f7';g.fillRect(P,y,IW,h+16);g.drawImage(img,P+(IW-w)/2,y+8,w,h);y+=h+40;
+    }catch(_){}
+  }
+  g.fillStyle='#7b9094';g.font=f('500',24);y=wrap(m.by,P,y,IW,32)+8;
+  g.fillStyle='#0a7f84';g.font=f('800',26);g.fillText('— '+COMPANY(),P,y);y+=60;
+  const out=document.createElement('canvas');out.width=W;out.height=Math.min(y,c.height);
+  out.getContext('2d').drawImage(c,0,0);
+  return new Promise(res=>out.toBlob(b=>res(b),'image/png'));
+}
+
+/* ---------- the share sheet ---------- */
+async function shareFiles(files,text){
+  if(navigator.share&&navigator.canShare&&navigator.canShare({files})){
+    try{await navigator.share(text?{files,text}:{files});return 'shared';}catch(e){if(e&&e.name==='AbortError')return 'cancel';}
+  }
+  return 'unsupported';
+}
+function open(type,id){
+  const v=V();if(!v)return;
+  const x=v.recs.get(type+':'+id);if(!x)return;
+  const o={name:'',rate:'',mobile:false,photo:true};
+  const base=model(type,x,o);
+  const hasRate=type!=='maal',hasMobile=type!=='maal'&&has(type==='chit'?x.farmer_mobile:(x.mobile||x.farmer_mobile));
+  const modal=v.dialog(T('બિલ શેર કરો','Share bill'),`<div class="sh-wrap" data-sh>
+    <div class="sh-bill" id="sh-preview"></div>
+    <div class="sh-opts">
+      <label>${T('નામ (હેડિંગ)','Name (heading)')}<input id="sh-name" type="text" autocomplete="off" value="${E(base.name==='—'?'':base.name)}"></label>
+      ${hasRate?`<label>${T('ભાવ (₹ / મણ) — વૈકલ્પિક','Rate (₹ / mann) — optional')}<input id="sh-rate" type="text" inputmode="decimal" autocomplete="off" placeholder="3000"></label>`:''}
+      ${base.photo?`<label class="sh-chk"><input type="checkbox" id="sh-photo" checked> ${T('ફોટો સાથે મોકલો','Send with the photo')}</label>`:''}
+      ${hasMobile?`<label class="sh-chk"><input type="checkbox" id="sh-mobile"> ${T('મોબાઇલ નંબર સાથે','Include mobile number')}</label>`:''}
+    </div>
+    <div class="sh-actions">
+      <button type="button" id="sh-wa" class="sh-primary">💬 ${T('WhatsApp પર મોકલો','Send on WhatsApp')}</button>
+      <button type="button" id="sh-png">🖼 ${T('બિલ ઇમેજ','Bill image')}</button>
+      <button type="button" id="sh-copy">📋 ${T('કૉપી','Copy')}</button>
+    </div>
+    <p id="sh-status" class="sh-status" role="status"></p></div>`);
+  const $=id=>modal.querySelector('#'+id);
+  const status=msg=>{$('sh-status').textContent=msg||'';};
+  const cur=()=>({name:$('sh-name').value,rate:$('sh-rate')?$('sh-rate').value:'',mobile:!!($('sh-mobile')&&$('sh-mobile').checked),photo:!($('sh-photo')&&!$('sh-photo').checked)});
+  const useModel=()=>model(type,x,cur());
+  const draw=()=>{const o2=cur();$('sh-preview').innerHTML=billHtml(model(type,x,o2),o2.photo);};
+  draw();
+  ['sh-name','sh-rate','sh-photo','sh-mobile'].forEach(i=>{const e=$(i);if(e){e.addEventListener('input',draw);e.addEventListener('change',draw);}});
+  // fetch the photo now so the Share button reacts instantly (browsers want a quick tap -> share)
+  let blob=null,photoState=base.photo?'loading':'none';
+  const photoP=base.photo?fetch(base.photo,{mode:'cors'}).then(r=>r.ok?r.blob():null).then(b=>{blob=b&&/^image\//.test(b.type||'image/jpeg')?b:null;photoState=blob?'ready':'failed';if(photoState==='failed')status(T('ફોટો લોડ થયો નથી — લિંક સાથે મોકલાશે.','Photo could not be loaded — a link will be sent instead.'));}).catch(()=>{photoState='failed';status(T('ફોટો લોડ થયો નથી — લિંક સાથે મોકલાશે.','Photo could not be loaded — a link will be sent instead.'));}):Promise.resolve();
+  const fname=(base.kind+'-'+(base.number||id)).replace(/[^\w.઀-૿-]+/g,'_');
+  const photoFile=()=>blob?new File([blob],'photo-'+fname+'.'+((blob.type.split('/')[1]||'jpg').replace('jpeg','jpg')),{type:blob.type||'image/jpeg'}):null;
+
+  $('sh-wa').addEventListener('click',async()=>{
+    const m=useModel(),text=billText(m),o2=cur();
+    const wantPhoto=!!(o2.photo&&m.photo);
+    if(wantPhoto&&photoState==='loading'){status(T('ફોટો તૈયાર થાય છે…','Preparing the photo…'));await photoP;}
+    const file=wantPhoto?photoFile():null;
+    const link=wantPhoto?'\n📷 '+m.photo:'';   // used whenever the picture itself cannot travel with the message
+    if(navigator.share){
+      try{
+        if(file&&navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],text});status('');return;}
+        await navigator.share({text:text+link});status(link?T('ફોટોની લિંક લખાણ સાથે મૂકી છે.','The photo link was added to the text.'):'');return;
+      }catch(e){if(e&&e.name==='AbortError')return;}
+    }
+    window.open('https://wa.me/?text='+encodeURIComponent(text+link),'_blank','noopener');
+    status(wantPhoto?T('WhatsApp ખૂલ્યું. ફોટો ફક્ત લિંક તરીકે જાય છે — ફોટો સાથે મોકલવા "બિલ ઇમેજ" વાપરો.','WhatsApp opened. The photo goes only as a link — use "Bill image" to send it with the picture.'):'');
+  });
+  $('sh-png').addEventListener('click',async()=>{
+    const m=useModel(),o2=cur();status(T('બિલ ઇમેજ બને છે…','Making the bill image…'));
+    if(o2.photo&&photoState==='loading')await photoP;
+    let png;try{png=await billPng(m,(o2.photo&&blob)?blob:null);}catch(_){png=null;}
+    if(!png){status(T('ઇમેજ બની શકી નથી.','Could not make the image.'));return;}
+    const file=new File([png],'bill-'+fname+'.png',{type:'image/png'});
+    const r=await shareFiles([file],'');
+    if(r==='shared'||r==='cancel'){status('');return;}
+    const a=document.createElement('a');a.href=URL.createObjectURL(png);a.download=file.name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},2000);
+    status(T('ઇમેજ Download થઈ — હવે WhatsApp માં Gallery માંથી મોકલો.','Image downloaded — now send it from your Gallery in WhatsApp.'));
+  });
+  $('sh-copy').addEventListener('click',async()=>{
+    const text=billText(useModel());
+    try{await navigator.clipboard.writeText(text);toast(T('✔ કૉપી થયું','✔ Copied'));}
+    catch(_){const ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast(T('✔ કૉપી થયું','✔ Copied'));}catch(e){}ta.remove();}
+  });
+}
+window.BalajiShare={open,model,billText,billPng};
+})();
+
+/* ================= Calculator (bottom sheet) ================= */
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const EN=()=>{try{return localStorage.getItem('balaji-app-language')==='en';}catch(_){return false;}};
+const L=(gu,en)=>EN()?en:gu;
+const el=(tag,cls,html)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(html!==undefined)e.innerHTML=html;return e;};
+const toAscii=t=>String(t).replace(/[૦-૯]/g,c=>String(c.charCodeAt(0)-0xAE6)).replace(/[०-९]/g,c=>String(c.charCodeAt(0)-0x966));
+const fmtN=(n,d)=>Number(n).toLocaleString('en-IN',{maximumFractionDigits:d===undefined?6:d});
+const store={get(k,d){try{const v=localStorage.getItem(k);return v===null?d:v;}catch(_){return d;}},set(k,v){try{localStorage.setItem(k,String(v));}catch(_){}}};
+
+/* ---- safe expression evaluator (no eval) ---- */
+function evaluate(src){
+  const s=String(src).replace(/×/g,'*').replace(/÷/g,'/').replace(/−/g,'-').replace(/\s+/g,'');
+  if(!s)return NaN;
+  let i=0;
+  const num=()=>{const st=i;while(i<s.length&&/[0-9.]/.test(s[i]))i++;if(st===i)throw 0;const t=s.slice(st,i);if((t.match(/\./g)||[]).length>1)throw 0;return parseFloat(t);};
+  const factor=()=>{let neg=false;while(s[i]==='-'||s[i]==='+'){if(s[i]==='-')neg=!neg;i++;}let v=num(),pct=false;while(s[i]==='%'){v/=100;pct=true;i++;}return {v:neg?-v:v,pct};};
+  const term=()=>{let a=factor();while(s[i]==='*'||s[i]==='/'){const op=s[i++],b=factor();if(op==='/'&&b.v===0)throw 0;a={v:op==='*'?a.v*b.v:a.v/b.v,pct:false};}return a;};
+  const expr=()=>{let a=term().v;while(s[i]==='+'||s[i]==='-'){const op=s[i++],b=term(),rhs=b.pct?a*b.v:b.v;a=op==='+'?a+rhs:a-rhs;}return a;};
+  try{const v=expr();if(i!==s.length||!Number.isFinite(v))return NaN;return Math.round(v*1e9)/1e9;}catch(_){return NaN;}
+}
+window.BalajiCalc={evaluate};
+
+let root=null,expr='',fresh=false,hist=[],lastField=null,toastT;
+const isOp=c=>'+−×÷'.includes(c);
+const numTok=()=>{const m=expr.match(/[0-9.]*$/);return m?m[0]:'';};
+function press(k){
+  if(k==='C'){expr='';fresh=false;}
+  else if(k==='⌫'){expr=expr.slice(0,-1);fresh=false;}
+  else if(k==='='){equals();return;}
+  else if(/^[0-9]$|^00$/.test(k)){
+    if(fresh){expr='';fresh=false;}
+    const t=numTok();
+    if(t==='0'&&k!=='.')expr=expr.slice(0,-1);
+    if(k==='00'&&!numTok()&&!(expr.slice(-1)==='0'))expr+='0';else if(k==='00'&&numTok()==='')expr+='0';else expr+=k;
+  }
+  else if(k==='.'){
+    if(fresh){expr='';fresh=false;}
+    const t=numTok();if(t.includes('.'))return render();
+    expr+=(t===''?'0.':'.');
+  }
+  else if(isOp(k)){
+    fresh=false;
+    if(!expr){if(k==='−')expr='−';}
+    else if(isOp(expr.slice(-1))){if(expr.length>1||k==='−')expr=expr.slice(0,-1)+k;}
+    else expr+=k;
+  }
+  else if(k==='%'){fresh=false;if(/[0-9.]$/.test(expr)&&!expr.endsWith('%'))expr+='%';}
+  render();
+}
+function current(){const e=isOp(expr.slice(-1))?expr.slice(0,-1):expr;return evaluate(e);}
+function equals(){
+  const v=current();
+  if(!Number.isFinite(v)){$('bc-res').textContent=L('ખોટી ગણતરી','Invalid');return;}
+  hist.unshift({e:expr,r:v});hist=hist.slice(0,4);
+  expr=String(v).replace('-','−');fresh=true;render();
+}
+function render(){
+  if(!root)return;
+  const v=current();
+  $('bc-expr').textContent=expr.replace(/([+−×÷])/g,' $1 ')||'';
+  const showing=expr===''?0:(Number.isFinite(v)?v:'');
+  $('bc-res').textContent=showing===''?'…':fmtN(showing);
+  $('bc-res').classList.toggle('neg',Number.isFinite(v)&&v<0);
+  const h=$('bc-hist');h.textContent='';
+  hist.forEach(x=>{const b=el('button','bc-h');b.type='button';b.textContent=x.e.replace(/([+−×÷])/g,' $1 ')+' = '+fmtN(x.r);b.addEventListener('click',()=>{expr=String(x.r).replace('-','−');fresh=true;render();});h.append(b);});
+  const fill=$('bc-fill');if(fill){const ok=fieldOk();fill.disabled=!(ok&&Number.isFinite(v)&&expr!=='');}
+}
+const fieldOk=()=>!!(lastField&&lastField.isConnected&&lastField.offsetParent!==null&&!lastField.readOnly&&!lastField.disabled);
+function toast(msg){
+  let t=$('bi-toast');if(!t){t=el('div','bi-toast');t.id='bi-toast';t.setAttribute('role','status');document.body.appendChild(t);}
+  t.textContent=msg;t.classList.remove('warn');t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2400);
+}
+async function copy(text){
+  try{await navigator.clipboard.writeText(text);toast(L('✔ કૉપી થયું','✔ Copied'));}
+  catch(_){const ta=el('textarea');ta.value=text;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast(L('✔ કૉપી થયું','✔ Copied'));}catch(e){}ta.remove();}
+}
+/* ---- rate / amount tab ---- */
+const nOf=id=>{const t=toAscii($(id).value).replace(/,/g,'').trim();return /^\d*\.?\d+$/.test(t)?Number(t):NaN;};
+let unit=Number(store.get('bi-mann-kg','40'))===20?20:40;
+function calcRate(){
+  const w=nOf('bc-w'),cut=nOf('bc-cut'),rate=nOf('bc-rate');
+  const net=Number.isFinite(w)?w-(Number.isFinite(cut)?cut:0):NaN;
+  const mann=net/unit;
+  const ok=Number.isFinite(net)&&net>0;
+  $('bc-o-net').textContent=ok?fmtN(Math.round(net*1000)/1000,3)+' KG':'—';
+  $('bc-o-mann').textContent=ok?fmtN(mann,2):'—';
+  $('bc-o-qt').textContent=ok?fmtN(net/100,3):'—';
+  const amt=ok&&Number.isFinite(rate)?Math.round(mann*rate):NaN;
+  $('bc-o-amt').textContent=Number.isFinite(amt)?'₹ '+fmtN(amt,0):'—';
+  root.querySelectorAll('.bc-unit button').forEach(b=>b.classList.toggle('on',Number(b.dataset.u)===unit));
+  if(Number.isFinite(rate))store.set('bi-rate',rate);
+  return {ok,net,mann,amt,rate};
+}
+function pullWeight(){
+  const ids=['net_weight','farmer_weight','wb_weight'];
+  for(const id of ids){const e=$(id);if(e&&e.offsetParent!==null){const n=Number(toAscii(e.value));if(n>0){$('bc-w').value=String(n);calcRate();return;}}}
+  toast(L('ફોર્મમાં વજન મળ્યું નથી','No weight found in the form'));
+}
+function build(){
+  root=el('div','bi-calc');root.id='bi-calc';root.hidden=true;root.setAttribute('data-user-content','');
+  const keys=[['C','fn red'],['⌫','fn'],['%','fn'],['÷','op'],['7'],['8'],['9'],['×','op'],['4'],['5'],['6'],['−','op'],['1'],['2'],['3'],['+','op'],['00'],['0'],['.'],['=','eq']];
+  root.innerHTML=`<div class="bc-backdrop"></div><section class="bc-sheet" role="dialog" aria-modal="true" aria-label="${L('કેલ્ક્યુલેટર','Calculator')}">
+  <div class="bc-grab"></div>
+  <header class="bc-head"><div class="bc-tabs"><button type="button" data-tab="calc" class="on">🧮 ${L('કેલ્ક્યુલેટર','Calculator')}</button><button type="button" data-tab="rate">⚖️ ${L('ભાવ / રકમ','Rate / Amount')}</button></div><button type="button" class="bc-x" aria-label="${L('બંધ','Close')}">×</button></header>
+  <div class="bc-pane" data-pane="calc">
+    <div class="bc-screen"><div class="bc-expr" id="bc-expr"></div><div class="bc-res" id="bc-res">0</div></div>
+    <div class="bc-hist" id="bc-hist"></div>
+    <div class="bc-keys">${keys.map(([k,c])=>`<button type="button" class="bk-key ${c||''}" data-k="${k}">${k}</button>`).join('')}</div>
+    <div class="bc-tools"><button type="button" id="bc-fill">⤵ ${L('ફોર્મમાં ભરો','Put in form')}</button><button type="button" id="bc-copy">📋 ${L('કૉપી','Copy')}</button></div>
+  </div>
+  <div class="bc-pane" data-pane="rate" hidden>
+    <label>${L('વજન (KG)','Weight (KG)')}<div class="bc-row"><input id="bc-w" inputmode="decimal" autocomplete="off" placeholder="3930.4"><button type="button" id="bc-pull">${L('ફોર્મમાંથી લો','From form')}</button></div></label>
+    <label>${L('કાપ (KG) — વૈકલ્પિક','Cut (KG) — optional')}<input id="bc-cut" inputmode="decimal" autocomplete="off" placeholder="0"></label>
+    <div class="bc-unit"><span>${L('1 મણ =','1 mann =')}</span><button type="button" data-u="20">20 KG</button><button type="button" data-u="40">40 KG</button></div>
+    <label>${L('ભાવ (₹ / મણ)','Rate (₹ / mann)')}<input id="bc-rate" inputmode="decimal" autocomplete="off" placeholder="3000"></label>
+    <div class="bc-out">
+      <div><span>${L('ચોખ્ખું વજન','Net weight')}</span><b id="bc-o-net">—</b></div>
+      <div><span>${L('મણ','Mann')}</span><b id="bc-o-mann">—</b></div>
+      <div><span>${L('ક્વિન્ટલ','Quintal')}</span><b id="bc-o-qt">—</b></div>
+      <div class="amt"><span>${L('કુલ રકમ','Total amount')}</span><b id="bc-o-amt">—</b></div>
+    </div>
+    <div class="bc-tools"><button type="button" id="bc-rcopy">📋 ${L('કૉપી','Copy')}</button></div>
+  </div></section>`;
+  document.body.appendChild(root);
+  const r=store.get('bi-rate','');if(r)$('bc-rate').value=r;
+  root.querySelector('.bc-backdrop').addEventListener('click',close);
+  root.querySelector('.bc-x').addEventListener('click',close);
+  root.querySelectorAll('.bc-tabs button').forEach(b=>b.addEventListener('click',()=>tab(b.dataset.tab)));
+  root.querySelector('.bc-keys').addEventListener('click',e=>{const b=e.target.closest('button[data-k]');if(b)press(b.dataset.k);});
+  $('bc-copy').addEventListener('click',()=>{const v=current();if(Number.isFinite(v))copy(String(v));});
+  $('bc-fill').addEventListener('click',()=>{
+    const v=current();if(!Number.isFinite(v)||!fieldOk())return;
+    lastField.value=String(Math.round(v*1000)/1000);lastField.dispatchEvent(new Event('input',{bubbles:true}));lastField.dispatchEvent(new Event('change',{bubbles:true}));
+    toast(L('✔ ફોર્મમાં ભર્યું','✔ Put in the form'));close();
+  });
+  ['bc-w','bc-cut','bc-rate'].forEach(id=>$(id).addEventListener('input',calcRate));
+  $('bc-pull').addEventListener('click',pullWeight);
+  root.querySelectorAll('.bc-unit button').forEach(b=>b.addEventListener('click',()=>{unit=Number(b.dataset.u);store.set('bi-mann-kg',unit);calcRate();}));
+  $('bc-rcopy').addEventListener('click',()=>{const o=calcRate();if(!o.ok)return;copy(fmtN(Math.round(o.net*1000)/1000,3)+' KG = '+fmtN(o.mann,2)+' '+L('મણ','mann')+(Number.isFinite(o.amt)?' × ₹'+fmtN(o.rate,2)+' = ₹'+fmtN(o.amt,0):''));});
+  calcRate();
+}
+function tab(name){
+  root.querySelectorAll('.bc-tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===name));
+  root.querySelectorAll('.bc-pane').forEach(p=>p.hidden=p.dataset.pane!==name);
+  if(name==='rate'&&!$('bc-w').value)pullWeight();
+}
+function onKey(e){
+  if(!root||root.hidden)return;
+  if(e.target&&e.target.matches&&e.target.matches('input,textarea'))return;
+  const k=e.key;
+  if(k==='Escape'){close();return;}
+  if(/^[0-9]$/.test(k)||k==='.'){press(k);e.preventDefault();}
+  else if(k==='+'){press('+');e.preventDefault();}else if(k==='-'){press('−');e.preventDefault();}
+  else if(k==='*'||k==='x'){press('×');e.preventDefault();}else if(k==='/'){press('÷');e.preventDefault();}
+  else if(k==='%'){press('%');e.preventDefault();}
+  else if(k==='Enter'||k==='='){press('=');e.preventDefault();}
+  else if(k==='Backspace'){press('⌫');e.preventDefault();}
+}
+function open(){
+  if(!root){build();document.addEventListener('keydown',onKey);}
+  root.hidden=false;document.documentElement.classList.add('bc-open');render();calcRate();
+}
+function close(){if(root){root.hidden=true;document.documentElement.classList.remove('bc-open');}}
+window.BalajiCalc.open=open;window.BalajiCalc.close=close;
+document.addEventListener('focusin',e=>{
+  const t=e.target;
+  if(t&&t.matches&&t.matches('input,textarea')&&!t.closest('#bi-calc')&&!t.closest('.bi-v2-modal')&&!/^(checkbox|radio|file|password|date|search|submit|button)$/i.test(t.type||''))lastField=t;
+});
+function ensureButton(){
+  const acts=document.querySelector('#app .bi-account-actions');
+  if(!acts)return;
+  let b=$('bi-calc-btn');
+  if(!b){
+    b=el('button','bi-calc-btn','🧮');b.type='button';b.id='bi-calc-btn';b.setAttribute('aria-label',L('કેલ્ક્યુલેટર','Calculator'));b.title=L('કેલ્ક્યુલેટર','Calculator');
+    b.addEventListener('click',open);
+  }
+  if(b.parentElement!==acts)acts.insertBefore(b,acts.firstChild);
+}
+ensureButton();setInterval(ensureButton,1200);
+})();
+
+</script>
 </body>
 </html>
 
