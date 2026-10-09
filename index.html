@@ -6084,50 +6084,7 @@ setInterval(()=>Object.keys(chips).forEach(render),1000);
 <style id="bi-v9-style">
 /* ===== calculator button + sheet ===== */
 #app button.bi-calc-btn{display:grid;place-items:center;width:42px!important;height:42px;min-height:42px!important;padding:0!important;margin:0!important;font-size:21px;line-height:1;background:var(--soft,#eef7f7);color:var(--dark,#0b4a4d);border:1px solid var(--line,#cfe0e1);border-radius:12px;box-shadow:none}
-.bi-calc[hidden]{display:none}
-.bi-calc{position:fixed;inset:0;z-index:100010;display:flex;align-items:flex-end;justify-content:center}
-.bi-calc .bc-backdrop{position:absolute;inset:0;background:#17343899}
-.bc-sheet{position:relative;width:100%;max-width:460px;max-height:94dvh;overflow:auto;background:#fff;border-radius:24px 24px 0 0;padding:8px 14px calc(16px + env(safe-area-inset-bottom,0px));box-shadow:0 -10px 40px #0004;animation:bcUp .22s ease-out}
 @keyframes bcUp{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
-.bc-grab{width:44px;height:5px;border-radius:3px;background:#cfdcdd;margin:4px auto 10px}
-.bc-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
-.bc-tabs{display:flex;gap:6px;flex:1;min-width:0}
-.bi-calc button{width:auto!important;margin:0!important;min-height:0!important;box-shadow:none!important;font-family:inherit}
-.bc-tabs button{flex:1;padding:10px 6px!important;border-radius:12px!important;border:1px solid #cfe0e1!important;background:#fff!important;color:#35575b!important;font-size:13.5px!important;font-weight:700!important}
-.bc-tabs button.on{background:#0a9297!important;border-color:#0a9297!important;color:#fff!important}
-.bc-x{flex:0 0 auto;width:40px!important;height:40px;border-radius:50%!important;border:1px solid #cfe0e1!important;background:#fff!important;color:#35575b!important;font-size:22px!important;line-height:1;padding:0!important}
-.bc-pane[hidden]{display:none}
-.bc-screen{background:#f1f9f9;border:1px solid #d5e7e8;border-radius:16px;padding:10px 16px;text-align:right;min-height:84px;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden}
-.bc-expr{font-size:16px;color:#5b7377;min-height:22px;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
-.bc-res{font-size:38px;font-weight:800;color:#173438;line-height:1.15;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
-.bc-res.neg{color:#b42336}
-.bc-hist{display:flex;gap:6px;overflow-x:auto;padding:8px 0 2px;min-height:6px}
-.bc-hist .bc-h{flex:0 0 auto;padding:5px 10px!important;border-radius:999px!important;border:1px solid #dbe8e9!important;background:#fff!important;color:#5b7377!important;font-size:12px!important;font-weight:600!important;white-space:nowrap}
-.bc-keys{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}
-.bi-calc .bk-key{height:58px;border-radius:16px!important;border:1px solid #e1ecec!important;background:#f7fbfb!important;color:#173438!important;font-size:24px!important;font-weight:700!important;width:100%!important}
-.bi-calc .bk-key:active{background:#dcefef!important}
-.bi-calc .bk-key.fn{background:#eef3f4!important;color:#35575b!important;font-size:21px!important}
-.bi-calc .bk-key.red{color:#b42336!important}
-.bi-calc .bk-key.op{background:#e3f4f4!important;color:#0a7f84!important;font-size:27px!important}
-.bi-calc .bk-key.eq{background:#0a9297!important;border-color:#0a9297!important;color:#fff!important;font-size:28px!important}
-.bc-tools{display:flex;gap:8px;margin-top:10px}
-.bc-tools button{flex:1;min-height:46px!important;border-radius:14px!important;border:1px solid #bcd9da!important;background:#fff!important;color:#0b4a4d!important;font-size:14px!important;font-weight:700!important}
-.bc-tools button:disabled{opacity:.45}
-.bc-pane[data-pane=rate] label{display:block;margin:10px 0 0;font-size:13px;font-weight:700;color:#35575b}
-.bc-pane input{display:block;width:100%;margin:5px 0 0!important;min-height:48px;font-size:18px!important;font-weight:700}
-.bc-row{display:flex;gap:8px;align-items:center}
-.bc-row input{flex:1}
-.bc-row button{flex:0 0 auto;min-height:48px!important;margin-top:5px!important;padding:0 12px!important;border-radius:12px!important;border:1px solid #bcd9da!important;background:#fff!important;color:#0b4a4d!important;font-size:13px!important;font-weight:700!important}
-.bc-unit{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;font-weight:700;color:#35575b}
-.bc-unit button{padding:8px 14px!important;border-radius:999px!important;border:1px solid #cfe0e1!important;background:#fff!important;color:#35575b!important;font-size:13px!important;font-weight:700!important}
-.bc-unit button.on{background:#0a9297!important;border-color:#0a9297!important;color:#fff!important}
-.bc-out{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
-.bc-out>div{background:#f1f9f9;border:1px solid #d5e7e8;border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
-.bc-out span{font-size:12px;color:#5b7377;font-weight:600}
-.bc-out b{font-size:19px;color:#173438;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
-.bc-out .amt{grid-column:1/-1;background:#e6f6ea;border-color:#bfe3cc}
-.bc-out .amt b{font-size:28px;color:#0e5c42}
-html.bc-open{overflow:hidden}
 /* ===== share-as-bill sheet ===== */
 .bi-v2-modal .sh-bill{border:1px solid #cfe0e1;border-radius:16px;overflow:hidden;background:#fff;margin-top:14px}
 .sb-head{background:linear-gradient(135deg,#0a9297,#065e62);color:#fff;padding:12px 16px}
@@ -6285,6 +6242,127 @@ html.bi-off body{padding-top:34px}
 .ask-msg{margin:8px 0 14px;font-size:15px;line-height:1.55;overflow-wrap:anywhere}
 .ask-wrap .ex-act{display:flex;gap:8px;flex-wrap:wrap}
 .bi-v2-modal .ask-wrap .ex-act button{flex:1 1 40%}
+
+/* ===== calculator + hisab (v10) ===== */
+.bi-calc{--bx-ink:#123d41;--bx-mut:#587276;--bx-line:#c8dcdc;--bx-dot:#a6c2c2;--bx-brand:#0a9297;--bx-deep:#0b4a4d;--bx-bg:#f1f7f7;--bx-skin:#9a4a2a;--bx-shell:#f4ecda;--bx-shell-line:#e3d5b5;position:fixed;inset:0;z-index:100010;display:flex;align-items:flex-end;justify-content:center}
+.bi-calc[hidden],.bi-calc [hidden]{display:none!important}
+.bi-calc .bc-backdrop{position:absolute;inset:0;background:#10343899}
+.bi-calc .bc-sheet{position:relative;width:100%;max-width:460px;min-height:min(700px,88dvh);max-height:94dvh;overflow:auto;overscroll-behavior:contain;background:var(--bx-bg);border-radius:26px 26px 0 0;padding:0;color:var(--bx-ink);box-shadow:0 -12px 44px #0005;animation:bcUp .22s ease-out}
+html.bc-open{overflow:hidden}
+.bi-calc .bc-head{position:sticky;top:0;z-index:5;margin:0;padding:6px 14px 10px;background:var(--bx-bg)}
+.bi-calc .bc-grab{width:42px;height:4px;border-radius:2px;background:#bfd3d3;margin:2px auto 8px}
+.bi-calc .bx-bar{display:flex;align-items:center;gap:8px}
+.bi-calc .bc-tabs{display:flex;flex:1;min-width:0;gap:4px;padding:4px;background:#dfeaea;border-radius:15px}
+.bi-calc .bc-tabs button,.bi-calc button.bx-b.seg{flex:1;display:block;width:auto;min-height:42px;margin:0;padding:0 6px;border:0;border-radius:11px;background:transparent;color:#41666a;font-size:14px;font-weight:700;box-shadow:none}
+.bi-calc .bc-tabs button.on,.bi-calc button.bx-b.seg.on{background:#fff;color:var(--bx-deep);box-shadow:0 1px 3px #0b4a4d2e}
+.bi-calc .bx-ic{flex:0 0 auto;display:grid;place-items:center;width:46px;height:46px;min-height:46px;margin:0;padding:0;border-radius:14px;border:1px solid var(--bx-line);background:#fff;color:var(--bx-mut);font-size:19px;line-height:1;box-shadow:none}
+.bi-calc .bx-ic.on{background:var(--bx-deep);border-color:var(--bx-deep);color:#fff}
+.bi-calc .bx-ic.bc-x{font-size:27px;padding-bottom:3px}
+.bi-calc .bc-pane{padding:0 14px}
+.bi-calc .bc-pane[data-pane=calc]{padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+
+/* ledger-style input cells */
+.bi-calc .bx-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;margin-top:10px;background:var(--bx-line);border:1px solid var(--bx-line);border-radius:16px;overflow:hidden}
+.bi-calc label.bx-cell{position:relative;display:block;margin:0;padding:9px 12px 6px;min-height:68px;background:#fff;font-size:12.5px;font-weight:650;color:var(--bx-mut);cursor:text}
+.bi-calc label.bx-cell.span2{grid-column:1/-1}
+.bi-calc .bx-cell .l{display:block;line-height:1.25}
+.bi-calc .bx-cell .l em{font-style:normal;font-weight:600;opacity:.8}
+.bi-calc input.bx-in{display:block;width:100%;height:34px;min-height:0;margin:2px 0 0;padding:0 30px 0 0;border:0;border-radius:0;background:transparent;box-shadow:none;outline:0;color:var(--bx-ink);font:inherit;font-size:22px;font-weight:800;font-variant-numeric:tabular-nums}
+.bi-calc input.bx-in::placeholder{color:#c2d2d3;font-size:22px;font-weight:600}
+.bi-calc .bx-cell .u{position:absolute;right:12px;bottom:10px;font-size:13px;font-weight:700;color:var(--bx-mut);pointer-events:none}
+.bi-calc label.bx-cell:focus-within{z-index:1;background:#eef9f9;box-shadow:inset 0 0 0 2px var(--bx-brand)}
+.bi-calc label.bx-cell.bad{background:#fdf1f0;box-shadow:inset 0 0 0 2px #d9626f}
+.bi-calc button.bx-chip{position:absolute;right:8px;top:6px;display:grid;place-items:center;width:34px;min-height:0;height:28px;margin:0;padding:0;border:1px solid #bcd9da;border-radius:999px;background:#f1fafa;color:var(--bx-deep);font-size:16px;line-height:1;font-weight:800;box-shadow:none}
+.bi-calc .bx-unit{display:flex;align-items:center;gap:8px;margin:12px 2px 0;font-size:13px;font-weight:700;color:var(--bx-mut)}
+.bi-calc button.bx-b.pill{display:block;width:auto;min-height:36px;margin:0;padding:0 14px;border:1px solid var(--bx-line);border-radius:999px;background:#fff;color:#41666a;font-size:13px;font-weight:700;box-shadow:none}
+.bi-calc button.bx-b.pill.on{background:var(--bx-deep);border-color:var(--bx-deep);color:#fff}
+.bi-calc .bx-rate-sec{margin-top:14px}
+.bi-calc.bx-norate .bx-rate-sec{display:none}
+.bi-calc .bx-modes{display:flex;gap:4px;padding:4px;background:#dfeaea;border-radius:14px}
+.bi-calc button.bx-b.seg{min-height:40px;font-size:13.5px;border-radius:10px}
+.bi-calc .bx-stale{margin:8px 2px 0;padding:7px 10px;border:1px solid #f0d99a;border-radius:10px;background:#fff6e0;color:#7a5a05;font-size:12.5px;font-weight:650}
+
+/* sample (nuno) helper — shell tan */
+.bi-calc .bx-sample{margin-top:12px;padding:0 12px 12px;border:1px solid var(--bx-shell-line);border-radius:16px;background:var(--bx-shell)}
+.bi-calc .bx-sample summary{display:flex;align-items:center;min-height:50px;color:#5b4a22;font-size:14px;font-weight:700;cursor:pointer;list-style:none}
+.bi-calc .bx-sample summary::-webkit-details-marker{display:none}
+.bi-calc .bx-sample summary::after{content:'▾';margin-left:auto;padding-left:10px;color:#8a7440;transition:transform .15s}
+.bi-calc .bx-sample[open] summary::after{transform:rotate(180deg)}
+.bi-calc .bx-sample .bx-grid{margin-top:2px;background:var(--bx-shell-line);border-color:var(--bx-shell-line)}
+.bi-calc .bx-fx{margin:8px 2px 0;color:#7a6a40;font-size:12px;line-height:1.5}
+.bi-calc .bx-s-row{display:flex;align-items:center;gap:10px;margin-top:8px}
+.bi-calc .bx-s-row b{flex:1;color:var(--bx-ink);font-size:14px}
+.bi-calc button.bx-b.solid{display:block;width:auto;min-height:44px;margin:0;padding:0 16px;border:0;border-radius:12px;background:var(--bx-brand);color:#fff;font-size:14px;font-weight:700;box-shadow:none}
+.bi-calc button.bx-b.solid:disabled{opacity:.4}
+
+/* the working — a ledger with dotted leaders */
+.bi-calc .bx-ledger{margin-top:14px;padding:10px 14px 8px;background:#fff;border:1px solid var(--bx-line);border-radius:16px}
+.bi-calc .bx-ln{display:flex;align-items:baseline;gap:6px;padding:5px 0;font-size:14.5px;line-height:1.35}
+.bi-calc .bx-ln .k{flex:0 1 auto;min-width:0;color:var(--bx-mut);font-weight:600}
+.bi-calc .bx-ln .lead{flex:1 1 10px;min-width:10px;align-self:flex-end;margin-bottom:5px;border-bottom:2px dotted var(--bx-dot)}
+.bi-calc .bx-ln .v{flex:0 0 auto;color:var(--bx-ink);font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
+.bi-calc .bx-ln.minus .v{color:var(--bx-skin)}
+.bi-calc .bx-ln.dim .k,.bi-calc .bx-ln.dim .v{color:#7d9395;font-size:13px;font-weight:600}
+.bi-calc .bx-ln.sum{margin-top:4px;padding-top:8px;border-top:1px solid var(--bx-line)}
+.bi-calc .bx-ln.sum .k{color:var(--bx-ink);font-weight:800}
+.bi-calc .bx-ln.sum .v{font-size:16.5px}
+.bi-calc .bx-hint{margin:6px 0;color:var(--bx-mut);font-size:13.5px;font-weight:600;line-height:1.5}
+.bi-calc .bx-hint.err{color:#b42336}
+.bi-calc .bx-foot{margin:8px 0 2px;padding-top:8px;border-top:1px dashed var(--bx-line);color:var(--bx-mut);font-size:12.5px;font-weight:650}
+.bi-calc .bx-more,.bi-calc .bc-tools{display:flex;gap:8px;margin-top:12px}
+.bi-calc button.bx-b.ghost{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;width:auto;min-height:46px;margin:0;padding:0 12px;border:1px solid #b9d4d5;border-radius:13px;background:#fff;color:var(--bx-deep);font-size:14px;font-weight:700;box-shadow:none}
+.bi-calc button.bx-b.ghost:disabled{opacity:.45}
+
+/* the total — one deep bar, always in view */
+.bi-calc .bx-total{position:sticky;bottom:0;z-index:4;display:flex;align-items:center;gap:10px;margin:14px -14px 0;padding:12px 14px calc(12px + env(safe-area-inset-bottom,0px));background:var(--bx-deep);color:#fff;box-shadow:0 -10px 26px #0b4a4d40}
+.bi-calc .bx-tt{display:flex;flex-direction:column;min-width:0;flex:1}
+.bi-calc .bx-tt .lbl{color:#a9d8da;font-size:12.5px;font-weight:650}
+.bi-calc .bx-tt .amt{font-size:32px;font-weight:800;letter-spacing:-.01em;line-height:1.12;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.bi-calc .bx-tt .sub{color:#a9d8da;font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bi-calc .bx-total .acts{display:flex;gap:8px;flex:0 0 auto}
+.bi-calc .bx-ab{display:grid;place-items:center;width:50px;height:50px;min-height:50px;margin:0;padding:0;border:1px solid #ffffff38;border-radius:15px;background:#ffffff1f;color:#fff;font-size:21px;line-height:1;text-decoration:none;box-shadow:none;cursor:pointer}
+.bi-calc .bx-ab:disabled,.bi-calc .bx-ab[aria-disabled=true]{opacity:.4;pointer-events:none}
+
+/* saved hisabs */
+.bi-calc .bx-hh{display:flex;align-items:center;gap:8px;margin-top:10px}
+.bi-calc .bx-hh b{flex:1;font-size:16px}
+.bi-calc .bx-hh button.bx-b{flex:0 0 auto;min-height:40px}
+.bi-calc .bx-h{margin-top:8px;padding:10px 12px;background:#fff;border:1px solid var(--bx-line);border-radius:14px}
+.bi-calc .bx-h-t{display:flex;align-items:baseline;justify-content:space-between;color:var(--bx-mut);font-size:13px;font-weight:650}
+.bi-calc .bx-h-t b{color:var(--bx-ink);font-size:19px;font-variant-numeric:tabular-nums}
+.bi-calc .bx-h-s{margin-top:2px;color:var(--bx-mut);font-size:13px}
+.bi-calc .bx-h-a{display:flex;gap:8px;margin-top:8px}
+.bi-calc .bx-h-a button.bx-b{min-height:42px}
+.bi-calc .bx-h-a button.del{flex:0 0 54px}
+
+/* keypad */
+.bi-calc .bc-screen{display:flex;flex-direction:column;justify-content:flex-end;min-height:92px;margin-top:10px;padding:12px 16px;overflow:hidden;text-align:right;background:#fff;border:1px solid var(--bx-line);border-radius:18px}
+.bi-calc .bc-expr{min-height:22px;color:var(--bx-mut);font-size:16px;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.bi-calc .bc-res{color:var(--bx-ink);font-size:40px;font-weight:800;line-height:1.15;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.bi-calc .bc-res.neg{color:#b42336}
+.bi-calc .bc-hist{display:flex;gap:6px;min-height:6px;padding:8px 0 2px;overflow-x:auto}
+.bi-calc .bc-hist .bc-h{flex:0 0 auto;display:block;width:auto;min-height:0;margin:0;padding:5px 10px;border:1px solid var(--bx-line);border-radius:999px;background:#fff;color:var(--bx-mut);font-size:12px;font-weight:600;white-space:nowrap;box-shadow:none}
+.bi-calc .bc-keys{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}
+.bi-calc .bk-key{display:block;width:100%;height:60px;min-height:60px;margin:0;padding:0;border:1px solid #dbe8e8;border-radius:18px;background:#fff;color:var(--bx-ink);font-size:25px;font-weight:700;box-shadow:0 1px 0 #cfe0e0}
+.bi-calc .bk-key:active{background:#e3f1f1;box-shadow:none}
+.bi-calc .bk-key.fn{background:#e8f0f0;color:#41666a;font-size:21px}
+.bi-calc .bk-key.red{color:#b42336}
+.bi-calc .bk-key.op{background:#d9efef;border-color:#c6e4e4;color:#0a7478;font-size:28px}
+.bi-calc .bk-key.eq{background:var(--bx-brand);border-color:var(--bx-brand);color:#fff;font-size:30px;box-shadow:0 1px 0 #07696c}
+@media (prefers-reduced-motion:reduce){.bi-calc .bc-sheet{animation:none}.bi-calc .bx-sample summary::after{transition:none}}
+
+/* bill share sheet — utaro / hava / damage */
+.bi-v2-modal .sh-more{margin-top:12px;padding:0 12px 12px;border:1px solid #e3d5b5;border-radius:14px;background:#f4ecda}
+.bi-v2-modal .sh-more summary{display:flex;align-items:center;min-height:48px;color:#5b4a22;font-size:14px;font-weight:700;cursor:pointer;list-style:none}
+.bi-v2-modal .sh-more summary::-webkit-details-marker{display:none}
+.bi-v2-modal .sh-more summary::after{content:'▾';margin-left:auto;padding-left:10px;color:#8a7440}
+.bi-v2-modal .sh-more[open] summary::after{transform:rotate(180deg)}
+.bi-v2-modal .sh-g2{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+.bi-v2-modal .sh-g2 label{margin:6px 0 0;font-size:13px}
+.bi-v2-modal .sh-g2 input{margin:4px 0 0}
+.bi-v2-modal .sh-more button.sh-calcbtn{display:block;width:100%;min-height:46px;margin:12px 0 0;padding:0 12px;border:1px solid #bcd9da;border-radius:12px;background:#fff;color:#0b4a4d;font-size:14px;font-weight:800;box-shadow:none}
+.bi-v2-modal .sh-more .sh-note{margin-top:8px;font-size:12.5px;font-weight:650;color:#6b5a30}
+.bi-v2-modal .sh-more .sh-note.warn{color:#b42336}
 </style>
 <script id="bi-v9-qr">
 /* ================= Small QR-code maker (byte mode, level L or M, versions 1-14) ================= */
@@ -6407,6 +6485,87 @@ window.BalajiSettings=S;
 // pull the shared settings once somebody is logged in
 let tries=0;const t=setInterval(()=>{tries++;const ready=!!profile();if(ready){clearInterval(t);S.load();}else if(tries>90)clearInterval(t);},2000);
 })();
+
+</script>
+<script id="bi-v9-calcmath">
+/* ================= Hisab engine (pure, shared by the calculator and the bill) =================
+   Order of work (one rule, always the same):
+     1. net0   = weight − bardan
+     2. hava   = net0 × hava%            (taken out of the WEIGHT)
+        net    = net0 − hava
+     3. mann   = net ÷ unit(20|40)
+     4. rate   = direct            : typed rate
+                 daana (kernel)    : daana rate × utaro%
+                 base (steps)      : base rate + (utaro − base utaro) × rupees per 1 %
+     5. gross  = round(mann × rate)
+     6. dameg  = round(gross × dameg%)   (taken out of the AMOUNT)
+     7. amount = gross − dameg − other   (all whole rupees, so the ledger always adds up)               */
+(function(g){
+'use strict';
+const num=v=>{
+  if(v===null||v===undefined||v==='')return NaN;
+  if(typeof v==='number')return v;
+  const t=String(v).replace(/[૦-૯]/g,c=>String(c.charCodeAt(0)-0xAE6)).replace(/[०-९]/g,c=>String(c.charCodeAt(0)-0x966)).replace(/,/g,'').trim();
+  return /^\d*\.?\d+$/.test(t)?Number(t):NaN;
+};
+const r3=n=>Math.round(n*1000)/1000;
+function compute(i){
+  i=i||{};
+  const out={ok:false,mode:i.mode||'direct',unit:Number(i.unit)===20?20:40,errors:[]};
+  const w=num(i.w),bardan=Number.isFinite(num(i.bardan))?num(i.bardan):0;
+  const hv=Number.isFinite(num(i.hava))?num(i.hava):0,dm=Number.isFinite(num(i.dameg))?num(i.dameg):0;
+  const other=Number.isFinite(num(i.other))?num(i.other):0;
+  const u=num(i.utaro);
+  out.w=w;out.bardan=bardan;out.havaPct=hv;out.damegPct=dm;out.utaro=Number.isFinite(u)?u:null;out.other=other;
+  if(!(w>0)){out.errors.push('w');return out;}
+  const net0=w-bardan;
+  if(!(net0>0)){out.errors.push('bardan');return out;}
+  if(hv<0||hv>=100)out.errors.push('hava');
+  if(dm<0||dm>=100)out.errors.push('dameg');
+  if(out.errors.length)return out;
+  out.net0=r3(net0);
+  out.havaKg=r3(net0*hv/100);
+  out.net=r3(net0-out.havaKg);
+  out.mann=out.net/out.unit;
+  out.quintal=out.net/100;
+  out.weightOk=out.net>0;
+  /* ---- rate ---- */
+  let R=NaN;
+  if(out.mode==='direct'){R=num(i.rate);}
+  else if(out.mode==='daana'){
+    out.daana=num(i.daana);
+    if(Number.isFinite(u)&&(u<0||u>100))out.errors.push('utaro');
+    else if(out.daana>0&&u>0)R=out.daana*u/100;
+  }else if(out.mode==='base'){
+    out.base=num(i.base);out.baseU=num(i.baseU);out.step=Number.isFinite(num(i.step))?num(i.step):0;
+    if(Number.isFinite(u)&&(u<0||u>100))out.errors.push('utaro');
+    else if(out.base>0&&Number.isFinite(out.baseU)&&Number.isFinite(u))R=out.base+(u-out.baseU)*out.step;
+  }
+  out.rate=(Number.isFinite(R)&&R>0)?Math.round(R*100)/100:NaN;
+  out.rateOk=Number.isFinite(out.rate);
+  out.ok=out.weightOk&&!out.errors.length;
+  if(out.rateOk&&out.ok){
+    out.perKg=out.rate/out.unit;out.perQuintal=out.rate*100/out.unit;
+    out.gross=Math.round(out.mann*out.rate);
+    out.damegAmt=Math.round(out.gross*dm/100);
+    out.otherAmt=Math.round(other);
+    out.amount=out.gross-out.damegAmt-out.otherAmt;
+    out.amountOk=true;
+  }else out.amountOk=false;
+  return out;
+}
+/* sample (nuno) helper:  grams  →  %   */
+function sample(i){
+  const s=num(i.sample),d=num(i.daana),h=num(i.hava),m=num(i.damage);
+  const o={};
+  if(s>0&&d>=0&&d<=s)o.utaro=Math.round(d/s*10000)/100;
+  if(s>0&&h>=0&&h<s)o.hava=Math.round(h/s*10000)/100;
+  if(d>0&&m>=0&&m<=d)o.dameg=Math.round(m/d*10000)/100;
+  return o;
+}
+g.BalajiMath={compute,sample,num};
+if(typeof module!=='undefined'&&module.exports)module.exports=g.BalajiMath;
+})(typeof window!=='undefined'?window:globalThis);
 
 </script>
 <script id="bi-v9-core">
@@ -6808,7 +6967,8 @@ const LB={
  total:['કુલ','Total','कुल'],no:['નં.','No.','नं.'],farmer_village:['ખેડૂત / ગામ','Farmer / village','किसान / गाँव'],gross_kg:['મૂળ KG','Gross KG','मूल KG'],net_kg:['ચોખ્ખું KG','Net KG','शुद्ध KG'],
  name:['નામ','Name','नाम'],mat_owner:['માલ / માલિક','Material / owner','माल / मालिक'],bags_t:['બેગ','Bags','बैग'],more_photos:['નોંધ: ફોટા ઘણા હોવાથી પહેલા','Note: only the first','नोट: पहली'],
  scan_pay:['ચુકવણી માટે QR સ્કેન કરો','Scan QR to pay','भुगतान के लिए QR स्कैन करें'],scan_bill:['આ બિલ ખોલવા QR સ્કેન કરો','Scan to open this bill','यह बिल खोलने के लिए QR स्कैन करें'],
- mat_bag_note:['માલ','Material','माल']
+ mat_bag_note:['માલ','Material','माल'],
+ utaro:['ઉતારો','Utaro (outturn)','उतारा'],hava:['હવા','Hava','हवा'],dameg:['ડેમેજ','Damage','डैमेज'],other_cut:['બીજી કપાત','Other deduction','अन्य कटौती'],net_after:['હવા પછીનું વજન','Weight after hava','हवा के बाद वजन']
 };
 let LANGO=null;
 const LG=()=>{const l=LANGO||ST().lang;return l==='gu'||l==='en'||l==='hi'?l:(localStorage.getItem('balaji-app-language')==='en'?'en':'gu');};
@@ -6858,9 +7018,16 @@ function model(type,x,o){
   if(!v.safeUrl(m.photo))m.photo='';
   const rate=num(toAscii(o.rate||'').replace(/,/g,''));
   if(!isM&&rate>0&&m.netKg>0&&SET.canRate()){
-    const unit=unitKg(),mann=m.netKg/unit;
-    m.amount=[[B('mann')+' ('+unit+' KG)',fmt(mann,2),'🧮'],[B('rate'),'₹ '+fmt(rate,2),'🏷']];
-    m.grand={label:B('amount'),value:'₹ '+fmt(Math.round(mann*rate),0)};
+    const unit=unitKg(),M=window.BalajiMath;
+    const uu=M.num(o.utaro),c=M.compute({w:m.netKg,bardan:0,hava:o.hava,dameg:o.dameg,other:o.other,utaro:(uu>0&&uu<=100)?uu:'',mode:'direct',rate,unit});
+    if(c.ok&&c.amountOk){
+      if(c.utaro>0)m.amount.push([B('utaro'),fmt(c.utaro,2)+' %','🥜']);
+      if(c.havaPct>0){m.amount.push([B('hava')+' ('+fmt(c.havaPct,2)+' %)','− '+fmt(c.havaKg,3)+' KG','➖']);m.amount.push([B('net_after'),fmt(c.net,3)+' KG','⚖️']);}
+      m.amount.push([B('mann')+' ('+unit+' KG)',fmt(c.mann,2),'🧮'],[B('rate'),'₹ '+fmt(c.rate,2),'🏷']);
+      if(c.damegPct>0)m.amount.push([B('dameg')+' ('+fmt(c.damegPct,2)+' %)','− ₹ '+fmt(c.damegAmt,0),'➖']);
+      if(c.otherAmt>0)m.amount.push([B('other_cut'),'− ₹ '+fmt(c.otherAmt,0),'➖']);
+      m.grand={label:B('amount'),value:'₹ '+fmt(c.amount,0)};
+    }
   }
   m.lang=LG();
   return m;
@@ -7159,24 +7326,45 @@ function open(type,id){
   const v=V();if(!v)return;
   const x=v.recs.get(type+':'+id);if(!x)return;
   const base=model(type,x,{});
-  const hasRate=type!=='maal'&&SET.canRate(),hasMobile=type!=='maal'&&has(type==='chit'?x.farmer_mobile:(x.mobile||x.farmer_mobile));
+  const hasRate=type!=='maal'&&SET.canRate(),lc=(type!=='maal'&&SET.canRate()&&window.BalajiCalc&&window.BalajiCalc.last)?window.BalajiCalc.last():null,hasMobile=type!=='maal'&&has(type==='chit'?x.farmer_mobile:(x.mobile||x.farmer_mobile));
   const ent=x.vehicle_number?vehicleEntries(x.vehicle_number,v.businessDay(x,type)):null;
   const n=ent?ent.chit.length+ent.wb.length+ent.maal.length:0;
   const fname=ascii((type==='chit'?'chit':type==='wb'?'kanta':'maal')+'-'+(base.number||id))||'bill';
   sheet({
     heading:T('બિલ શેર કરો','Share bill'),phone:base.phone,
     fields:`<label>${E(type==='maal'?T('માલિકનું નામ (હેડિંગ)','Owner name (heading)'):T('ખેડૂતનું નામ (હેડિંગ)','Farmer name (heading)'))}<input id="sh-name" type="text" autocomplete="off" value="${E(base.name==='—'?'':base.name)}"></label>
-      ${hasRate?`<label>${E(T('ભાવ (₹ / મણ) — વૈકલ્પિક','Rate (₹ / mann) — optional'))}<input id="sh-rate" type="text" inputmode="decimal" autocomplete="off" placeholder="3000"></label>`:''}
+      ${hasRate?`<label>${E(T('ભાવ (₹ / મણ) — વૈકલ્પિક','Rate (₹ / mann) — optional'))}<input id="sh-rate" type="text" inputmode="decimal" autocomplete="off" placeholder="3000"></label>
+      <details class="sh-more" id="sh-more"><summary>🥜 ${E(T('ઉતારો / હવા / ડેમેજ (વૈકલ્પિક)','Utaro / hava / damage (optional)'))}</summary>
+        <div class="sh-g2">
+          <label>${E(T('ઉતારો %','Utaro %'))}<input id="sh-utaro" type="text" inputmode="decimal" autocomplete="off" placeholder="68"></label>
+          <label>${E(T('હવા %','Hava %'))}<input id="sh-hava" type="text" inputmode="decimal" autocomplete="off" placeholder="2"></label>
+          <label>${E(T('ડેમેજ %','Damage %'))}<input id="sh-dameg" type="text" inputmode="decimal" autocomplete="off" placeholder="1"></label>
+          <label>${E(T('બીજી કપાત ₹','Other deduction ₹'))}<input id="sh-other" type="text" inputmode="decimal" autocomplete="off" placeholder="0"></label>
+        </div>
+        ${lc?`<button type="button" id="sh-calc" class="sh-calcbtn">🧮 ${E(T('છેલ્લી ગણતરીમાંથી ભરો','Fill from the last hisab'))}</button><p class="sh-note" id="sh-calc-note"></p>`:''}
+      </details>`:''}
       ${base.photo?`<label class="sh-chk"><input type="checkbox" id="sh-photo" checked> ${E(T('ફોટો સાથે મોકલો','Send with the photo'))}</label>`:''}
       ${hasMobile?`<label class="sh-chk"><input type="checkbox" id="sh-mobile"> ${E(T('મોબાઇલ નંબર સાથે','Include mobile number'))}</label>`:''}`,
     extra:n>=2?`<button type="button" id="sh-veh" class="sh-wide">🚛 ${E(T('આખી ગાડીનું બિલ','Whole vehicle bill'))} (${n})</button>`:'',
-    read:$=>({name:$('sh-name').value,rate:$('sh-rate')?$('sh-rate').value:'',mobile:!!($('sh-mobile')&&$('sh-mobile').checked),photo:!!(base.photo&&!($('sh-photo')&&!$('sh-photo').checked))}),
+    read:$=>({name:$('sh-name').value,rate:$('sh-rate')?$('sh-rate').value:'',utaro:$('sh-utaro')?$('sh-utaro').value:'',hava:$('sh-hava')?$('sh-hava').value:'',dameg:$('sh-dameg')?$('sh-dameg').value:'',other:$('sh-other')?$('sh-other').value:'',mobile:!!($('sh-mobile')&&$('sh-mobile').checked),photo:!!(base.photo&&!($('sh-photo')&&!$('sh-photo').checked))}),
     make:o=>{
       const m=model(type,x,o);
       const photos=o.photo&&m.photo?[{url:m.photo,caption:photoTitle(type)+(m.number?' • '+m.number:''),sub:m.name+' • '+m.date}]:[];
       return {m,photos,fileBase:fname,text:link=>billText(m,link),render:(items,crop,extra)=>renderEntry(m,items,crop,extra)};
     },
-    after:($)=>{const b=$('sh-veh');if(b)b.addEventListener('click',()=>openVehicle(x.vehicle_number,v.businessDay(x,type)));}
+    after:($)=>{
+      const b=$('sh-veh');if(b)b.addEventListener('click',()=>openVehicle(x.vehicle_number,v.businessDay(x,type)));
+      const cb=$('sh-calc');
+      if(cb&&lc){
+        const n=$('sh-calc-note'),f=(a,k)=>{const e=$(a);if(e){e.value=k>0?String(k):'';e.dispatchEvent(new Event('input',{bubbles:true}));}};
+        const diff=Math.abs(Number(lc.net0)-Number(base.netKg));
+        n.textContent=T('છેલ્લી ગણતરી: ભાવ ₹'+fmt(lc.rate,2)+(lc.utaro>0?' • ઉતારો '+fmt(lc.utaro,2)+'%':'')+(lc.hava>0?' • હવા '+fmt(lc.hava,2)+'%':'')+(lc.dameg>0?' • ડેમેજ '+fmt(lc.dameg,2)+'%':'')+' • '+fmt(lc.net0,3)+' KG',
+          'Last hisab: rate ₹'+fmt(lc.rate,2)+(lc.utaro>0?' • utaro '+fmt(lc.utaro,2)+'%':'')+(lc.hava>0?' • hava '+fmt(lc.hava,2)+'%':'')+(lc.dameg>0?' • damage '+fmt(lc.dameg,2)+'%':'')+' • '+fmt(lc.net0,3)+' KG')
+          +(diff>1?T('  ⚠ આ બિલનું વજન '+fmt(base.netKg,3)+' KG છે — અલગ છે!','  ⚠ this bill has '+fmt(base.netKg,3)+' KG — different!'):'');
+        n.classList.toggle('warn',diff>1);
+        cb.addEventListener('click',()=>{f('sh-rate',lc.rate);f('sh-utaro',lc.utaro);f('sh-hava',lc.hava);f('sh-dameg',lc.dameg);f('sh-other',lc.other);});
+      }
+    }
   });
 }
 function openVehicle(vehicle,date){
@@ -7270,16 +7458,18 @@ window.BalajiBill={B,LB,heroTitle,farmerLabel,footerText,newDoc};
 
 </script>
 <script id="bi-v9-calc">
-/* ================= Calculator (bottom sheet) ================= */
+/* ================= Calculator + Hisab (bottom sheet) ================= */
 (function(){
 'use strict';
 const $=id=>document.getElementById(id);
 const EN=()=>{try{return localStorage.getItem('balaji-app-language')==='en';}catch(_){return false;}};
 const L=(gu,en)=>EN()?en:gu;
 const el=(tag,cls,html)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(html!==undefined)e.innerHTML=html;return e;};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const toAscii=t=>String(t).replace(/[૦-૯]/g,c=>String(c.charCodeAt(0)-0xAE6)).replace(/[०-९]/g,c=>String(c.charCodeAt(0)-0x966));
 const fmtN=(n,d)=>Number(n).toLocaleString('en-IN',{maximumFractionDigits:d===undefined?6:d});
 const store={get(k,d){try{const v=localStorage.getItem(k);return v===null?d:v;}catch(_){return d;}},set(k,v){try{localStorage.setItem(k,String(v));}catch(_){}}};
+const M=window.BalajiMath;
 
 /* ---- safe expression evaluator (no eval) ---- */
 function evaluate(src){
@@ -7348,55 +7538,280 @@ async function copy(text){
   try{await navigator.clipboard.writeText(text);toast(L('✔ કૉપી થયું','✔ Copied'));}
   catch(_){const ta=el('textarea');ta.value=text;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast(L('✔ કૉપી થયું','✔ Copied'));}catch(e){}ta.remove();}
 }
-/* ---- rate / amount tab ---- */
-const nOf=id=>{const t=toAscii($(id).value).replace(/,/g,'').trim();return /^\d*\.?\d+$/.test(t)?Number(t):NaN;};
+/* ================= Hisab tab (weight → mann → rate from utaro → amount) ================= */
+const IDS=['w','bardan','hava','dameg','other','rate','daana','utaro','base','baseu','step'];
+const RATE_IDS=['rate','daana','base','baseu','step'];
+const MODES=['direct','daana','base'];
+let mode=MODES.includes(store.get('bi-calc-mode','daana'))?store.get('bi-calc-mode','daana'):'daana';
 let unit=Number(store.get('bi-mann-kg','40'))===20?20:40;
-function calcRate(){
-  const w=nOf('bc-w'),cut=nOf('bc-cut'),rate=nOf('bc-rate');
-  const net=Number.isFinite(w)?w-(Number.isFinite(cut)?cut:0):NaN;
-  const mann=net/unit;
-  const ok=Number.isFinite(net)&&net>0;
-  $('bc-o-net').textContent=ok?fmtN(Math.round(net*1000)/1000,3)+' KG':'—';
-  $('bc-o-mann').textContent=ok?fmtN(mann,2):'—';
-  $('bc-o-qt').textContent=ok?fmtN(net/100,3):'—';
-  const amt=ok&&Number.isFinite(rate)?Math.round(mann*rate):NaN;
-  $('bc-o-amt').textContent=Number.isFinite(amt)?'₹ '+fmtN(amt,0):'—';
-  root.querySelectorAll('.bc-unit button').forEach(b=>b.classList.toggle('on',Number(b.dataset.u)===unit));
-  if(Number.isFinite(rate))store.set('bi-rate',rate);
-  return {ok,net,mann,amt,rate};
+let tabName=store.get('bi-calc-tab','rate')==='calc'?'calc':'rate';
+let hh=[];           /* saved hisabs */
+let lastT=0;         /* debounce for the "last calculation" snapshot */
+const nOf=id=>{const e=$('bx-'+id);return e?M.num(e.value):NaN;};
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const dm=iso=>{const p=String(iso||'').split('-');return p.length===3?p[2]+'-'+p[1]:'';};
+const canRate=()=>{try{return !window.BalajiSettings||window.BalajiSettings.canRate();}catch(_){return true;}};
+
+function S(){return {
+  tabCalc:L('કેલ્ક્યુલેટર','Calculator'),tabHisab:L('હિસાબ','Hisab'),
+  weight:L('વજન','Weight'),bardan:L('બારદાન / કાપ','Bardan / cut'),hava:L('હવા','Hava'),dameg:L('ડેમેજ','Damage'),
+  net:L('ચોખ્ખું વજન','Net weight'),mann:L('મણ','Mann'),quintal:L('ક્વિન્ટલ','Quintal'),
+  mDirect:L('સીધો ભાવ','Direct rate'),mDaana:L('દાણા × ઉતારો','Daana × utaro'),mBase:L('બેઝ ± ઉતારો','Base ± utaro'),
+  rate:L('ભાવ','Rate'),daana:L('દાણા ભાવ','Daana rate'),utaro:L('ઉતારો','Utaro'),base:L('બેઝ ભાવ','Base rate'),
+  cropRate:L('મગફળીનો ભાવ','Magfadi rate'),gross:L('રકમ (મણ × ભાવ)','Amount (mann × rate)'),other:L('બીજી કપાત','Other deduction'),
+  total:L('કુલ રકમ','Total amount'),
+  empty:L('વજન લખો — ગણતરી અહીં દેખાશે.','Enter the weight — the working appears here.'),
+  needRate:L('ભાવ ઉમેરો — રકમ તરત દેખાશે.','Add the rate — the amount appears at once.'),
+  needRateD:L('દાણા ભાવ અને ઉતારો ઉમેરો.','Add the daana rate and utaro %.'),
+  needRateB:L('બેઝ ભાવ, બેઝ ઉતારો અને ઉતારો ઉમેરો.','Add base rate, base utaro and utaro %.'),
+  eBardan:L('બારદાન વજન કરતાં વધુ છે.','Bardan is more than the weight.'),eHava:L('હવા % 0 થી 100 ની અંદર લખો.','Hava % must be between 0 and 100.'),
+  eDameg:L('ડેમેજ % 0 થી 100 ની અંદર લખો.','Damage % must be between 0 and 100.'),eUtaro:L('ઉતારો % 0 થી 100 ની અંદર લખો.','Utaro % must be between 0 and 100.')
+};}
+let T=null;
+
+/* ---------- the working, as ledger lines ---------- */
+function lines(o,norate){
+  const a=[],kg=n=>fmtN(n,3)+' KG',rs=n=>'₹ '+fmtN(n,0),rs2=n=>'₹ '+fmtN(n,2),ms=' / '+T.mann;
+  a.push({k:T.weight,v:kg(o.w)});
+  if(o.bardan>0)a.push({k:'− '+T.bardan,v:kg(o.bardan),c:'minus'});
+  if(o.havaPct>0)a.push({k:'− '+T.hava+' ('+fmtN(o.havaPct,2)+' %)',v:kg(o.havaKg),c:'minus'});
+  a.push({k:T.net,v:kg(o.net),c:'sum'});
+  a.push({k:T.mann+' (÷ '+o.unit+' KG)',v:fmtN(o.mann,2)});
+  a.push({k:T.quintal,v:fmtN(o.quintal,3),c:'dim'});
+  if(norate||!o.rateOk)return a;
+  if(o.mode==='daana'){
+    a.push({k:T.daana,v:rs2(o.daana)+ms});
+    a.push({k:'× '+T.utaro,v:fmtN(o.utaro,2)+' %'});
+    a.push({k:T.cropRate,v:rs2(o.rate)+ms,c:'sum'});
+  }else if(o.mode==='base'){
+    const diff=Math.round((o.utaro-o.baseU)*o.step*100)/100;
+    a.push({k:T.base+' ('+fmtN(o.baseU,2)+' %)',v:rs2(o.base)+ms});
+    a.push({k:(diff<0?'− ':'+ ')+T.utaro+' ('+fmtN(o.utaro,2)+' % → '+fmtN(o.utaro-o.baseU,2)+' × ₹'+fmtN(o.step,2)+')',v:(diff<0?'− ':'+ ')+rs2(Math.abs(diff)),c:diff<0?'minus':''});
+    a.push({k:T.cropRate,v:rs2(o.rate)+ms,c:'sum'});
+  }else a.push({k:T.rate,v:rs2(o.rate)+ms,c:'sum'});
+  a.push({k:T.gross,v:rs(o.gross)});
+  if(o.damegPct>0)a.push({k:'− '+T.dameg+' ('+fmtN(o.damegPct,2)+' %)',v:rs(o.damegAmt),c:'minus'});
+  if(o.otherAmt>0)a.push({k:'− '+T.other,v:rs(o.otherAmt),c:'minus'});
+  return a;
 }
-function pullWeight(){
+function textOf(o,norate){
+  const ls=lines(o,norate),d=new Date();
+  const out=['⚖️ '+L('હિસાબ','Hisab')+' — '+String(d.getDate()).padStart(2,'0')+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+d.getFullYear()];
+  ls.forEach(l=>{if(l.c!=='dim')out.push(l.k+': '+l.v);});
+  if(o.amountOk&&!norate)out.push('💰 '+T.total+': ₹ '+fmtN(o.amount,0));
+  return out.join('\n');
+}
+
+/* ---------- paint ---------- */
+function markBad(o){
+  const bad={w:false,bardan:o.errors.includes('bardan'),hava:o.errors.includes('hava'),dameg:o.errors.includes('dameg'),utaro:o.errors.includes('utaro')};
+  Object.keys(bad).forEach(k=>{const e=$('bx-'+k);if(e&&e.parentElement)e.parentElement.classList.toggle('bad',bad[k]);});
+}
+function paint(){
+  const norate=!canRate();
+  const i={w:$('bx-w').value,bardan:$('bx-bardan').value,hava:$('bx-hava').value,dameg:$('bx-dameg').value,other:norate?0:$('bx-other').value,
+    utaro:$('bx-utaro').value,rate:$('bx-rate').value,daana:$('bx-daana').value,base:$('bx-base').value,baseU:$('bx-baseu').value,step:$('bx-step').value,mode,unit};
+  const o=M.compute(i);
+  markBad(o);
+  const led=$('bx-ledger'),bar=$('bx-total');
+  if(!(o.w>0)||o.errors.includes('bardan')&&!(o.net>0)){
+    const msg=o.errors.includes('bardan')?T.eBardan:T.empty;
+    led.innerHTML='<p class="bx-hint'+(o.errors.includes('bardan')?' err':'')+'">'+esc(msg)+'</p>';
+    $('bx-lbl').textContent=T.total;$('bx-amt').textContent='—';$('bx-sub').textContent='';
+    setActs(null,norate);return o;
+  }
+  const errs=[];
+  if(o.errors.includes('hava'))errs.push(T.eHava);
+  if(o.errors.includes('dameg'))errs.push(T.eDameg);
+  if(o.errors.includes('utaro'))errs.push(T.eUtaro);
+  if(errs.length){
+    led.innerHTML=errs.map(e=>'<p class="bx-hint err">'+esc(e)+'</p>').join('');
+    $('bx-lbl').textContent=T.total;$('bx-amt').textContent='—';$('bx-sub').textContent='';
+    setActs(null,norate);return o;
+  }
+  const ls=lines(o,norate);
+  let html=ls.map(l=>'<div class="bx-ln'+(l.c?' '+l.c:'')+'"><span class="k">'+esc(l.k)+'</span><i class="lead"></i><b class="v">'+esc(l.v)+'</b></div>').join('');
+  if(!norate&&!o.rateOk)html+='<p class="bx-hint">'+esc(mode==='daana'?T.needRateD:mode==='base'?T.needRateB:T.needRate)+'</p>';
+  if(!norate&&o.rateOk)html+='<p class="bx-foot">₹ '+esc(fmtN(o.perKg,2))+' / KG &nbsp;•&nbsp; ₹ '+esc(fmtN(o.perQuintal,0))+' / '+esc(T.quintal)+'</p>';
+  led.innerHTML=html;
+  if(o.amountOk&&!norate){
+    $('bx-lbl').textContent=T.total;$('bx-amt').textContent='₹ '+fmtN(o.amount,0);
+    $('bx-sub').textContent=fmtN(o.net,3)+' KG • '+fmtN(o.mann,2)+' '+T.mann;
+  }else{
+    $('bx-lbl').textContent=T.net;$('bx-amt').textContent=fmtN(o.net,3)+' KG';
+    $('bx-sub').textContent=norate?fmtN(o.mann,2)+' '+T.mann+' • '+fmtN(o.quintal,3)+' '+T.quintal:T.needRate;
+  }
+  setActs(o,norate);
+  snapshot(o,norate);
+  return o;
+}
+function setActs(o,norate){
+  const ok=!!(o&&o.ok);
+  $('bx-copy').disabled=!ok;$('bx-save').disabled=!ok;
+  const wa=$('bx-wa');
+  if(ok){wa.href='https://wa.me/?text='+encodeURIComponent(textOf(o,norate));wa.removeAttribute('aria-disabled');}
+  else{wa.removeAttribute('href');wa.setAttribute('aria-disabled','true');}
+  paint.last=o;
+}
+/* what the bill sheet may pick up */
+function snapshot(o,norate){
+  if(norate||!o.amountOk)return;
+  clearTimeout(lastT);
+  lastT=setTimeout(()=>store.set('bi-calc-last',JSON.stringify({t:Date.now(),net0:o.net0,rate:o.rate,hava:o.havaPct,dameg:o.damegPct,utaro:o.utaro,other:o.otherAmt})),400);
+}
+function last(){
+  try{const s=JSON.parse(store.get('bi-calc-last','null'));if(s&&Date.now()-s.t<6*3600e3)return s;}catch(_){}
+  return null;
+}
+
+/* ---------- layout of the rate cells for the chosen method ---------- */
+function layout(){
+  const show={rate:mode==='direct',daana:mode==='daana',base:mode==='base',baseu:mode==='base',utaro:mode!=='direct',step:mode==='base',other:true};
+  Object.keys(show).forEach(k=>{const c=$('bx-'+k);if(c)c.parentElement.hidden=!show[k];});
+  $('bx-other').parentElement.classList.toggle('span2',mode!=='direct');
+  root.querySelectorAll('.bx-modes button').forEach(b=>{const on=b.dataset.m===mode;b.classList.toggle('on',on);b.setAttribute('aria-pressed',on?'true':'false');});
+  root.querySelectorAll('.bx-unit button').forEach(b=>{const on=Number(b.dataset.u)===unit;b.classList.toggle('on',on);b.setAttribute('aria-pressed',on?'true':'false');});
+}
+function staleNote(){
+  const n=$('bx-stale');if(!n)return;
+  let R={};try{R=JSON.parse(store.get('bi-calc-rates','{}'))||{};}catch(_){}
+  const has=RATE_IDS.some(k=>R[k]);
+  if(has&&R.d&&R.d!==today()){n.textContent='⚠ '+L('ભાવ '+dm(R.d)+' નો છે — આજનો ભાવ નાખો.','Rates are from '+dm(R.d)+' — enter today\'s rate.');n.hidden=false;}
+  else n.hidden=true;
+}
+function saveRates(){
+  const R={d:today()};RATE_IDS.forEach(k=>{const v=$('bx-'+k).value;if(v)R[k]=v;});
+  store.set('bi-calc-rates',JSON.stringify(R));staleNote();
+}
+
+/* ---------- take weight from the open form ---------- */
+function pullWeight(quiet){
   const ids=['net_weight','farmer_weight','wb_weight'];
-  for(const id of ids){const e=$(id);if(e&&e.offsetParent!==null){const n=Number(toAscii(e.value));if(n>0){$('bc-w').value=String(n);calcRate();return;}}}
-  toast(L('ફોર્મમાં વજન મળ્યું નથી','No weight found in the form'));
+  for(const id of ids){const e=document.getElementById(id);if(e&&e.offsetParent!==null){const n=Number(toAscii(e.value));if(n>0){$('bx-w').value=String(n);paint();return true;}}}
+  if(!quiet)toast(L('ફોર્મમાં વજન મળ્યું નથી','No weight found in the form'));
+  return false;
 }
+
+/* ---------- sample (nuno) helper ---------- */
+function sampleRead(){
+  const r=M.sample({sample:$('bx-s-sample').value,daana:$('bx-s-daana').value,hava:$('bx-s-hava').value,damage:$('bx-s-dam').value});
+  const out=[];
+  if(r.utaro!==undefined)out.push(T.utaro+' '+fmtN(r.utaro,2)+' %');
+  if(r.hava!==undefined)out.push(T.hava+' '+fmtN(r.hava,2)+' %');
+  if(r.dameg!==undefined)out.push(T.dameg+' '+fmtN(r.dameg,2)+' %');
+  $('bx-s-out').textContent=out.length?out.join('  •  '):'—';
+  $('bx-s-apply').disabled=!out.length;
+  return r;
+}
+function sampleApply(){
+  const r=sampleRead();
+  if(r.utaro!==undefined)$('bx-utaro').value=String(r.utaro);
+  if(r.hava!==undefined)$('bx-hava').value=String(r.hava);
+  if(r.dameg!==undefined)$('bx-dameg').value=String(r.dameg);
+  paint();toast(L('✔ % ભરાઈ ગયા','✔ Percentages filled'));
+  $('bx-sample').open=false;
+}
+
+/* ---------- history ---------- */
+function loadHist(){try{const a=JSON.parse(store.get('bi-calc-hist','[]'));hh=Array.isArray(a)?a:[];}catch(_){hh=[];}}
+function saveHist(){store.set('bi-calc-hist',JSON.stringify(hh.slice(0,20)));}
+function inputsNow(){const v={};IDS.forEach(k=>{const e=$('bx-'+k);if(e&&e.value)v[k]=e.value;});return v;}
+function remember(o){
+  if(!o||!o.ok)return;
+  loadHist();
+  const e={t:Date.now(),mode,unit,v:inputsNow(),net:o.net,amt:o.amountOk&&canRate()?o.amount:null,utaro:o.utaro};
+  const key=JSON.stringify([e.mode,e.unit,e.v]);
+  hh=hh.filter(x=>JSON.stringify([x.mode,x.unit,x.v])!==key);
+  hh.unshift(e);saveHist();
+}
+function histView(on){
+  $('bx-main').hidden=on;$('bx-histview').hidden=!on;$('bx-total').hidden=on;
+  $('bx-hist-btn').classList.toggle('on',on);
+  if(!on)return;
+  loadHist();
+  const box=$('bx-hlist');
+  if(!hh.length){box.innerHTML='<p class="bx-hint">'+esc(L('હજી કંઈ યાદ રાખ્યું નથી. હિસાબ કરીને 📌 દબાવો.','Nothing saved yet. Do a hisab and press 📌.'))+'</p>';return;}
+  box.innerHTML=hh.map((x,idx)=>{
+    const d=new Date(x.t),when=String(d.getDate()).padStart(2,'0')+'-'+String(d.getMonth()+1).padStart(2,'0')+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+    const bits=[fmtN(x.net,1)+' KG'];if(x.utaro!==null&&x.utaro!==undefined&&x.mode!=='direct')bits.push(L('ઉતારો','Utaro')+' '+fmtN(x.utaro,2)+'%');
+    return '<div class="bx-h"><div class="bx-h-t"><span>'+esc(when)+'</span><b>'+(x.amt!==null&&x.amt!==undefined?'₹ '+esc(fmtN(x.amt,0)):'')+'</b></div><div class="bx-h-s">'+esc(bits.join('  •  '))+'</div>'
+      +'<div class="bx-h-a"><button type="button" class="bx-b ghost" data-open="'+idx+'">'+esc(L('ખોલો','Open'))+'</button><button type="button" class="bx-b ghost del" data-del="'+idx+'" aria-label="'+esc(L('કાઢો','Delete'))+'">🗑</button></div></div>';
+  }).join('');
+}
+function restore(x){
+  mode=MODES.includes(x.mode)?x.mode:'daana';unit=x.unit===20?20:40;store.set('bi-calc-mode',mode);store.set('bi-mann-kg',unit);
+  IDS.forEach(k=>{const e=$('bx-'+k);if(e)e.value=x.v&&x.v[k]!==undefined?x.v[k]:'';});
+  layout();histView(false);paint();
+}
+function newLot(){
+  ['w','bardan','hava','dameg','other','utaro'].forEach(k=>$('bx-'+k).value='');
+  ['sample','daana','hava','dam'].forEach(k=>$('bx-s-'+k).value='');sampleRead();
+  paint();pullWeight(true);
+  try{$('bx-w').focus();}catch(_){}
+}
+
+/* ================= shell ================= */
 function build(){
+  T=S();loadHist();
   root=el('div','bi-calc');root.id='bi-calc';root.hidden=true;root.setAttribute('data-user-content','');
   const keys=[['C','fn red'],['⌫','fn'],['%','fn'],['÷','op'],['7'],['8'],['9'],['×','op'],['4'],['5'],['6'],['−','op'],['1'],['2'],['3'],['+','op'],['00'],['0'],['.'],['=','eq']];
-  root.innerHTML=`<div class="bc-backdrop"></div><section class="bc-sheet" role="dialog" aria-modal="true" aria-label="${L('કેલ્ક્યુલેટર','Calculator')}">
-  <div class="bc-grab"></div>
-  <header class="bc-head"><div class="bc-tabs"><button type="button" data-tab="calc" class="on">🧮 ${L('કેલ્ક્યુલેટર','Calculator')}</button><button type="button" data-tab="rate">⚖️ ${L('ભાવ / રકમ','Rate / Amount')}</button></div><button type="button" class="bc-x" aria-label="${L('બંધ','Close')}">×</button></header>
-  <div class="bc-pane" data-pane="calc">
+  const cell=(id,label,unitTxt,ph)=>`<label class="bx-cell"><span class="l">${label}</span><input id="bx-${id}" class="bx-in" type="text" inputmode="decimal" autocomplete="off" enterkeyhint="next" placeholder="${ph||''}"><span class="u">${unitTxt}</span></label>`;
+  root.innerHTML=`<div class="bc-backdrop"></div><section class="bc-sheet" role="dialog" aria-modal="true" aria-label="${T.tabCalc}">
+  <header class="bc-head"><div class="bc-grab"></div><div class="bx-bar">
+    <div class="bc-tabs" role="tablist"><button type="button" role="tab" data-tab="rate" class="on">⚖️ ${T.tabHisab}</button><button type="button" role="tab" data-tab="calc">🧮 ${T.tabCalc}</button></div>
+    <button type="button" class="bx-ic" id="bx-hist-btn" aria-label="${L('યાદ રાખેલા હિસાબ','Saved hisabs')}">🕘</button>
+    <button type="button" class="bx-ic bc-x" aria-label="${L('બંધ','Close')}">×</button></div></header>
+  <div class="bc-pane" data-pane="rate">
+   <div id="bx-main">
+    <div class="bx-grid" id="bx-wgrid">
+      <label class="bx-cell"><span class="l">${T.weight} <em>${L('(KG)','(KG)')}</em></span><input id="bx-w" class="bx-in" type="text" inputmode="decimal" autocomplete="off" enterkeyhint="next" placeholder="3930.4"><span class="u">KG</span><button type="button" class="bx-chip" id="bx-pull" aria-label="${L('ફોર્મમાંથી વજન લો','Take the weight from the form')}" title="${L('ફોર્મમાંથી વજન લો','Take the weight from the form')}">⤓</button></label>
+      ${cell('bardan',T.bardan,'KG','6')}
+      ${cell('hava',T.hava,'%','2')}
+      ${cell('dameg',T.dameg,'%','1')}
+    </div>
+    <div class="bx-unit"><span>${L('1 મણ =','1 mann =')}</span><button type="button" class="bx-b pill" data-u="20">20 KG</button><button type="button" class="bx-b pill" data-u="40">40 KG</button></div>
+    <section class="bx-rate-sec" id="bx-ratesec">
+      <div class="bx-modes" role="group" aria-label="${L('ભાવ કેવી રીતે','Rate method')}"><button type="button" class="bx-b seg" data-m="direct">${T.mDirect}</button><button type="button" class="bx-b seg" data-m="daana">${T.mDaana}</button><button type="button" class="bx-b seg" data-m="base">${T.mBase}</button></div>
+      <p class="bx-stale" id="bx-stale" hidden></p>
+      <div class="bx-grid" id="bx-rgrid">
+        ${cell('rate',T.rate+' <em>(₹ / '+T.mann+')</em>','₹','3000')}
+        ${cell('daana',T.daana+' <em>(₹ / '+T.mann+')</em>','₹','1500')}
+        ${cell('base',T.base+' <em>(₹ / '+T.mann+')</em>','₹','1100')}
+        ${cell('baseu',L('બેઝ ઉતારો','Base utaro'),'%','65')}
+        ${cell('utaro',T.utaro,'%','68')}
+        ${cell('step',L('દર 1% ના','Per 1 %')+' <em>(₹ / '+T.mann+')</em>','₹','20')}
+        ${cell('other',T.other,'₹','0')}
+      </div>
+    </section>
+    <section class="bx-ledger" id="bx-ledger" aria-live="polite"></section>
+    <div class="bx-more"><button type="button" class="bx-b ghost" id="bx-save">📌 ${L('યાદ રાખો','Save')}</button><button type="button" class="bx-b ghost" id="bx-new">🧹 ${L('નવો હિસાબ','New lot')}</button></div>
+    <details class="bx-sample" id="bx-sample"><summary>🥜 ${L('નમૂનાથી ઉતારો / હવા / ડેમેજ કાઢો','Work out utaro / hava / damage from a sample')}</summary>
+      <div class="bx-grid">
+        ${cell('s-sample',L('નમૂનો','Sample'),'g','1000')}
+        ${cell('s-daana',L('દાણા','Daana'),'g','680')}
+        ${cell('s-hava',L('હવા','Hava'),'g','20')}
+        ${cell('s-dam',L('ડેમેજ દાણા','Damaged daana'),'g','14')}
+      </div>
+      <p class="bx-fx">${L('ઉતારો = દાણા ÷ નમૂનો • હવા = હવા ÷ નમૂનો • ડેમેજ = ડેમેજ દાણા ÷ દાણા','Utaro = daana ÷ sample • Hava = hava ÷ sample • Damage = damaged ÷ daana')}</p>
+      <div class="bx-s-row"><b id="bx-s-out">—</b><button type="button" class="bx-b solid" id="bx-s-apply" disabled>${L('આ % ભરો','Use these %')}</button></div>
+    </details>
+   </div>
+   <div id="bx-histview" hidden><div class="bx-hh"><b>${L('યાદ રાખેલા હિસાબ','Saved hisabs')}</b><button type="button" class="bx-b ghost" id="bx-hback">← ${L('પાછા','Back')}</button></div><div id="bx-hlist"></div></div>
+   <footer class="bx-total" id="bx-total"><div class="bx-tt"><span class="lbl" id="bx-lbl">${T.total}</span><b class="amt" id="bx-amt">—</b><span class="sub" id="bx-sub"></span></div>
+     <div class="acts"><button type="button" class="bx-ab" id="bx-copy" aria-label="${L('કૉપી','Copy')}">📋</button><a class="bx-ab" id="bx-wa" target="_blank" rel="noopener" aria-label="WhatsApp">💬</a></div></footer>
+  </div>
+  <div class="bc-pane" data-pane="calc" hidden>
     <div class="bc-screen"><div class="bc-expr" id="bc-expr"></div><div class="bc-res" id="bc-res">0</div></div>
     <div class="bc-hist" id="bc-hist"></div>
     <div class="bc-keys">${keys.map(([k,c])=>`<button type="button" class="bk-key ${c||''}" data-k="${k}">${k}</button>`).join('')}</div>
-    <div class="bc-tools"><button type="button" id="bc-fill">⤵ ${L('ફોર્મમાં ભરો','Put in form')}</button><button type="button" id="bc-copy">📋 ${L('કૉપી','Copy')}</button></div>
-  </div>
-  <div class="bc-pane" data-pane="rate" hidden>
-    <label>${L('વજન (KG)','Weight (KG)')}<div class="bc-row"><input id="bc-w" inputmode="decimal" autocomplete="off" placeholder="3930.4"><button type="button" id="bc-pull">${L('ફોર્મમાંથી લો','From form')}</button></div></label>
-    <label>${L('કાપ (KG) — વૈકલ્પિક','Cut (KG) — optional')}<input id="bc-cut" inputmode="decimal" autocomplete="off" placeholder="0"></label>
-    <div class="bc-unit"><span>${L('1 મણ =','1 mann =')}</span><button type="button" data-u="20">20 KG</button><button type="button" data-u="40">40 KG</button></div>
-    <label>${L('ભાવ (₹ / મણ)','Rate (₹ / mann)')}<input id="bc-rate" inputmode="decimal" autocomplete="off" placeholder="3000"></label>
-    <div class="bc-out">
-      <div><span>${L('ચોખ્ખું વજન','Net weight')}</span><b id="bc-o-net">—</b></div>
-      <div><span>${L('મણ','Mann')}</span><b id="bc-o-mann">—</b></div>
-      <div><span>${L('ક્વિન્ટલ','Quintal')}</span><b id="bc-o-qt">—</b></div>
-      <div class="amt"><span>${L('કુલ રકમ','Total amount')}</span><b id="bc-o-amt">—</b></div>
-    </div>
-    <div class="bc-tools"><button type="button" id="bc-rcopy">📋 ${L('કૉપી','Copy')}</button></div>
+    <div class="bc-tools"><button type="button" class="bx-b ghost" id="bc-fill">⤵ ${L('ફોર્મમાં ભરો','Put in form')}</button><button type="button" class="bx-b ghost" id="bc-copy">📋 ${L('કૉપી','Copy')}</button></div>
   </div></section>`;
   document.body.appendChild(root);
-  const r=store.get('bi-rate','');if(r)$('bc-rate').value=r;
+  /* remembered rates */
+  let R={};try{R=JSON.parse(store.get('bi-calc-rates','{}'))||{};}catch(_){}
+  if(!Object.keys(R).length){const old=store.get('bi-rate','');if(old)R={direct:old,rate:old};}
+  RATE_IDS.forEach(k=>{if(R[k])$('bx-'+k).value=R[k];});
+  /* events */
   root.querySelector('.bc-backdrop').addEventListener('click',close);
   root.querySelector('.bc-x').addEventListener('click',close);
   root.querySelectorAll('.bc-tabs button').forEach(b=>b.addEventListener('click',()=>tab(b.dataset.tab)));
@@ -7407,19 +7822,36 @@ function build(){
     lastField.value=String(Math.round(v*1000)/1000);lastField.dispatchEvent(new Event('input',{bubbles:true}));lastField.dispatchEvent(new Event('change',{bubbles:true}));
     toast(L('✔ ફોર્મમાં ભર્યું','✔ Put in the form'));close();
   });
-  ['bc-w','bc-cut','bc-rate'].forEach(id=>$(id).addEventListener('input',calcRate));
-  $('bc-pull').addEventListener('click',pullWeight);
-  root.querySelectorAll('.bc-unit button').forEach(b=>b.addEventListener('click',()=>{unit=Number(b.dataset.u);store.set('bi-mann-kg',unit);calcRate();}));
-  $('bc-rcopy').addEventListener('click',()=>{const o=calcRate();if(!o.ok)return;copy(fmtN(Math.round(o.net*1000)/1000,3)+' KG = '+fmtN(o.mann,2)+' '+L('મણ','mann')+(Number.isFinite(o.amt)?' × ₹'+fmtN(o.rate,2)+' = ₹'+fmtN(o.amt,0):''));});
-  calcRate();
+  IDS.forEach(k=>$('bx-'+k).addEventListener('input',()=>{paint();if(RATE_IDS.includes(k))saveRates();}));
+  root.querySelectorAll('.bx-in').forEach(i=>i.addEventListener('focus',()=>{setTimeout(()=>{try{i.select();}catch(_){}},0);}));
+  ['sample','daana','hava','dam'].forEach(k=>$('bx-s-'+k).addEventListener('input',sampleRead));
+  $('bx-s-apply').addEventListener('click',sampleApply);
+  $('bx-pull').addEventListener('click',e=>{e.preventDefault();pullWeight(false);});
+  root.querySelectorAll('.bx-unit button').forEach(b=>b.addEventListener('click',()=>{unit=Number(b.dataset.u);store.set('bi-mann-kg',unit);layout();paint();}));
+  root.querySelectorAll('.bx-modes button').forEach(b=>b.addEventListener('click',()=>{mode=b.dataset.m;store.set('bi-calc-mode',mode);layout();paint();}));
+  $('bx-copy').addEventListener('click',()=>{const o=paint.last;if(!o||!o.ok)return;copy(textOf(o,!canRate()));remember(o);});
+  $('bx-wa').addEventListener('click',()=>{const o=paint.last;if(o&&o.ok)remember(o);});
+  $('bx-save').addEventListener('click',()=>{const o=paint.last;if(!o||!o.ok)return;remember(o);toast(L('✔ યાદ રાખ્યું','✔ Saved'));});
+  $('bx-new').addEventListener('click',newLot);
+  $('bx-hist-btn').addEventListener('click',()=>{const want=tabName==='rate'?$('bx-histview').hidden:true;tab('rate');histView(want);});
+  $('bx-hback').addEventListener('click',()=>histView(false));
+  $('bx-hlist').addEventListener('click',e=>{
+    const o=e.target.closest('[data-open]'),d=e.target.closest('[data-del]');
+    if(o){const x=hh[Number(o.dataset.open)];if(x)restore(x);}
+    if(d){hh.splice(Number(d.dataset.del),1);saveHist();histView(true);}
+  });
+  layout();staleNote();sampleRead();
 }
 function tab(name){
-  root.querySelectorAll('.bc-tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===name));
-  root.querySelectorAll('.bc-pane').forEach(p=>p.hidden=p.dataset.pane!==name);
-  if(name==='rate'&&!$('bc-w').value)pullWeight();
+  tabName=name==='calc'?'calc':'rate';store.set('bi-calc-tab',tabName);
+  root.querySelectorAll('.bc-tabs button').forEach(b=>{const on=b.dataset.tab===tabName;b.classList.toggle('on',on);b.setAttribute('aria-selected',on?'true':'false');});
+  root.querySelectorAll('.bc-pane').forEach(p=>p.hidden=p.dataset.pane!==tabName);
+  if(tabName==='rate'){histView(false);if(!$('bx-w').value)pullWeight(true);paint();}
+  else render();
+  try{root.querySelector('.bc-sheet').scrollTop=0;}catch(_){}
 }
 function onKey(e){
-  if(!root||root.hidden)return;
+  if(!root||root.hidden||tabName!=='calc')return;
   if(e.target&&e.target.matches&&e.target.matches('input,textarea'))return;
   const k=e.key;
   if(k==='Escape'){close();return;}
@@ -7430,12 +7862,16 @@ function onKey(e){
   else if(k==='Enter'||k==='='){press('=');e.preventDefault();}
   else if(k==='Backspace'){press('⌫');e.preventDefault();}
 }
-function open(){
-  if(!root){build();document.addEventListener('keydown',onKey);}
-  root.hidden=false;document.documentElement.classList.add('bc-open');try{const ok=!window.BalajiSettings||window.BalajiSettings.canRate();const rb=root.querySelector('[data-tab="rate"]');if(rb){rb.hidden=!ok;if(!ok)tab('calc');}}catch(_){}render();calcRate();
+function open(which){
+  if(!root){build();document.addEventListener('keydown',onKey);document.addEventListener('keydown',e=>{if(e.key==='Escape'&&root&&!root.hidden&&tabName==='rate')close();});}
+  T=S();
+  root.hidden=false;document.documentElement.classList.add('bc-open');
+  root.classList.toggle('bx-norate',!canRate());
+  layout();
+  tab(which==='calc'||which==='rate'?which:tabName);
 }
 function close(){if(root){root.hidden=true;document.documentElement.classList.remove('bc-open');}}
-window.BalajiCalc.open=open;window.BalajiCalc.close=close;
+window.BalajiCalc={evaluate,open,close,last,compute:M.compute};
 document.addEventListener('focusin',e=>{
   const t=e.target;
   if(t&&t.matches&&t.matches('input,textarea')&&!t.closest('#bi-calc')&&!t.closest('.bi-v2-modal')&&!/^(checkbox|radio|file|password|date|search|submit|button)$/i.test(t.type||''))lastField=t;
@@ -7446,7 +7882,7 @@ function ensureButton(){
   let b=$('bi-calc-btn');
   if(!b){
     b=el('button','bi-calc-btn','🧮');b.type='button';b.id='bi-calc-btn';b.setAttribute('aria-label',L('કેલ્ક્યુલેટર','Calculator'));b.title=L('કેલ્ક્યુલેટર','Calculator');
-    b.addEventListener('click',open);
+    b.addEventListener('click',()=>open());
   }
   if(b.parentElement!==acts)acts.insertBefore(b,acts.firstChild);
 }
