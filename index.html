@@ -6848,6 +6848,9 @@ a.bz-wabtn,#admin a.bz-wabtn,.bi-v2-modal a.bz-wabtn{flex:1 1 0;display:inline-f
 .kt-vt{margin-top:8px}
 #admin .kt-c select,#admin .kt-det select{min-height:40px!important;font-size:14px!important;border-radius:10px!important}
 .kt-log{margin:8px 0 0;max-height:240px;overflow:auto;white-space:pre-wrap;font-size:11px;line-height:1.45;color:#44625f}
+.kt-bd:empty{display:none}.kt-bd{display:block}
+.kt-fn span{font-size:11px!important;color:#6a8184}
+.kt-firm label>span b{font-weight:800}
 </style>
 <script id="bi-v9-qr">
 /* ================= Small QR-code maker (byte mode, level L or M, versions 1-14) ================= */
@@ -11983,12 +11986,26 @@ async function saveLedgers(firm,leds){
 }
 
 /* ---- sync one firm from Tally ---- */
+const emsg=e=>String((e&&e.message)||e||'').slice(0,500);
+/* the name Tally knows: exact spelling from Tally's list, else a very close one, else what is typed
+   (Tally's own answer then decides - its company list may leave out the company that is currently active) */
+function resolveCompany(typed,comps){
+  const k=nkey(typed);if(!k)return '';
+  let real=(comps||[]).find(c=>nkey(c)===k);
+  if(!real){
+    const sim=(comps||[]).map(c=>{const a=nkey(c);return [c,1-BK.lev(a,k)/Math.max(a.length,k.length,1)];}).sort((a,b)=>b[1]-a[1]);
+    if(sim.length&&sim[0][1]>=0.85&&(!sim[1]||sim[1][1]<sim[0][1]-0.05))real=sim[0][0];
+  }
+  return real||clean(typed);
+}
+const noCompany=(f,comps)=>new Error(T('Tally ma "'+f.company+'" company khuli nathi (athva naam alag chhe). Tally ni company: ','Company "'+f.company+'" is not open in Tally (or the name differs). Tally companies: ')+((comps||[]).join(', ')||'—'));
 async function syncFirm(f,opt){
   opt=opt||{};
   const comps=TM.parseCompanies(await tcall(TM.reqCompanies()));
-  const real=comps.find(c=>nkey(c)===nkey(f.company));
-  if(!real)throw new Error(T('Tally ma "'+f.company+'" company khuli nathi. Khuli chhe: ','Company "'+f.company+'" is not open in Tally. Open: ')+(comps.join(', ')||'—'));
-  const types=TM.parseVoucherTypes(await tcall(TM.reqVoucherTypes(real)));
+  const real=resolveCompany(f.company,comps);
+  let types;
+  try{types=TM.parseVoucherTypes(await tcall(TM.reqVoucherTypes(real)));}
+  catch(e){if(/SVCurrentCompany|company/i.test(String(e&&e.message)))throw noCompany(f,comps);throw e;}
   const base=TM.baseResolver(types,TS().vt||{});
   let nl=0;
   if(!opt.noLedgers){const leds=TM.parseLedgers(await tcall(TM.reqLedgers(real)));await saveLedgers(f.id,leds);nl=leds.length;}
@@ -12092,7 +12109,7 @@ async function syncAll(opt){
       }catch(e){
         const h=tsqlHint(e);
         if(/supabase-tally/.test(h)){res.ok=false;res.msg=h;tlog('✗ '+h);sqlBad=true;break;}
-        res.firms[f.id]={err:err(e)};res.ok=false;res.msg=(res.msg?res.msg+' • ':'')+f.name+': '+err(e);tlog(f.name+' ✗ '+err(e));
+        res.firms[f.id]={err:emsg(e)};res.ok=false;res.msg=(res.msg?res.msg+' • ':'')+f.name+': '+emsg(e);tlog(f.name+' ✗ '+emsg(e));
       }
     }
     if(!sqlBad)try{
@@ -12465,7 +12482,9 @@ function tallySetupView(S){
     :pg===undefined?'':!pg?'<p class="kt-msg bad">✗ '+E(T('Tally Link પ્રોગ્રામ ચાલુ નથી. નીચે મુજબ Tally-Link.bat ચલાવો.','Tally Link program is not running. Run Tally-Link.bat as shown below.'))+'</p>'
       :!pg.tally?'<p class="kt-msg warn">⚠ '+E(T('Tally Link ચાલુ છે પણ Tally મળ્યું નથી — Tally ચાલુ છે અને XML server ON છે?','Tally Link is running but Tally was not found — is Tally open with the XML server ON?'))+'</p>'
       :'<p class="kt-msg good">✔ '+E(T('Tally Link ચાલુ છે • Tally મળી ગયું','Tally Link is running • Tally found'))+'</p>';
-  const compOk=c=>S.comps?S.comps.some(x=>nkey(x)===nkey(c)):null;
+  /* a firm is "open" when Tally itself accepts its name (checked with a tiny read-only request) */
+  const compOk=f=>S.ok&&S.ok[f.id]!==undefined?S.ok[f.id]:null;
+  const badge=ok=>ok===null||ok===undefined?'':'<span class="kb-fl '+(ok?'ok':'warn')+'">'+E(ok?T('✔ Tally માં ખુલ્લી છે','✔ open in Tally'):T('✗ Tally માં ખુલ્લી નથી — નામ બરાબર છે?','✗ not open in Tally — is the name exact?'))+'</span>';
   const tmap=new Map();(S.vs||[]).forEach(v=>{if(v.type&&!tmap.has(v.type))tmap.set(v.type,v.base);});
   const L=BASE_LB();
   let log=[];try{log=JSON.parse(LS('bi-tally-log','[]'));}catch(_){}
@@ -12478,9 +12497,9 @@ function tallySetupView(S){
     +(pc?'<div class="kt-btns"><button type="button" class="kt-b" id="kt-chk">🔌 '+E(T('ચકાસો','Check'))+'</button><button type="button" class="kt-b ok" id="kt-now">🔄 '+E(T('હમણાં સિંક','Sync now'))+'</button><button type="button" class="kt-b" id="kt-full">⏮ '+E(T('શરૂઆતથી બધું','Everything from start date'))+'</button><button type="button" class="kt-b" id="kt-raw">🧪 '+E(T('Tally નો નમૂનો ફાઇલમાં','Save a Tally sample'))+'</button></div>':'')
     +'<p class="bz-st" id="bz-st" role="status"></p></div>'
     +'<div class="kb-card kt-c"><div class="kb-ct"><span>🏢 '+E(T('ફર્મ ↔ Tally કંપની','Firms ↔ Tally companies'))+'</span></div>'
-    +FIRMS().map((f,i)=>{const ok=compOk(f.company);return '<div class="kt-firm"><label class="bz-f"><span>'+firmIc(f.id)+' '+E(T('ફર્મનું નામ','Firm name'))+'</span><input class="kt-in" data-fn="'+i+'" value="'+E(f.name)+'"></label>'
-      +'<label class="bz-f"><span>'+E(T('Tally માં કંપનીનું નામ (બરાબર એવું જ)','Company name in Tally (exactly)'))+'</span><input class="kt-in" list="kt-comps" data-fc="'+i+'" value="'+E(f.company)+'"></label>'
-      +(ok===null?'':'<span class="kb-fl '+(ok?'ok':'warn')+'">'+E(ok?T('✔ Tally માં ખુલ્લી છે','✔ open in Tally'):T('✗ Tally માં ખુલ્લી નથી','✗ not open in Tally'))+'</span>')+'</div>';}).join('')
+    +FIRMS().map((f,i)=>'<div class="kt-firm" data-fi="'+i+'"><label class="bz-f"><span>'+firmIc(f.id)+' <b>'+E(f.name)+'</b> — '+E(T('Tally માં કંપનીનું નામ (બરાબર એવું જ)','Company name in Tally (exactly)'))+'</span><input class="kt-in" list="kt-comps" data-fc="'+i+'" value="'+E(f.company)+'" autocomplete="off"></label>'
+      +'<span class="kt-bd">'+badge(compOk(f))+'</span>'
+      +'<label class="bz-f kt-fn"><span>'+E(T('ઍપમાં દેખાતું નામ (ફક્ત બતાવવા માટે)','Name shown in the app (display only)'))+'</span><input class="kt-in" data-fn="'+i+'" value="'+E(f.name)+'" autocomplete="off"></label></div>').join('')
     +'<datalist id="kt-comps">'+(S.comps||[]).map(c=>'<option value="'+E(c)+'"></option>').join('')+'</datalist></div>'
     +'<div class="kb-card kt-c"><div class="kb-ct"><span>📅 '+E(T('ક્યારથી ડેટા લેવો','Take data from'))+'</span></div><label class="bz-f"><span>'+E(T('શરૂઆતની તારીખ','Start date'))+'</span><input type="date" id="kt-from" value="'+E(tallyFrom())+'"></label>'
     +'<p class="v9-note">'+E(T('આ તારીખથી Tally નો ડેટા આવશે. ખાલી હોય તો આ મહિનાની 1 તારીખથી. ખેડૂતની જૂની ચૂકવણી ડબલ ન થાય તે માટે પહેલી વાર ખાતામાં નાખતાં પહેલાં તમને પૂછશે.','Tally data is taken from this date (default: 1st of this month). To avoid doubles, the first time you are asked before payments go to khata.'))+'</p></div>'
@@ -12508,14 +12527,17 @@ function tallySetupView(S){
     body.querySelectorAll('[data-fc]').forEach(i=>{arr[+i.dataset.fc].company=clean(i.value);});
     SET.save({tally:{firms:arr}});
   };
-  body.querySelectorAll('.kt-in').forEach(i=>i.addEventListener('change',()=>{
+  async function probeFirm(f){
+    if(!clean(f.company)){S.ok=S.ok||{};delete S.ok[f.id];return;}
+    S.ok=S.ok||{};
+    try{await tcall(TM.reqVoucherTypes(resolveCompany(f.company,S.comps||[])));S.ok[f.id]=true;}
+    catch(e){S.ok[f.id]=/SVCurrentCompany|company/i.test(String(e&&e.message))?false:undefined;if(S.ok[f.id]===undefined)delete S.ok[f.id];}
+  }
+  const paintBadge=k=>{const box=body.querySelector('.kt-firm[data-fi="'+k+'"] .kt-bd'),f=FIRMS()[k];if(box&&f)box.innerHTML=badge(compOk(f));};
+  body.querySelectorAll('.kt-in').forEach(i=>i.addEventListener('change',async()=>{
     saveFirms();
-    /* update the little "open in Tally" badges in place (no re-draw while a field is being left) */
-    body.querySelectorAll('.kt-firm').forEach((box,k)=>{
-      const f=FIRMS()[k],b=box.querySelector('.kb-fl');if(!f||!b||!S.comps)return;
-      const ok=S.comps.some(x=>nkey(x)===nkey(f.company));
-      b.className='kb-fl '+(ok?'ok':'warn');b.textContent=ok?T('✔ Tally માં ખુલ્લી છે','✔ open in Tally'):T('✗ Tally માં ખુલ્લી નથી','✗ not open in Tally');
-    });
+    /* no re-draw while a field is being left; just refresh that firm's badge */
+    if(isTallyPC()&&i.dataset.fc!==undefined){const k=+i.dataset.fc;await probeFirm(FIRMS()[k]);paintBadge(k);}
   }));
   q('#kt-dl').addEventListener('click',()=>{
     if(!window.BalajiTallyLinkPS){status(body,T('પ્રોગ્રામ તૈયાર નથી — ઍપ ફરી ખોલો.','Program not ready — reopen the app.'),true);return;}
@@ -12531,8 +12553,11 @@ function tallySetupView(S){
   }));
   async function check(){
     status(body,T('ચકાસે છે…','Checking…'));
-    S.ping=await relayPing();S.comps=null;
-    if(S.ping&&S.ping.tally){try{S.comps=TM.parseCompanies(await tcall(TM.reqCompanies()));}catch(e){status(body,err(e),true);}}
+    S.ping=await relayPing();S.comps=null;S.ok={};
+    if(S.ping&&S.ping.tally){
+      try{S.comps=TM.parseCompanies(await tcall(TM.reqCompanies()));}catch(e){status(body,err(e),true);}
+      for(const f of FIRMS())await probeFirm(f);
+    }
     S.repaint();
   }
   const bc=q('#kt-chk');if(bc)bc.addEventListener('click',check);
