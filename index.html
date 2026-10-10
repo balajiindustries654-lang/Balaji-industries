@@ -5300,6 +5300,7 @@ function day(v){if(!v)return '';const date=new Date(v);if(!Number.isFinite(+date
 function businessDay(x,type){return type==='maal'&&x.entry_date?String(x.entry_date).slice(0,10):day(x.created_at);}
 function number(v){const n=Number(v);return Number.isFinite(n)?n:0;}
 const fmt=v=>number(v).toLocaleString(language==='en'?'en-IN':'gu-IN',{maximumFractionDigits:3});
+const big=v=>{const n=number(v),a=Math.abs(n);if(a<1e7)return fmt(n);if(a<1e12)return (n/1e7).toLocaleString(language==='en'?'en-IN':'gu-IN',{maximumFractionDigits:2})+' Cr';const q=n.toExponential(2).split('e');return q[0]+'×10'+String(parseInt(q[1],10)).replace(/[-0-9]/g,c=>'⁻⁰¹²³⁴⁵⁶⁷⁸⁹'['-0123456789'.indexOf(c)]);};
 const stamp=v=>v?new Date(v).toLocaleString(language==='en'?'en-IN':'gu-IN',{timeZone:'Asia/Kolkata',dateStyle:'medium',timeStyle:'short'}):'\u2014';
 const sum=(rows,field)=>Math.round(rows.reduce((s,x)=>s+number(x[field]),0)*1000)/1000;
 const material=v=>({Magfadi:T('\u0aae\u0a97\u0aab\u0ab3\u0ac0','Groundnut'),Aeranda:T('\u0a8f\u0ab0\u0a82\u0aa1\u0abe','Castor'),Gau:T('\u0a98\u0a89\u0a82','Wheat'),Govar:T('\u0a97\u0ab5\u0abe\u0ab0','Guar')})[v]||v||'\u2014';
@@ -5318,7 +5319,7 @@ async function refresh(){if(loading)return loading;const generation=dataGenerati
  data.closureError=l.error?.message||'';data.profileError=p.error?.message||'';updateStats();return data;
  })().finally(()=>loading=null);return loading;}
 function updateStats(){const now=day(new Date()),c=data.chit.filter(x=>businessDay(x,'chit')===now),w=data.wb.filter(x=>businessDay(x,'wb')===now),m=data.maal.filter(x=>businessDay(x,'maal')===now);
- const vals={stat_entries:c.length,stat_weight:fmt(sum(w,'net_weight_kg'))+' KG',stat_vehicles:new Set([...c,...w,...m].map(x=>key(x.vehicle_number)).filter(Boolean)).size,stat_farmers:new Set(c.map(x=>x.farmer_mobile||x.farmer_name).filter(Boolean)).size,stat_unloading:fmt(sum(m.filter(x=>x.entry_type==='unloading'),'bags'))+' '+T('\u0aac\u0ac7\u0a97','Bags'),stat_loading:fmt(sum(m.filter(x=>x.entry_type==='loading'),'bags'))+' '+T('\u0aac\u0ac7\u0a97','Bags')};
+ const vals={stat_entries:c.length,stat_weight:big(sum(w,'net_weight_kg'))+' KG',stat_vehicles:new Set([...c,...w,...m].map(x=>key(x.vehicle_number)).filter(Boolean)).size,stat_farmers:new Set(c.map(x=>x.farmer_mobile||x.farmer_name).filter(Boolean)).size,stat_unloading:big(sum(m.filter(x=>x.entry_type==='unloading'),'bags'))+' '+T('\u0aac\u0ac7\u0a97','Bags'),stat_loading:big(sum(m.filter(x=>x.entry_type==='loading'),'bags'))+' '+T('\u0aac\u0ac7\u0a97','Bags')};
  Object.entries(vals).forEach(([id,v])=>{if($v(id))$v(id).textContent=v;});
 }
 function closed(x,type){return data.closures.find(c=>c.vehicle_key===key(x.vehicle_number)&&c.business_date===businessDay(x,type))?.closed;}
@@ -5333,17 +5334,18 @@ function card(x,type,detail=false){
  const fields=isM?label('\u0aae\u0abe\u0ab2','Material',material(x.material_type))+label('\u0aa4\u0abe\u0ab0\u0ac0\u0a96','Date',businessDay(x,type))+label('\u0aae\u0abe\u0ab2\u0abf\u0a95 / \u0ab8\u0aaa\u0acd\u0ab2\u0abe\u0aaf\u0ab0','Owner / Supplier',name||'\u2014'):
  isW?label('RST \u0aa8\u0a82\u0aac\u0ab0','RST number',id||'\u2014')+label('\u0aa4\u0abe\u0ab0\u0ac0\u0a96','Date',businessDay(x,type))+label('\u0aa8\u0abe\u0aae','Name',name||'\u2014'):
  label('\u0a96\u0ac7\u0aa1\u0ac2\u0aa4','Farmer',name||'\u2014')+label('\u0a97\u0abe\u0aae','Village',x.village_name||'\u2014')+label('\u0aae\u0abe\u0ab2','Material',material(x.commodity_type))+label('\u0aae\u0acb\u0aac\u0abe\u0a87\u0ab2','Mobile',x.farmer_mobile||'\u2014');
- return `<article class="bi-v2-record" data-record="${E(type)}"><header><div><span class="bi-v2-tag">${E(badge)}${id?' \u00b7 '+E(id):''}</span><h3>${E(x.vehicle_number||'\u2014')}</h3></div><div class="bi-v2-total">${E(amount)}</div></header>${warning(x,type)}<dl>${fields}</dl><footer><span>${E(T('Entry \u0a95\u0ab0\u0ac0: ','Submitted by: ')+staff(x.created_by))}<br>${E(stamp(x.created_at))}</span>${closed(x,type)?`<span class="bi-v2-tag closed">${E(T('\u0ab9\u0abf\u0ab8\u0abe\u0aac \u0aac\u0a82\u0aa7','Closed'))}</span>`:''}<div class="rec-actions"><button type="button" class="rec-share" data-action="share" data-type="${E(type)}" data-id="${E(x.id)}">📤 ${E(T('શેર','Share'))}</button>${!detail?`<button type="button" data-action="detail" data-type="${E(type)}" data-id="${E(x.id)}">${E(T('\u0ab5\u0abf\u0a97\u0aa4\u0acb \u0a9c\u0ac1\u0a93','View details'))} \u2197</button>`:''}</div></footer></article>`;
+ const raw=isM?x.bags:isW?x.net_weight_kg:x.weight_kg,unit=isM?T('બેગ','Bags'):'KG';
+ const odd=(isM?number(x.bags)>10000:number(raw)>100000)||(type!=='maal'&&number(type==='chit'?x.gross_weight_kg:x.net_weight_kg)>100000);
+ const ic=isM?(x.entry_type==='loading'?'🚛':'📥'):isW?'⚖️':'📝';
+ const sub=(isM?[material(x.material_type),name]:isW?[name,id?'RST '+id:'']:[name,x.village_name,material(x.commodity_type)]).filter(v=>v&&v!=='—');
+ const bd=String(businessDay(x,type)||''),dm=bd?bd.slice(8,10)+'-'+bd.slice(5,7):'',tm=x.created_at?new Date(x.created_at).toLocaleTimeString(language==='en'?'en-IN':'gu-IN',{timeZone:'Asia/Kolkata',hour:'numeric',minute:'2-digit'}):'';
+ const act=detail?'':` data-action="detail" data-type="${E(type)}" data-id="${E(x.id)}" tabindex="0" role="button"`;
+ return `<article class="bi-v2-record kr kr-${E(type)}${isM&&x.entry_type==='loading'?' kr-out':''}${odd?' kr-bad':''}${detail?' kr-det':''}" data-record="${E(type)}" data-raw="${E(number(raw))}"${act}><span class="kr-av" aria-hidden="true">${ic}</span><div class="kr-mid"><div class="kr-t"><span class="kr-plate">${E(x.vehicle_number||'—')}</span><span class="kr-tag">${E(badge)}${id?' · '+E(id):''}</span>${closed(x,type)?`<span class="kr-tag kr-cl">${E(T('હિસાબ બંધ','Closed'))}</span>`:''}</div><div class="kr-s">${E(sub.join(' • ')||'—')}</div><div class="kr-f">${E([dm,tm,staff(x.created_by)].filter(Boolean).join(' • '))}</div></div><div class="kr-r"><b class="${odd?'bad':''}" title="${E(fmt(raw))}">${E(big(raw))}</b><small>${E(unit)}</small></div><button type="button" class="kr-share rec-share" data-action="share" data-type="${E(type)}" data-id="${E(x.id)}" aria-label="${E(T('શેર','Share'))}"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 10.5l6.8-4M8.6 13.5l6.8 4"/></svg></button>${odd?`<p class="kr-warn">⚠ ${E(T('અસામાન્ય મોટો આંકડો — મૂળ પાવતી સાથે ચકાસો.','Unusually large number — check the original slip.'))}</p>`:''}</article>`;
 }
-function groups(rows,by,type){const map=new Map();rows.forEach(x=>{const k=by==='date'?businessDay(x,type):by==='staff'?(x.created_by||'legacy'):by==='material'?material(x.material_type||x.commodity_type):key(x.vehicle_number)||'\u2014';if(!map.has(k))map.set(k,[]);map.get(k).push(x);});return [...map].map(([k,r])=>`<details class="bi-v2-group" open><summary>${E(by==='staff'?staff(k):k)} \u00b7 ${fmt(r.length)} ${E(T('Entries','entries'))} \u00b7 ${fmt(sum(r,type==='maal'?'bags':type==='wb'?'net_weight_kg':'weight_kg'))} ${type==='maal'?E(T('\u0aac\u0ac7\u0a97','Bags')):'KG'}</summary>${r.map(x=>card(x,type)).join('')}</details>`).join('');}
+function groups(rows,by,type){const map=new Map();rows.forEach(x=>{const k=by==='date'?businessDay(x,type):by==='staff'?(x.created_by||'legacy'):by==='material'?material(x.material_type||x.commodity_type):key(x.vehicle_number)||'\u2014';if(!map.has(k))map.set(k,[]);map.get(k).push(x);});return [...map].map(([k,r])=>`<details class="bi-v2-group kr-grp" open><summary><span class="kr-gn">${E(by==='staff'?staff(k):k)}</span><span class="kr-gs">${fmt(r.length)} ${E(T('Entries','entries'))} · ${big(sum(r,type==='maal'?'bags':type==='wb'?'net_weight_kg':'weight_kg'))} ${type==='maal'?E(T('બેગ','Bags')):'KG'}</span></summary><div class="kr-list">${r.map(x=>card(x,type)).join('')}</div></details>`).join('');}
 function rangeRows(rows,type,from,to,search,person,mat){return rows.filter(x=>{const d=businessDay(x,type);if(from&&d<from||to&&d>to)return false;if(person&&x.created_by!==person)return false;if(mat&&(x.material_type||x.commodity_type)!==mat)return false;
  return !search||[x.chiththi_number,x.rst_no,x.vehicle_number,x.farmer_name,x.owner_name,x.village_name,x.farmer_mobile,x.commodity_type,x.material_type,staff(x.created_by)].join(' ').toLocaleLowerCase().includes(search.toLocaleLowerCase());});}
-function createPanel(){if(activePanel)return;activePanel=document.createElement('section');activePanel.className='bi-panel8 bi-v2-hidden';activePanel.id='bi-v2-records';activePanel.innerHTML=`<div class="bi-v2-toolbar"><h2 id="bi-v2-title"></h2><button type="button" data-action="home">\u2190 ${E(T('\u0aae\u0ac1\u0a96\u0acd\u0aaf \u0aaa\u0ac3\u0ab7\u0acd\u0aa0','Home'))}</button></div><div class="bi-v2-filter">
- <label>${E(T('\u0aa4\u0abe\u0ab0\u0ac0\u0a96\u0aa5\u0ac0','From date'))}<input type="date" id="bi-v2-from"></label><label>${E(T('\u0aa4\u0abe\u0ab0\u0ac0\u0a96 \u0ab8\u0ac1\u0aa7\u0ac0','To date'))}<input type="date" id="bi-v2-to"></label>
- <label class="wide">${E(T('\u0ab6\u0acb\u0aa7\u0acb','Search'))}<input id="bi-v2-search" placeholder="${E(T('\u0a96\u0ac7\u0aa1\u0ac2\u0aa4, \u0a97\u0abe\u0aae, \u0a97\u0abe\u0aa1\u0ac0, \u0a9a\u0abf\u0aa0\u0acd\u0aa0\u0ac0 / RST, \u0aae\u0acb\u0aac\u0abe\u0a87\u0ab2','Farmer, village, vehicle, chit / RST, mobile'))}"></label>
- <label>${E(T('Entry \u0a95\u0ab0\u0aa8\u0abe\u0ab0','Submitted by'))}<select id="bi-v2-person"></select></label><label>${E(T('\u0aae\u0abe\u0ab2','Material'))}<select id="bi-v2-material"></select></label>
- <label>${E(T('\u0a97\u0acb\u0aa0\u0ab5\u0aa3\u0ac0','Group by'))}<select id="bi-v2-group"><option value="date">${E(T('\u0aa4\u0abe\u0ab0\u0ac0\u0a96 \u0aae\u0ac1\u0a9c\u0aac','By date'))}</option><option value="staff">${E(T('Entry \u0a95\u0ab0\u0aa8\u0abe\u0ab0 \u0aae\u0ac1\u0a9c\u0aac','By contributor'))}</option><option value="material">${E(T('\u0aae\u0abe\u0ab2 \u0aae\u0ac1\u0a9c\u0aac','By material'))}</option><option value="vehicle">${E(T('\u0a97\u0abe\u0aa1\u0ac0 \u0aae\u0ac1\u0a9c\u0aac','By vehicle'))}</option></select></label>
- <div><button type="button" data-action="refresh">${E(T('Refresh \u0a95\u0ab0\u0acb','Refresh'))}</button><button type="button" class="ex-btn" data-action="export">\u2B07 Export</button><button type="button" data-action="allDates">${E(T('\u0aac\u0aa7\u0ac0 \u0aa4\u0abe\u0ab0\u0ac0\u0a96\u0acb','All dates'))}</button></div></div><div id="bi-v2-status" role="status"></div><div id="bi-v2-summary" class="bi-v2-summary"></div><div id="bi-v2-list"></div>`;
+function createPanel(){if(activePanel)return;activePanel=document.createElement('section');activePanel.className='bi-panel8 bi-v2-hidden';activePanel.id='bi-v2-records';activePanel.innerHTML=`<div class="bi-v2-toolbar"><h2 id="bi-v2-title"></h2><button type="button" data-action="home">\u2190 ${E(T('\u0aae\u0ac1\u0a96\u0acd\u0aaf \u0aaa\u0ac3\u0ab7\u0acd\u0aa0','Home'))}</button></div><div class="kr-search"><span aria-hidden="true">🔍</span><input id="bi-v2-search" type="search" autocomplete="off" placeholder="${E(T('ખેડૂત, ગામ, ગાડી, ચિઠ્ઠી / RST, મોબાઇલ','Farmer, village, vehicle, chit / RST, mobile'))}"></div><div class="kb-seg kb-sub kr-chips" id="kr-periods" role="tablist">${[['today',T('આજે','Today')],['yday',T('ગઈકાલે','Yesterday')],['7d',T('7 દિવસ','7 days')],['month',T('આ મહિને','This month')],['all',T('બધું','All')]].map(a=>`<button type="button" role="tab" data-kr-p="${a[0]}" aria-selected="false">${E(a[1])}</button>`).join('')}</div><details class="kr-more"><summary>⚙ ${E(T('ફિલ્ટર અને ગોઠવણી','Filters & grouping'))}</summary><div class="bi-v2-filter"><label>${E(T('\u0aa4\u0abe\u0ab0\u0ac0\u0a96\u0aa5\u0ac0','From date'))}<input type="date" id="bi-v2-from"></label><label>${E(T('\u0aa4\u0abe\u0ab0\u0ac0\u0a96 \u0ab8\u0ac1\u0aa7\u0ac0','To date'))}<input type="date" id="bi-v2-to"></label><label>${E(T('Entry \u0a95\u0ab0\u0aa8\u0abe\u0ab0','Submitted by'))}<select id="bi-v2-person"></select></label><label>${E(T('\u0aae\u0abe\u0ab2','Material'))}<select id="bi-v2-material"></select></label><label>${E(T('\u0a97\u0acb\u0aa0\u0ab5\u0aa3\u0ac0','Group by'))}<select id="bi-v2-group"><option value="date">${E(T('\u0aa4\u0abe\u0ab0\u0ac0\u0a96 \u0aae\u0ac1\u0a9c\u0aac','By date'))}</option><option value="staff">${E(T('Entry \u0a95\u0ab0\u0aa8\u0abe\u0ab0 \u0aae\u0ac1\u0a9c\u0aac','By contributor'))}</option><option value="material">${E(T('\u0aae\u0abe\u0ab2 \u0aae\u0ac1\u0a9c\u0aac','By material'))}</option><option value="vehicle">${E(T('\u0a97\u0abe\u0aa1\u0ac0 \u0aae\u0ac1\u0a9c\u0aac','By vehicle'))}</option></select></label></div></details><div class="kr-acts"><button type="button" data-action="refresh">↻ ${E(T('Refresh','Refresh'))}</button><button type="button" class="ex-btn" data-action="export">⬇ Export</button></div><div id="bi-v2-status" role="status"></div><div id="bi-v2-summary" class="bi-v2-summary"></div><div id="bi-v2-list"></div>`;
  $v('admin').appendChild(activePanel);activePanel.addEventListener('click',handleClick);
  activePanel.addEventListener('input',e=>{if(e.target.id.startsWith('bi-v2-'))render();});activePanel.addEventListener('change',render);
 }
@@ -5374,11 +5376,12 @@ function render(){if(!activePanel||activePanel.hidden)return;const from=$v('bi-v
    return `<details class="bi-v2-group"><summary>${E(vehicle)} \u00b7 ${E(d)} \u00b7 ${E(state)} ${cl?.closed?' \u00b7 '+E(T('\u0aac\u0a82\u0aa7','Closed')):''}</summary><p>${E(T('\u0a9a\u0abf\u0aa0\u0acd\u0aa0\u0ac0\u0aa8\u0ac1\u0a82 \u0aae\u0ac2\u0ab3 \u0ab5\u0a9c\u0aa8','Chit gross weight'))}: ${fmt(gross)} KG \u00b7 Waybridge: ${fmt(wbTotal)} KG${known?' \u00b7 '+E(T('\u0aab\u0ab0\u0a95','Difference'))+': '+fmt(wbTotal-gross)+' KG':''}</p><p class="bi-v2-note">${E(T('\u0a8f\u0a95 \u0aa6\u0abf\u0ab5\u0ab8\u0aae\u0abe\u0a82 \u0a8f\u0a95\u0aa5\u0ac0 \u0ab5\u0aa7\u0ac1 \u0aab\u0ac7\u0ab0\u0abe \u0ab9\u0acb\u0aaf \u0aa4\u0acb \u0aa6\u0ab0\u0ac7\u0a95 \u0aaa\u0abe\u0ab5\u0aa4\u0ac0 \u0aaa\u0aa3 \u0a85\u0ab2\u0a97\u0aa5\u0ac0 \u0a9a\u0a95\u0abe\u0ab8\u0acb.','For multiple trips on the same day, review each slip separately.'))}</p><button type="button" class="veh-share" data-action="shareVeh" data-vehicle="${E(vehicle)}" data-date="${E(d)}">\u{1F69B} ${E(T('\u0a97\u0abe\u0aa1\u0ac0\u0aa8\u0ac1\u0a82 \u0aac\u0abf\u0ab2 \u0ab6\u0ac7\u0ab0','Share vehicle bill'))}</button><button data-action="closure" data-vehicle="${E(vehicle)}" data-date="${E(d)}" data-closed="${cl?.closed?'1':'0'}">${E(cl?.closed?T('\u0ab9\u0abf\u0ab8\u0abe\u0aac \u0aab\u0ab0\u0ac0 \u0a96\u0acb\u0ab2\u0acb','Reopen day account'):T('\u0ab9\u0abf\u0ab8\u0abe\u0aac \u0aae\u0a82\u0a9c\u0ac2\u0ab0 \u0a95\u0ab0\u0ac0\u0aa8\u0ac7 \u0aac\u0a82\u0aa7 \u0a95\u0ab0\u0acb','Approve and close day account'))}</button>${cr.map(x=>card(x,'chit')).join('')}${wr.map(x=>card(x,'wb')).join('')}${mr.map(x=>card(x,'maal')).join('')}</details>`;
   }).join('');rows=[...map];
  }else if(activeView==='farmers'){
-  const map=new Map();c.forEach(x=>{const k=x.farmer_mobile||x.farmer_name||'\u2014';if(!map.has(k))map.set(k,[]);map.get(k).push(x);});html=[...map].map(([k,r])=>`<details class="bi-v2-group"><summary>${E(r[0].farmer_name||'\u2014')} \u00b7 ${E(k)} \u00b7 ${fmt(sum(r,'weight_kg'))} KG</summary>${r.map(x=>card(x,'chit')).join('')}</details>`).join('');rows=[...map];
+  const map=new Map();c.forEach(x=>{const k=x.farmer_mobile||x.farmer_name||'\u2014';if(!map.has(k))map.set(k,[]);map.get(k).push(x);});html=[...map].map(([k,r])=>`<details class="bi-v2-group kr-grp"><summary><span class="kr-gn">${E(r[0].farmer_name||'\u2014')}</span><span class="kr-gs">${E(k)} \u00b7 ${big(sum(r,'weight_kg'))} KG</span></summary><div class="kr-list">${r.map(x=>card(x,'chit')).join('')}</div></details>`).join('');rows=[...map];
  }else if(activeView==='all'){
   html=[['chit',c],['wb',w],['maal',m]].map(([t,r])=>`<h3>${E(t==='chit'?T('\u0a9a\u0abf\u0aa0\u0acd\u0aa0\u0ac0\u0a93','Chits'):t==='wb'?'Waybridge':T('\u0aae\u0abe\u0ab2','Material entries'))}</h3>${groups(r,by,t)}`).join('');rows=[...c,...w,...m];
  }else html=groups(rows,by,type);
- $v('bi-v2-summary').innerHTML=`<div><strong>${fmt(rows.length)}</strong><span>${E(title(activeView))}</span></div><div><strong>${fmt(sum(c,'weight_kg'))} KG</strong><span>${E(T('\u0a9a\u0abf\u0aa0\u0acd\u0aa0\u0ac0\u0a93\u0aa8\u0ac1\u0a82 Final \u0ab5\u0a9c\u0aa8','Chit final weight'))}</span></div><div><strong>${fmt(sum(activeView==='loading'||activeView==='unloading'?rows:m,'bags'))}</strong><span>${E(T('\u0aae\u0abe\u0ab2\u0aa8\u0ac0 \u0aac\u0ac7\u0a97','Material bags'))}</span></div>`;
+ {const chitKg=sum(c,'weight_kg'),bagN=sum(activeView==='loading'||activeView==='unloading'?rows:m,'bags'),oddN=c.filter(x=>number(x.weight_kg)>100000).length+m.filter(x=>number(x.bags)>10000).length;
+ $v('bi-v2-summary').innerHTML=`<div class="kr-sum"><div><b>${fmt(rows.length)}</b><span>${E(title(activeView))}</span></div><div><b title="${E(fmt(chitKg))}">${E(big(chitKg))}</b><span>${E(T('ચિઠ્ઠી KG','Chit KG'))}</span></div><div><b title="${E(fmt(bagN))}">${E(big(bagN))}</b><span>${E(T('માલ બેગ','Bags'))}</span></div></div>`+(oddN?`<p class="kr-note">⚠ ${oddN} ${E(T('Entry માં અસામાન્ય મોટો આંકડો છે — લાલ ⚠ વાળા કાર્ડ ચકાસો.','entries have unusually large numbers — check the ⚠ cards.'))}</p>`:'');}
  $v('bi-v2-list').innerHTML=rows.length?html:`<p class="bi-v2-note">${E(T('\u0a86 \u0aaa\u0ab8\u0a82\u0aa6\u0a97\u0ac0\u0aae\u0abe\u0a82 \u0a95\u0acb\u0a88 Entry \u0aa8\u0aa5\u0ac0.','No entries for these filters.'))}</p>`;
  $v('bi-v2-status').textContent=(data.profileError?T('Entry \u0a95\u0ab0\u0aa8\u0abe\u0ab0\u0aa8\u0abe\u0a82 \u0aa8\u0abe\u0aae \u0ab2\u0acb\u0aa1 \u0aa5\u0aaf\u0abe\u0a82 \u0aa8\u0aa5\u0ac0. ','Contributor names could not be loaded. '):'')+(data.closureError?T('\u0ab9\u0abf\u0ab8\u0abe\u0aac \u0aac\u0a82\u0aa7 \u0a95\u0ab0\u0ab5\u0abe SQL update \u0a9c\u0ab0\u0ac2\u0ab0\u0ac0 \u0a9b\u0ac7. ','SQL update is required to close accounts. '):'')+T('\u0a9b\u0ac7\u0ab2\u0acd\u0ab2\u0ac7 \u0a9a\u0a95\u0abe\u0ab8\u0acd\u0aaf\u0ac1\u0a82: ','Last refreshed: ')+stamp(new Date());
 }
@@ -5387,7 +5390,7 @@ function dialog(heading,content){if(modal)modal.remove();const focus=document.ac
  document.addEventListener('keydown',onKey);modal.cleanup=()=>{document.removeEventListener('keydown',onKey);focus?.focus?.();};modal.querySelector('button').focus();return modal;
 }
 function closeModal(){modal?.cleanup?.();modal?.remove();modal=null;}
-window.__biV2={recs,T,E,fmt,staff,material,businessDay,stamp,dialog,closeModal,safeUrl,key,sum,last:null,card,data:()=>data,refresh,hideLegacy,home,table,profiles:async()=>{if(profileMap.size)return;try{const p=await db.from('user_profiles').select('id,full_name,mobile,role').limit(10000);(p.data||[]).forEach(x=>profileMap.set(x.id,x));}catch(_){}}};
+window.__biV2={recs,T,E,fmt,big,staff,material,businessDay,stamp,dialog,closeModal,safeUrl,key,sum,last:null,card,data:()=>data,refresh,hideLegacy,home,table,profiles:async()=>{if(profileMap.size)return;try{const p=await db.from('user_profiles').select('id,full_name,mobile,role').limit(10000);(p.data||[]).forEach(x=>profileMap.set(x.id,x));}catch(_){}}};
 function photo(url,heading){const u=safeUrl(url);if(!u)return;dialog(heading,`<img src="${E(u)}" alt="${E(T('Entry\u0aa8\u0acb \u0aab\u0acb\u0a9f\u0acb','Entry photo'))}"><a href="${E(u)}" target="_blank" rel="noopener noreferrer">${E(T('\u0aae\u0ac2\u0ab3 \u0aab\u0acb\u0a9f\u0acb \u0a96\u0acb\u0ab2\u0acb','Open original photo'))} \u2197</a>`);}
 function detail(type,id){const x=data[type].find(x=>String(x.id)===String(id));if(!x)return;const url=type==='chit'?x.chiththi_photo_url:x.slip_url;const cl=closed(x,type);
  dialog(T('Entry\u0aa8\u0ac0 \u0ab5\u0abf\u0a97\u0aa4\u0acb','Entry details'),card(x,type,true)+`<dl>${type==='chit'?label('\u0aae\u0ac2\u0ab3 \u0ab5\u0a9c\u0aa8','Gross weight',fmt(x.gross_weight_kg)+' KG')+label('\u0aac\u0abe\u0ab0\u0aa6\u0abe\u0aa8','Bag deduction',fmt(x.bardan_kg)+' KG')+label('\u0a95\u0ab0\u0aa1\u0acb','Other deduction',fmt(x.kardo_kg)+' KG')+label('\u0aa6\u0ab2\u0abe\u0ab2','Broker',x.broker_name||'\u2014'):''}${label('Entry\u0aa8\u0acb \u0ab8\u0aae\u0aaf','Submitted at',stamp(x.created_at))}</dl><div class="bi-v2-actions">${safeUrl(url)?`<button data-action="photo" data-url="${E(url)}">${E(T('\u0aab\u0acb\u0a9f\u0acb \u0aae\u0acb\u0a9f\u0acb \u0a9c\u0ac1\u0a93','Enlarge photo'))}</button>`:''}${type==='chit'&&!cl?`<button data-action="edit" data-id="${E(id)}">${E(T('Entry \u0ab8\u0ac1\u0aa7\u0abe\u0ab0\u0acb','Edit entry'))}</button>`:''}<button data-action="audit" data-type="${E(type)}" data-id="${E(id)}">${E(T('\u0aab\u0ac7\u0ab0\u0aab\u0abe\u0ab0\u0aa8\u0acb \u0ab0\u0ac7\u0a95\u0acb\u0ab0\u0acd\u0aa1','Change history'))}</button>${window.BalajiSettings&&window.BalajiSettings.isAdmin()?`<button data-action="del" data-type="${E(type)}" data-id="${E(id)}">\u{1F5D1} ${E(T('\u0a95\u0abe\u0aa2\u0ac0 \u0aa8\u0abe\u0a96\u0acb','Delete'))}</button>`:''}</div><div id="bi-v2-audit" role="status"></div>`);
@@ -6059,10 +6062,10 @@ function enhanceRecords(){
       }
     });
     if(arts.length&&!box.querySelector(':scope>.rec-tools')){
-      const unit=(arts[0].querySelector('.bi-v2-total small')||{}).textContent||'';
-      const total=arts.reduce((s,a)=>s+numFrom((a.querySelector('.bi-v2-total')||{}).firstChild?.textContent||''),0);
+      const unit=(arts[0].querySelector('.kr-r small,.bi-v2-total small')||{}).textContent||'';
+      const total=arts.reduce((s,a)=>s+(a.dataset.raw!==undefined&&a.dataset.raw!==''?Number(a.dataset.raw)||0:numFrom((a.querySelector('.bi-v2-total')||{}).firstChild?.textContent||'')),0);
       const tools=el('div','rec-tools');
-      tools.innerHTML='<div class="rec-sum"><span>Entries<b>'+arts.length+'</b></span><span>કુલ<b>'+fmt(total)+' '+unit+'</b></span></div>';
+      tools.innerHTML='<div class="rec-sum"><span>Entries<b>'+arts.length+'</b></span><span>કુલ<b>'+(window.__biV2&&window.__biV2.big?window.__biV2.big(total):fmt(total))+' '+unit+'</b></span></div>';
       const q=el('input','rec-search');q.type='search';q.placeholder='🔍 ગાડી નંબર / નામ શોધો';q.autocomplete='off';
       q.addEventListener('input',()=>{const s=q.value.trim().toLowerCase();box.querySelectorAll(':scope>article.bi-v2-record').forEach(a=>{a.style.display=(!s||a.textContent.toLowerCase().includes(s))?'':'none';});});
       tools.append(q);
@@ -6737,6 +6740,80 @@ a.bz-wabtn,#admin a.bz-wabtn,.bi-v2-modal a.bz-wabtn{flex:1 1 0;display:inline-f
   body:has(#admin:not(.hide) nav.bi-nav8) #admin .bi-install{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:42px;margin:auto 0 0;padding:0 12px;border:1px dashed #9fcfd1;border-radius:12px;background:#f1f9f9;color:#0b4a4d;font-size:13px;font-weight:800;cursor:pointer}
   body:has(#admin:not(.hide) nav.bi-nav8) #admin .bi-install:hover{background:#e3f3f3}
 }
+
+@media (min-width:1024px){#admin #bi-v2-records .kr-chips button{flex:0 0 auto;padding:0 16px}.kr-sum{max-width:760px}}
+
+/* ===== Entries: compact Kotak-style rows (phone + laptop) ===== */
+#bi-v2-records .bi-v2-toolbar{display:flex;flex-wrap:nowrap;align-items:center;justify-content:space-between;gap:8px;margin:0 0 8px!important}
+#bi-v2-records .bi-v2-toolbar h2{flex:1;min-width:0;margin:0!important;font-size:17px!important;line-height:1.25;color:#173438}
+#admin #bi-v2-records .bi-v2-toolbar button[data-action=home]{width:auto!important;flex:none;min-height:32px!important;margin:0!important;padding:0 12px!important;font-size:12.5px!important;font-weight:800;border:1px solid #cfe3e4!important;border-radius:999px!important;background:#fff!important;color:#0b4a4d!important;box-shadow:none!important}
+.kr-search{position:relative;margin:0 0 8px}
+.kr-search>span{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;pointer-events:none}
+#admin .kr-search input{min-height:40px!important;margin:0!important;padding:0 12px 0 34px!important;font-size:14px!important;border-radius:12px!important}
+#bi-v2-records .kr-chips{margin:0 0 6px}
+#admin #bi-v2-records .kr-chips button{flex:1 1 auto;padding:0 9px}
+.kr-more{margin:0 0 8px;border:1px solid #dbe8e9;border-radius:12px;background:#fff}
+.kr-more>summary{padding:8px 12px;font-size:12.5px;font-weight:800;color:#35575b;cursor:pointer;list-style:none}
+.kr-more>summary::-webkit-details-marker{display:none}
+.kr-more[open]>summary{border-bottom:1px solid #eef3f3}
+#admin .kr-more .bi-v2-filter{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:10px 12px}
+#admin .kr-more .bi-v2-filter label{margin:0!important;font-size:11.5px!important;color:#587276}
+#admin .kr-more .bi-v2-filter .wide{grid-column:1/-1}
+#admin .kr-more .bi-v2-filter input,#admin .kr-more .bi-v2-filter select{min-height:40px!important;margin:3px 0 0!important;padding:0 10px!important;font-size:13.5px!important;border-radius:10px!important}
+.kr-acts{display:flex;gap:8px;margin:0 0 8px}
+#admin .kr-acts button{width:auto!important;flex:1;min-height:36px!important;margin:0!important;padding:0 10px!important;font-size:13px!important;font-weight:800;border-radius:10px!important;background:#fff!important;border:1px solid #bcd9da!important;color:#0b4a4d!important;box-shadow:none!important}
+#admin .kr-acts button[data-action=refresh]{background:#0a9297!important;border-color:#0a9297!important;color:#fff!important}
+#bi-v2-records #bi-v2-status{margin:0 2px 6px;font-size:11.5px;color:#6a8184}
+#bi-v2-records #bi-v2-summary{display:block!important;margin:0 0 10px!important}
+.kr-sum{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border:1px solid #dbe8e9;border-radius:14px;background:#fff;overflow:hidden}
+.kr-sum>div{display:grid;gap:2px;min-width:0;padding:9px 8px 9px 10px;border-left:1px solid #eef3f3;background:transparent!important;border-radius:0!important}
+.kr-sum>div:first-child{border-left:0}
+.kr-sum b{font-size:16px;line-height:1.15;font-weight:800;color:#173438;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kr-sum span{font-size:10.5px;font-weight:700;line-height:1.2;color:#6a8184}
+.kr-note{margin:6px 2px 0;font-size:11.5px;font-weight:700;color:#8a5a00}
+/* day / group header */
+#bi-v2-records .bi-v2-group.kr-grp{margin:6px 0 8px!important;padding:0!important;border:0!important;background:transparent!important}
+.kr-grp>summary{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:6px 2px!important;font-size:12px;font-weight:800;color:#587276;cursor:pointer;list-style:none}
+.kr-grp>summary::-webkit-details-marker{display:none}
+.kr-grp>summary::before{content:'▾';margin-right:6px;font-size:11px;color:#8a9a9d}
+.kr-grp:not([open])>summary::before{content:'▸'}
+.kr-gn{flex:1;min-width:0;color:#173438;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kr-gs{flex:none;font-weight:700;font-size:11.5px;white-space:nowrap}
+.kr-list{display:grid;gap:8px}
+@media (min-width:1024px){.kr-list{grid-template-columns:repeat(2,minmax(0,1fr))}#admin .kr-more .bi-v2-filter{grid-template-columns:repeat(3,minmax(0,1fr))}}
+/* the row card */
+.bi-v2-record.kr{display:grid!important;grid-template-columns:38px minmax(0,1fr) auto 30px;align-items:center;gap:2px 10px;margin:0!important;padding:9px 10px!important;border:1px solid #dbe8e9!important;border-radius:14px!important;background:#fff!important;box-shadow:none!important;overflow:hidden;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.bi-v2-record.kr:hover{background:#f7fbfb!important}
+.bi-v2-record.kr.kr-det{cursor:default}
+.bi-v2-record.kr.kr-bad{border-color:#e6b3b9!important}
+.kr-av{grid-row:1/3;display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:#e6f4f4;font-size:18px;line-height:1}
+.kr-out .kr-av{background:#fff0d6}
+.kr-wb .kr-av{background:#e5eefc}
+.kr-chit .kr-av{background:#e7f6e8}
+.kr-mid{grid-column:2;min-width:0;display:grid;gap:2px}
+.kr-t{display:flex;align-items:center;flex-wrap:wrap;gap:4px 6px;min-width:0}
+.kr-plate{padding:0 6px;border:1.2px solid #1e3c3f;border-radius:6px;background:#fffdf3;font:800 13.5px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.8px;color:#173438;white-space:nowrap}
+.kr-tag{padding:1px 8px;border-radius:99px;background:#edf7f7;color:#08676b;font-size:10.5px;font-weight:800;white-space:nowrap}
+.kr-maal .kr-tag{background:#e6f4f4}
+.kr-out .kr-tag{background:#fff0d6;color:#9a6200}
+.kr-wb .kr-tag{background:#e5eefc;color:#2b5aa8}
+.kr-tag.kr-cl{background:#eef0f4;color:#475569}
+.kr-s{font-size:12px;line-height:1.35;color:#44625f;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.kr-f{font-size:10.8px;color:#8a9a9d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kr-r{grid-column:3;display:grid;justify-items:end;text-align:right}
+.kr-r b{font-size:16px;line-height:1.15;font-weight:800;font-variant-numeric:tabular-nums;color:#173438;white-space:nowrap}
+.kr-r b.bad{color:#a3202f}
+.kr-r small{font-size:10.5px;font-weight:700;color:#6a8184}
+.bi-v2-record.kr .kr-share{grid-column:4;grid-row:1/3;display:grid;place-items:center;width:30px!important;height:30px;min-height:0!important;margin:0!important;padding:0!important;border:1px solid #cfe3e4!important;border-radius:50%!important;background:#fff!important;color:#0a9297!important;box-shadow:none!important}
+.kr-warn{grid-column:1/-1;margin:4px 0 0;padding:4px 8px;border-radius:8px;background:#fff3dd;color:#905a06;font-size:11.5px;font-weight:700}
+@media (max-width:360px){.bi-v2-record.kr{grid-template-columns:34px minmax(0,1fr) auto 28px;gap:2px 8px;padding:8px}.kr-av{width:34px;height:34px;font-size:16px}.kr-r b{font-size:15px}}
+
+@media (max-width:400px){#admin #bi-v2-records .kr-chips{gap:5px}#admin #bi-v2-records .kr-chips button{padding:0 7px;font-size:11.5px}.kr-sum b{font-size:15px;letter-spacing:-.2px}.kr-sum>div{padding:9px 6px 9px 8px}}
+
+/* staff cards: photo footer spans the whole card, no grey box */
+.bi-v2-record.kr>footer{grid-column:1/-1;display:flex;justify-content:flex-end;margin:2px 0 0!important;padding:0!important;border:0!important;background:transparent!important}
+.bi-v2-record.kr>footer:empty{display:none}
+#admin .bi-v2-record.kr>footer button{min-height:30px!important;padding:0 12px!important;font-size:12px!important;border-radius:999px!important;width:auto!important}
 </style>
 <script id="bi-v9-qr">
 /* ================= Small QR-code maker (byte mode, level L or M, versions 1-14) ================= */
@@ -11507,6 +11584,34 @@ setManifest();
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();ev=e;place();if(!timer)timer=setInterval(place,2000);});
 window.addEventListener('appinstalled',()=>{ev=null;gone();});
 window.BalajiInstall={available:()=>!!ev,manifest};
+})();
+
+</script>
+<script id="bi-v9-rows">
+/* Entries list: period chips (Today / Yesterday / 7 days / This month / All) + keyboard open on compact rows. */
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const BT=()=>window.BalajiTools||{};
+const today=()=>BT().istDay?BT().istDay(new Date()):new Date().toISOString().slice(0,10);
+const add=(d,n)=>BT().addDays?BT().addDays(d,n):d;
+const PS=['today','yday','7d','month','all'];
+const range=p=>{const t=today();return p==='today'?[t,t]:p==='yday'?[add(t,-1),add(t,-1)]:p==='7d'?[add(t,-6),t]:p==='month'?[t.slice(0,8)+'01',t]:['',''];};
+function sync(){
+  const f=$('bi-v2-from'),t=$('bi-v2-to'),box=$('kr-periods');if(!f||!t||!box)return;
+  let hit='';PS.forEach(p=>{const r=range(p);if(!hit&&f.value===r[0]&&t.value===r[1])hit=p;});
+  box.querySelectorAll('[data-kr-p]').forEach(b=>{const on=b.dataset.krP===hit;if(b.classList.contains('on')!==on)b.classList.toggle('on',on);b.setAttribute('aria-selected',String(on));});
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest&&e.target.closest('#kr-periods [data-kr-p]');if(!b)return;
+  const r=range(b.dataset.krP),f=$('bi-v2-from'),t=$('bi-v2-to');if(!f||!t)return;
+  f.value=r[0];t.value=r[1];f.dispatchEvent(new Event('input',{bubbles:true}));sync();
+});
+['input','change'].forEach(ev=>document.addEventListener(ev,e=>{const i=e.target&&e.target.id;if(i==='bi-v2-from'||i==='bi-v2-to')sync();}));
+document.addEventListener('keydown',e=>{
+  if((e.key==='Enter'||e.key===' ')&&e.target&&e.target.matches&&e.target.matches('.bi-v2-record.kr[data-action]')){e.preventDefault();e.target.click();}
+});
+setInterval(sync,700);
 })();
 
 </script>
