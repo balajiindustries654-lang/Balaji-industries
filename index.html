@@ -6864,6 +6864,7 @@ a.bz-wabtn,#admin a.bz-wabtn,.bi-v2-modal a.bz-wabtn{flex:1 1 0;display:inline-f
 .kt-hl.good>b{color:#17803d}.kt-hl.warn>b{color:#b07800}.kt-hl.bad>b{color:#a3202f}
 .kt-hl.bad>span{color:#a3202f}
 .kt-tips{margin:8px 0 0;padding-left:18px;display:grid;gap:6px;font-size:12px;color:#35575b}
+.kt-diag{margin:8px 0 0;padding:9px 10px;border:1px solid #cfe3e4;border-radius:10px;background:#f6fbfb;max-height:none;font-size:11.5px;color:#173438}
 </style>
 <script id="bi-v9-qr">
 /* ================= Small QR-code maker (byte mode, level L or M, versions 1-14) ================= */
@@ -6951,7 +6952,7 @@ const DEF={
   biz:{process:false,tiles:{ledger:true,expense:true,profit:true,batch:false,sale:false,tally:true},alias:{},bankAlias:{},mannMaals:['Magfadi'],processMaals:['Magfadi'],
     grades:[{k:'50/60',kernel:1},{k:'60/70',kernel:1},{k:'70/80',kernel:1},{k:'80/90',kernel:1},{k:'90/100',kernel:1},{k:'100/110',kernel:1},{k:'એડિબલ',kernel:1},{k:'ફાડિયા',kernel:1},{k:'ટકાલો',kernel:1},{k:'વેસ્ટેજ',kernel:0}],
     cats:['દલાલી','મજૂરી','બારદાન','ગાડી ભાડું','લાઇટ બિલ','પ્રોસેસ ખર્ચ','GST','બીજા']},
-  tally:{firms:[{id:'patel',name:'Patel Enterprises',company:'PATEL ENTREPRISES'},{id:'shreenathji',name:'Shreenathji Enterprises',company:'SHREENATHJI ENTERPRISES'},{id:'balaji',name:'Balaji Industries',company:'BALAJI INDUSTRIES'}],from:'',auto:true,every:5,win:14,mirror:true,autoPay:true,payOk:false,vt:{},ignore:{},last:{}}
+  tally:{firms:[{id:'patel',name:'Patel Enterprises',company:'PATEL ENTREPRISES',purchase:false},{id:'shreenathji',name:'Shreenathji Enterprises',company:'SHREENATHJI ENTERPRISES',purchase:false},{id:'balaji',name:'Balaji Industries',company:'BALAJI NEW',purchase:true}],from:'',auto:true,every:5,win:14,full:'3h',src:'both',opt:true,optPay:false,mirror:true,autoPay:true,payOk:false,vt:{},ignore:{},last:{}}
 };
 const clone=o=>JSON.parse(JSON.stringify(o));
 const merge=(a,b)=>{if(!b||typeof b!=='object')return a;Object.keys(b).forEach(k=>{if(a[k]&&typeof a[k]==='object'&&!Array.isArray(a[k])&&b[k]&&typeof b[k]==='object')merge(a[k],b[k]);else if(b[k]!==undefined)a[k]=b[k];});return a;};
@@ -7689,14 +7690,38 @@ const reqVoucherTypes=co=>reqCollection('BalajiVchTypes','VoucherType','Name,Par
 const reqLedgers=(co,toIso)=>reqCollection('BalajiLedgers','Ledger','Name,Parent,ClosingBalance',co,toIso?'<SVTODATE>'+tDate(toIso)+'</SVTODATE>':'');
 function reqDayBook(co,fromIso,toIso){
   return '<ENVELOPE><HEADER><VERSION>1</VERSION><TALLYREQUEST>Export</TALLYREQUEST><TYPE>Data</TYPE><ID>Day Book</ID></HEADER><BODY><DESC><STATICVARIABLES><SVEXPORTFORMAT>$$SysName:XML</SVEXPORTFORMAT>'
-    +'<SVCURRENTCOMPANY>'+xe(co)+'</SVCURRENTCOMPANY><SVFROMDATE>'+tDate(fromIso)+'</SVFROMDATE><SVTODATE>'+tDate(toIso)+'</SVTODATE></STATICVARIABLES></DESC></BODY></ENVELOPE>';
+    +(co?'<SVCURRENTCOMPANY>'+xe(co)+'</SVCURRENTCOMPANY>':'')+(fromIso?'<SVFROMDATE>'+tDate(fromIso)+'</SVFROMDATE>':'')+(toIso?'<SVTODATE>'+tDate(toIso)+'</SVTODATE>':'')+'</STATICVARIABLES></DESC></BODY></ENVELOPE>';
 }
+/* which company is on Tally's screen right now? (a tiny custom report that prints the SVCurrentCompany variable) */
+function reqWho(co){
+  return '<ENVELOPE><HEADER><VERSION>1</VERSION><TALLYREQUEST>Export</TALLYREQUEST><TYPE>Data</TYPE><ID>BalajiWho</ID></HEADER><BODY><DESC><STATICVARIABLES><SVEXPORTFORMAT>$$SysName:XML</SVEXPORTFORMAT>'+(co?'<SVCURRENTCOMPANY>'+xe(co)+'</SVCURRENTCOMPANY>':'')+'</STATICVARIABLES>'
+    +'<TDL><TDLMESSAGE><REPORT NAME="BalajiWho"><FORMS>BalajiWho</FORMS></REPORT><FORM NAME="BalajiWho"><PARTS>BalajiWho</PARTS></FORM><PART NAME="BalajiWho"><LINES>BalajiWho</LINES></PART>'
+    +'<LINE NAME="BalajiWho"><FIELDS>BalajiWho</FIELDS></LINE><FIELD NAME="BalajiWho"><SET>##SVCurrentCompany</SET><XMLTAG>BALAJICURCOMP</XMLTAG></FIELD></TDLMESSAGE></TDL></DESC></BODY></ENVELOPE>';
+}
+/* EVERY voucher of a period straight from Tally's voucher list (not the Day Book): sales / purchase / optional / memorandum ... too.
+   Three ways of asking, because Tally versions name the ledger-entry list differently; the program remembers the one that works. */
+const VCH_BASE='Date,VoucherTypeName,VoucherNumber,PartyLedgerName,Narration,GUID,AlterID,IsCancelled,IsOptional';
+const VCH_BANK='BankAllocations.UniqueReferenceNumber,BankAllocations.InstrumentNumber,BankAllocations.TransactionType';
+function reqVouchers(co,fromIso,toIso,variant){
+  variant=variant||0;
+  const id='BalajiVouchers'+(variant?String(variant+1):'');
+  const ent=n=>n+'.LedgerName,'+n+'.Amount,'+n+'.IsDeemedPositive,'+VCH_BANK.split(',').map(x=>n+'.'+x).join(',');
+  const fetch=[VCH_BASE+','+ent('AllLedgerEntries'),VCH_BASE+','+ent('LedgerEntries'),VCH_BASE+',AllLedgerEntries.*,LedgerEntries.*'][variant]||VCH_BASE;
+  return reqCollection(id,'Voucher',fetch,co,(fromIso?'<SVFROMDATE>'+tDate(fromIso)+'</SVFROMDATE>':'')+(toIso?'<SVTODATE>'+tDate(toIso)+'</SVTODATE>':''));
+}
+function parseWho(xml){const m=/<BALAJICURCOMP>([\s\S]*?)<\/BALAJICURCOMP>/i.exec(String(xml||''));return m&&clean(m[1])?decode(m[1]):'';}
 /* Tally answers an error as LINEERROR / "Unknown Request" / an empty RESPONSE */
 function tallyError(xml){
   const t=String(xml||'');
   let m=/<LINEERROR>([\s\S]*?)<\/LINEERROR>/i.exec(t);if(m)return clean(decode(m[1]));
   m=/<RESPONSE>\s*(Unknown Request[\s\S]*?)<\/RESPONSE>/i.exec(t);if(m)return clean(m[1]);
   return '';
+}
+
+/* a proper answer with no vouchers in it (nothing entered in that period) */
+function emptyReply(xml){
+  const t=String(xml||'');
+  return /<ENVELOPE[\s>]/i.test(t)&&/<\/ENVELOPE>/i.test(t)&&!/<LINEERROR|Unknown Request|<VOUCHER[\s>]/i.test(t);
 }
 
 /* ---------------- voucher kinds ---------------- */
@@ -7759,7 +7784,8 @@ function parseLedgers(xml){
 const groupKind=p=>{p=String(p||'').toLowerCase();return /creditor/.test(p)?'creditor':/debtor/.test(p)?'debtor':/bank/.test(p)?'bank':/cash/.test(p)?'cash':/expense/.test(p)?'expense':/income|sales/.test(p)?'income':/purchase/.test(p)?'purchase':'other';};
 function parseCompanies(xml){
   const out=[];
-  all(parseXML(xml),'COMPANY').forEach(n=>{const name=clean(attr(n,'NAME'))||val(n,'NAME');if(name&&out.indexOf(name)<0)out.push(name);});
+  /* names are kept exactly as Tally writes them (even a double / trailing space): Tally wants the very same text back */
+  all(parseXML(xml),'COMPANY').forEach(n=>{const k=kid(n,'NAME'),name=attr(n,'NAME')||(k?k.x:'');if(clean(name)&&out.indexOf(name)<0)out.push(name);});
   return out;
 }
 
@@ -7781,7 +7807,7 @@ function parseVouchers(xml,base){
   base=base||baseResolver([]);
   const out=[];
   all(parseXML(xml),'VOUCHER').forEach(v=>{
-    const type=val(v,'VOUCHERTYPENAME')||attr(v,'VCHTYPE'),date=isoDate(val(v,'DATE'));
+    const type=val(v,'VOUCHERTYPENAME')||attr(v,'VCHTYPE'),date=isoDate(val(v,'DATE'))||parseDayDate(val(v,'DATE'));
     if(!type||!date)return;
     const ents=[];
     v.k.forEach(c=>{
@@ -7925,7 +7951,7 @@ function planPayments(vouchers,ctx,opts){
   const doneRefs=new Set((ctx.pays||[]).map(p=>p.tally_ref).filter(Boolean));
   const seen=new Set();
   vouchers.forEach(v=>{
-    if(v.base!=='payment'||v.cancelled||v.optional)return;
+    if(v.base!=='payment'||v.cancelled||(v.optional&&!opts.optional))return;
     (v.lines&&v.lines.length?v.lines:[{ledger:v.party,amount:v.amount}]).forEach((ln,i)=>{
       if(!(ln.amount>0))return;
       const item={v,line:i,ledger:ln.ledger,amount:ln.amount,state:'other',cand:null,cands:[],why:'',ref:refOf(v,i)};
@@ -7950,7 +7976,7 @@ function planPayments(vouchers,ctx,opts){
   return out;
 }
 
-const api={parseXML,all,kid,kids,val,attr,xe,tDate,isoDate,reqCompanies,reqVoucherTypes,reqLedgers,reqDayBook,reqCollection,tallyError,parseCompanies,parseVoucherTypes,parseLedgers,parseVouchers,baseResolver,guessBase,groupKind,
+const api={parseXML,all,kid,kids,val,attr,xe,tDate,isoDate,reqCompanies,reqVoucherTypes,reqLedgers,reqDayBook,reqCollection,reqWho,reqVouchers,parseWho,emptyReply,tallyError,parseCompanies,parseVoucherTypes,parseLedgers,parseVouchers,baseResolver,guessBase,groupKind,
   parseDayBookItems,parseDayBookRows,parseDayDate,firmOfCompany,planPayments,amt,modeOf,isBankish,refFromNarr};
 g.BalajiTallyMath=api;
 if(typeof module!=='undefined'&&module.exports)module.exports=api;
@@ -11954,6 +11980,13 @@ async function tcall(xml){
   return t;
 }
 
+/* diagnostics: the plain answer (never throws on a Tally error) */
+async function rawCall(xml){
+  try{const r=await fetchT(RELAY()+'/tally',{method:'POST',headers:{'Content-Type':'text/plain'},body:xml,cache:'no-store'},300000);const t=await r.text();
+    return {status:r.status,text:t,err:r.ok?TM.tallyError(t):('HTTP '+r.status+' '+String(t).slice(0,140))};}
+  catch(e){return {status:0,text:'',err:'Tally Link: '+emsg(e)};}
+}
+
 /* ---- small data helpers ---- */
 async function qAll(name,filters){
   const rows=[];
@@ -11971,17 +12004,26 @@ const tsqlHint=e=>{
   return /does not exist|relation|schema cache|42P01|PGRST205|permission|policy|row-level|column/i.test(m)?T('Supabase માં supabase-tally.sql ચલાવો. ','Run supabase-tally.sql in Supabase. ')+m:m;
 };
 const rowToV=r=>({firm:r.firm,vkey:r.vkey,guid:r.guid||'',date:r.v_date,type:r.v_type,base:r.base_type,no:r.v_no||'',party:r.party||'',amount:n0(r.amount),narr:r.narration||'',bank:r.bank_ledger||'',mode:r.mode||'',utr:r.utr||'',
-  cancelled:!!r.cancelled,optional:false,alter:n0(r.alter_id),lines:Array.isArray(r.lines)?r.lines:[],src:r.src||'xml',id:r.id});
+  cancelled:!!r.cancelled,optional:r.src==='xmlo',alter:n0(r.alter_id),lines:Array.isArray(r.lines)?r.lines:[],src:r.src==='xmlo'?'xml':(r.src||'xml'),id:r.id});
 const vToRow=(firm,v)=>({firm,vkey:v.vkey,guid:v.guid||null,v_date:v.date,v_type:v.type,base_type:v.base,v_no:v.no||null,party:v.party||null,amount:v.amount,narration:(v.narr||'').slice(0,400)||null,
-  bank_ledger:v.bank||null,mode:v.mode||null,utr:v.utr||null,cancelled:!!v.cancelled,lines:v.lines||[],src:v.src||'xml',alter_id:v.alter||null,synced_at:new Date().toISOString()});
+  bank_ledger:v.bank||null,mode:v.mode||null,utr:v.utr||null,cancelled:!!v.cancelled,lines:v.lines||[],src:(v.src||'xml')==='xml'&&v.optional?'xmlo':(v.src||'xml'),alter_id:v.alter||null,synced_at:new Date().toISOString()});
 async function upsertChunks(table,rows,conflict){
   for(let i=0;i<rows.length;i+=150){
     const r=await db.from(table).upsert(rows.slice(i,i+150),{onConflict:conflict});
     if(r&&r.error)throw r.error;
   }
 }
+/* purchase vouchers are taken only from the firm(s) switched on for it (default: only the kacha company, Balaji) */
+const takesPurchase=id=>{const f=FIRMS().find(x=>x.id===id);return !f?false:(f.purchase===undefined?id==='balaji':!!f.purchase);};
+const purgedP=new Set();
+async function purgePurchases(id){
+  if(takesPurchase(id)||purgedP.has(id))return 0;
+  const r=await db.from(TT.v).delete().eq('firm',id).eq('base_type','purchase');
+  if(r&&r.error)throw r.error;purgedP.add(id);return 1;
+}
 async function saveVouchers(firm,vs,from,to,opts){
   opts=opts||{};
+  if(!takesPurchase(firm))vs=vs.filter(v=>v.base!=='purchase');
   /* two vouchers with the same type + number + date would collide in one upsert: keep both, tag the later one */
   const seenK=new Map();
   vs.forEach(v=>{const n=(seenK.get(v.vkey)||0)+1;seenK.set(v.vkey,n);if(n>1)v.vkey=v.vkey+'~'+n;});
@@ -11991,7 +12033,7 @@ async function saveVouchers(firm,vs,from,to,opts){
   vs.forEach(v=>{
     const old=have.get(v.vkey);
     if(opts.onlyNew&&old)return;
-    if(old&&old.src==='xml'&&v.src==='file')return;           /* a printed Day Book never overwrites what Tally sent directly */
+    if(old&&/^xml/.test(old.src||'')&&v.src==='file')return;           /* a printed Day Book never overwrites what Tally sent directly */
     if(old)upd++;else add++;
     rows.push(vToRow(firm,v));
   });
@@ -11999,7 +12041,7 @@ async function saveVouchers(firm,vs,from,to,opts){
   let del=0,skipped=0;
   if(opts.prune){
     const fresh=new Set(vs.map(v=>v.vkey));
-    const gone=ex.filter(r=>r.src==='xml'&&!fresh.has(r.vkey));
+    const gone=ex.filter(r=>/^xml/.test(r.src||'')&&!fresh.has(r.vkey));
     /* safety: if Tally suddenly "forgets" most of what we had (wrong company / period / half answer), keep our copy */
     if(gone.length>Math.max(5,Math.floor(ex.length*0.4)))skipped=gone.length;
     else for(const r of gone){await db.from(TT.v).delete().eq('id',r.id);del++;}
@@ -12028,25 +12070,97 @@ function resolveCompany(typed,comps){
   return real||clean(typed);
 }
 const noCompany=(f,comps)=>new Error(T('Tally ma "'+f.company+'" company khuli nathi (athva naam alag chhe). Tally ni company: ','Company "'+f.company+'" is not open in Tally (or the name differs). Tally companies: ')+((comps||[]).join(', ')||'—'));
+const noSwitch=(real,e)=>{const ne=new Error(T('Tally "'+real+'" company પર સ્વિચ કરી શકતું નથી — Tally માં Alt+F3 (Select Company) થી આ કંપની ખોલો (ત્રણેય કંપની ખોલો). ','Tally cannot switch to company "'+real+'" — in Tally press Alt+F3 (Select Company) and open this company (open all three). ')+'['+emsg(e).slice(0,140)+']');ne.kind='company';return ne;};
+/* Day Book of one company. If Tally refuses to switch to it but it IS the company on Tally's screen, read it without switching */
+async function dayBookFor(real,a,b,st,onScreen){
+  try{return await tcall(TM.reqDayBook(real,a,b));}
+  catch(e){
+    if(!(e&&e.kind==='company'))throw e;
+    if(st.who===undefined){st.who='';try{st.who=TM.parseWho(await tcall(TM.reqWho()));}catch(_){}}
+    if(st.who&&nkey(st.who)===nkey(real)){if(onScreen)onScreen();return await tcall(TM.reqDayBook('',a,b));}
+    throw e;
+  }
+}
+/* true = Tally can read this company, false = it cannot (not open / name differs), undefined = could not tell */
+async function probeCompany(real,st){
+  try{await dayBookFor(real,today(),today(),st||{});return true;}
+  catch(e){return e&&e.kind==='company'?false:undefined;}
+}
+/* which company does Tally really use for a request carrying this company name? (guards against reading another company's list) */
+async function whoUnder(real){
+  try{return TM.parseWho(await tcall(TM.reqWho(real)));}
+  catch(e){if(e&&(e.kind==='link'||e.kind==='down'||e.kind==='busy'))throw e;return '';}
+}
+/* every voucher of the period from Tally's voucher list (also those the Day Book does not show) */
+async function allVouchersFor(real,from,to,st,base){
+  const out=[];
+  for(let a=from;a<=to;){
+    const b=TL.addDays(a,30)>to?to:TL.addDays(a,30);
+    const order=st.vv||[n0(LS('bi-tally-vv','0')),0,1,2].filter((x,i,r)=>r.indexOf(x)===i);
+    let part=null;
+    for(const k of order){
+      let x;
+      try{x=await tcall(TM.reqVouchers(real,a,b,k));}catch(e){if(e&&(e.kind==='link'||e.kind==='down'||e.kind==='busy'))throw e;continue;}
+      if(/<VOUCHER[\s>]/i.test(x)){part=TM.parseVouchers(x,base);st.vv=[k];LSset('bi-tally-vv',String(k));break;}
+    }
+    if(part)out.push(...part);
+    a=TL.addDays(b,1);
+  }
+  return out;
+}
+/* Day Book list + voucher-list extras (same type+no+date = same voucher; only really new ones are added) */
+function mergeVouchers(D,C){
+  const gd=new Map();D.forEach(v=>{const a=gd.get(v.vkey)||[];a.push(v);gd.set(v.vkey,a);});
+  const gc=new Map();C.forEach(v=>{const a=gc.get(v.vkey)||[];a.push(v);gc.set(v.vkey,a);});
+  const out=D.slice();let added=0;
+  gc.forEach((cs,k)=>{const ds=gd.get(k)||[];cs.forEach((cv,i)=>{if(i<ds.length){if(cv.optional)ds[i].optional=true;}else{out.push(cv);added++;}});});
+  return {vs:out,added};
+}
 async function syncFirm(f,opt){
-  opt=opt||{};
+  opt=opt||{};const st=opt.st||{};
   const comps=opt.comps||TM.parseCompanies(await tcall(TM.reqCompanies()));
   const real=resolveCompany(f.company,comps);
+  const from=opt.from,to=opt.to,raws=[];
+  /* the Day Book goes first: unlike a plain list, it really checks the company, so we never mix up firms */
+  let viaScreen=false;
+  try{
+    for(let a=from;a<=to;){
+      const b=TL.addDays(a,30)>to?to:TL.addDays(a,30);
+      raws.push(await dayBookFor(real,a,b,st,()=>{viaScreen=true;}));a=TL.addDays(b,1);
+    }
+  }catch(e){if(e&&e.kind==='company')throw noSwitch(real,e);throw e;}
   let types;
   try{types=TM.parseVoucherTypes(await tcall(TM.reqVoucherTypes(real)));}
-  catch(e){if(e&&e.kind==='company'||/SVCurrentCompany|company/i.test(String(e&&e.message))){const ne=noCompany(f,comps);ne.kind='company';throw ne;}throw e;}
+  catch(e){if(e&&e.kind==='company')throw noSwitch(real,e);throw e;}
   const base=TM.baseResolver(types,TS().vt||{});
   let nl=0;
   if(!opt.noLedgers){const leds=TM.parseLedgers(await tcall(TM.reqLedgers(real)));await saveLedgers(f.id,leds);nl=leds.length;}
-  const from=opt.from,to=opt.to,vs=[];
-  for(let a=from;a<=to;){
-    const b=TL.addDays(a,30)>to?to:TL.addDays(a,30);
-    const x=await tcall(TM.reqDayBook(real,a,b)),part=TM.parseVouchers(x,base);
-    if(!part.length&&x.length>400&&!/<VOUCHER[\s>]/i.test(x))throw new Error(T('Tally નો જવાબ સમજાયો નથી (Day Book).','Could not understand the answer from Tally (Day Book).'));
-    vs.push(...part);a=TL.addDays(b,1);
+  await purgePurchases(f.id);
+  let vs=[];
+  raws.forEach(x=>{
+    const part=TM.parseVouchers(x,base);
+    if(!part.length&&x.length>400&&!/<VOUCHER[\s>]/i.test(x)&&!TM.emptyReply(x))throw new Error(T('Tally નો જવાબ સમજાયો નથી (Day Book). ','Could not understand the answer from Tally (Day Book). ')+'['+String(x).replace(/\s+/g,' ').slice(0,200)+']');
+    vs.push(...part);
+  });
+  /* + every voucher from the voucher list (sales, purchase, optional ... the Day Book may leave some out) */
+  let extra=0,complete=true,note='';
+  if(TS().src!=='daybook'){
+    complete=false;
+    const w=viaScreen?'':await whoUnder(real);
+    if(viaScreen||(w&&nkey(w)===nkey(real))){
+      try{
+        const C=await allVouchersFor(real,from,to,st,base);
+        /* a list that cannot be matched with the Day Book at all belongs to another company: ignore it */
+        const dk=new Set(vs.filter(v=>!v.optional).map(v=>v.vkey)),hit=C.filter(v=>dk.has(v.vkey)).length;
+        if(dk.size>=3&&hit<dk.size*0.6){note=T('બધા વાઉચરની યાદી બીજી કંપનીની લાગી — છોડી','voucher list looked like another company — skipped');}
+        else{const m=mergeVouchers(vs,C);vs=m.vs;extra=m.added;complete=true;}
+      }catch(e){if(e&&(e.kind==='link'||e.kind==='down'||e.kind==='busy'))throw e;note=T('બધા વાઉચરની યાદી મળી નહીં','voucher list not available');}
+    }else note=T('બધા વાઉચરની યાદી છોડી (Tally ની કંપની ચકાસાઈ નહીં)','voucher list skipped (company not confirmed)');
   }
-  const r=await saveVouchers(f.id,vs,from,to,{prune:true});
-  return {n:vs.length,add:r.add,upd:r.upd,del:r.del,skipped:r.skipped||0,ledgers:nl};
+  if(TS().opt===false)vs=vs.filter(v=>!v.optional);
+  /* nothing is deleted when only a part of the picture was available */
+  const r=await saveVouchers(f.id,vs,from,to,{prune:complete});
+  return {n:vs.length,add:r.add,upd:r.upd,del:r.del,skipped:r.skipped||0,ledgers:nl,extra,note};
 }
 
 /* ---- farmer payments from Tally vouchers -> khata ---- */
@@ -12069,7 +12183,7 @@ async function loadPlanData(from){
     ign};
 }
 function makePlan(D){
-  const items=TM.planPayments(D.vouchers,D.ctx,{refOf:refOfV});
+  const items=TM.planPayments(D.vouchers,D.ctx,{refOf:refOfV,optional:TS().optPay===true});
   const lk=new Map();(D.leds||[]).forEach(l=>lk.set(l.firm+'|'+nkey(l.name),TM.groupKind(l.parent)));
   items.forEach(it=>{
     if(it.state==='done'||it.state==='dup')return;
@@ -12122,6 +12236,9 @@ async function mirrorPayments(D,ranges){
 /* ---- one full cycle (only on the Tally computer) ---- */
 let tBusy=false;
 const tcSet=(k,d)=>{const v=n0(TS()[k]);return v>0?v:d;};
+const FULL_MS={'off':0,'1h':36e5,'3h':108e5,'6h':216e5,'24h':864e5};
+const fullEvery=()=>FULL_MS[TS().full===undefined?'3h':TS().full]||0;
+const fullAt=()=>n0(LS('bi-tally-fullat','0'));
 async function syncAll(opt){
   opt=opt||{};
   if(tBusy)return {busy:true};
@@ -12131,17 +12248,22 @@ async function syncAll(opt){
     if(!ping){res.ok=false;res.kind='link';res.msg=MSG_LINK();tlog('✗ '+res.msg);return res;}
     if(!ping.tally){res.ok=false;res.kind='down';res.msg=MSG_DOWN();tlog('✗ '+res.msg);return res;}
     const t=today(),floor=tallyFrom(),ranges=[];let sqlBad=false;
-    const win=Math.max(3,Math.min(120,tcSet('win',14)));
-    const from=opt.full?floor:(()=>{const w=TL.addDays(t,-win);return w<floor?floor:w;})();
+    const win=TS().win===0?0:Math.max(3,Math.min(120,tcSet('win',14)));
+    /* "poori tapas": every so often everything from the start date is read again, so an old entry that was corrected in Tally is caught too */
+    const fullDue=!opt.noFull&&fullEvery()>0&&Date.now()-fullAt()>=fullEvery();
+    const doFull=!!opt.full||fullDue||win===0;
+    const from=doFull?floor:(()=>{const w=TL.addDays(t,-win);return w<floor?floor:w;})();
     /* the list of companies Tally has is asked once per round (not once per firm) */
+    const st={};
     let comps=null;
     try{comps=TM.parseCompanies(await tcall(TM.reqCompanies()));}
     catch(e){if(e&&(e.kind==='link'||e.kind==='down'||e.kind==='busy')){res.ok=false;res.kind=e.kind;res.msg=emsg(e);tlog('✗ '+emsg(e));return res;}}
     for(const f of FIRMS()){
       if(!clean(f.company))continue;
       try{
-        const r=await syncFirm(f,{from,to:t,comps});res.firms[f.id]=r;ranges.push({firm:f.id,from,to:t,n:r.n});
-        tlog(f.name+': '+r.n+' voucher ('+r.add+' navi, '+r.upd+' jaana, '+r.del+' kadhya), '+r.ledgers+' khata');
+        const r=await syncFirm(f,{from,to:t,comps,st});res.firms[f.id]=r;ranges.push({firm:f.id,from,to:t,n:r.n});
+        tlog(f.name+': '+r.n+' voucher ('+r.add+' navi, '+r.upd+' jaana, '+r.del+' kadhya'+(r.extra?', '+r.extra+' badha-voucher mathi':'')+'), '+r.ledgers+' khata'+(doFull?' [poori tapas]':'')+(r.note?' • '+r.note:''));
+        if(r.note)res.warn=(res.warn?res.warn+' • ':'')+f.name+': '+r.note;
         if(r.skipped){tlog('⚠ '+f.name+': Tally e ghana ochha voucher aapya — jaana '+r.skipped+' voucher kadhya nathi (safety). Tally ma company/tarikh barabar chhe?');res.warn=(res.warn?res.warn+' • ':'')+f.name+': '+r.skipped+' '+T('જૂના વાઉચર રાખ્યા (સલામતી)','old vouchers kept (safety)');}
       }catch(e){
         const h=tsqlHint(e);
@@ -12151,6 +12273,8 @@ async function syncAll(opt){
         res.firms[f.id]={err:emsg(e)};res.ok=false;res.msg=(res.msg?res.msg+' • ':'')+f.name+': '+emsg(e);tlog(f.name+' ✗ '+emsg(e));
       }
     }
+    if(doFull&&res.ok&&!sqlBad)LSset('bi-tally-fullat',String(Date.now()));
+    res.full=doFull;
     if(!sqlBad&&!res.kind)try{
       const D=await loadPlanData();
       const ch=TS().mirror===false?0:await mirrorPayments(D,ranges);
@@ -12163,7 +12287,8 @@ async function syncAll(opt){
   finally{
     tBusy=false;
     /* kept on this computer only: saving it in the shared settings every few minutes could overwrite a change made on another device */
-    LSset('bi-tally-last',JSON.stringify({at:new Date().toISOString(),ok:res.ok,kind:res.kind||'',msg:res.msg||'',warn:res.warn||'',n:Object.values(res.firms).reduce((s,x)=>s+(x.n||0),0),imp:res.imported||0,review:res.review||0}));
+    LSset('bi-tally-last',JSON.stringify({at:new Date().toISOString(),ok:res.ok,kind:res.kind||'',msg:res.msg||'',warn:res.warn||'',n:Object.values(res.firms).reduce((s,x)=>s+(x.n||0),0),imp:res.imported||0,review:res.review||0,
+      fm:Object.fromEntries(Object.entries(res.firms).map(([k,x])=>[k,x.err?{err:String(x.err).slice(0,200)}:{n:x.n||0}]))}));
   }
   return res;
 }
@@ -12233,6 +12358,7 @@ function tallyVoucherDlg(S,v){
     +'<div class="kb-card">'+kv(T('તારીખ','Date'),dmy(v.date))+kv(T('વાઉચર નં.','Voucher no.'),v.no)+kv(T('ફર્મ','Firm'),firmName(v.firm))+kv(T('પાર્ટી','Party'),v.party)
       +'<div class="bz-kv big"><span>'+E(T('રકમ','Amount'))+'</span><b>'+E(money(v.amount))+'</b></div>'
       +kv(T('બેંક / કેશ','Bank / cash'),v.bank)+kv(T('રીત','Mode'),v.mode?v.mode.toUpperCase():'')+kv('UTR',v.utr)+kv(T('નોંધ','Narration'),v.narr)
+      +(v.optional?'<p class="v9-note">'+E(T('Optional / Memorandum વાઉચર (Tally માં પાક્કું નથી)','Optional / memorandum voucher (not final in Tally)'))+'</p>':'')
       +(v.src==='file'?'<p class="v9-note">'+E(T('છાપેલી Day Book ફાઇલમાંથી','From a Day Book file'))+'</p>':'')+'</div>'
     +(lines.length>1?'<div class="kb-ct"><span>'+E(T('બધી લાઇન','All lines'))+'</span></div><div class="kb-rows">'+lines.map(l=>'<div class="kb-row"><span class="kb-rt"><b>'+E(l.ledger)+'</b></span><span class="kb-ra"><b>'+E(money(Math.abs(l.amount)))+'</b></span></div>').join('')+'</div>':'')
     +'</div>');
@@ -12567,12 +12693,14 @@ function tallySetupView(S){
           :hl('warn','⚠',T('Tally જવાબ આપતું નથી','Tally is not answering'),T('Tally ખુલ્લું છે? Gateway of Tally પર આવો → F1 → Settings → Connectivity → Client/Server → Both, Port 9000.','Is Tally open? Go to Gateway of Tally → F1 → Settings → Connectivity → Client/Server → Both, Port 9000.')));
       }
     }
+    if(pg&&pg.tally)rows.push(hl('',S.who?'🖥':'•',S.who?T('Tally ની સ્ક્રીન પર અત્યારે: ','On Tally’s screen now: ')+S.who:T('Tally ની સ્ક્રીન પરની કંપની વાંચી શકાઈ નથી','Could not read the company on Tally’s screen')));
     (S.autoNames||[]).forEach(x=>rows.push(hl('good','🪄',T('આપમેળે ભર્યું: ','Filled automatically: ')+x)));
     FIRMS().forEach(f=>{
       const ok=compOk(f);
       if(!clean(f.company))rows.push(hl('warn','⚠',f.name+': '+T('કંપનીનું નામ ખાલી છે','company name is empty'),T('નીચે Tally ની કંપની દબાવીને પસંદ કરો.','Tap one of the Tally companies below.')));
-      else if(ok===true)rows.push(hl('good','✔',f.name+' → '+(resolveCompany(f.company,S.comps||[]))));
-      else if(ok===false)rows.push(hl('bad','✗',f.name+': '+T('આ નામની કંપની Tally માં ખુલ્લી નથી','no company with this name is open in Tally'),T('નીચે ⭐ વાળી / Tally ની કંપની દબાવો. Tally માં કંપની ખુલ્લી (Select Company) હોવી જોઈએ.','Tap the ⭐ / a Tally company below. The company must be loaded in Tally (Select Company).')));
+      else if(L0.fm&&L0.fm[f.id]&&L0.fm[f.id].err)rows.push(hl('bad','✗',f.name+': '+L0.fm[f.id].err));
+      else if(ok===true)rows.push(hl(L0.fm&&L0.fm[f.id]&&L0.fm[f.id].n===0?'warn':'good',L0.fm&&L0.fm[f.id]&&L0.fm[f.id].n===0?'⚠':'✔',f.name+' → '+(resolveCompany(f.company,S.comps||[]))+(L0.fm&&L0.fm[f.id]&&L0.fm[f.id].n!==undefined?' • '+L0.fm[f.id].n+' '+T('વાઉચર','vouchers'):''),L0.fm&&L0.fm[f.id]&&L0.fm[f.id].n===0?T('આ સમયમાં Tally માં કોઈ વાઉચર નથી (ઉપર “ક્યારથી ડેટા લેવો” ની તારીખ તપાસો).','No vouchers in Tally for this period (check the start date below).'):''));
+      else if(ok===false)rows.push(hl('bad','✗',f.name+': '+T('Tally આ કંપની વાંચી શકતું નથી','Tally cannot read this company'),T('Tally માં Alt+F3 (Select Company) થી આ કંપની ખોલો — ત્રણેય કંપની ખોલો. નામ ખોટું હોય તો નીચે ⭐ વાળી કંપની દબાવો. પછી “ચકાસો”.','In Tally press Alt+F3 (Select Company) and open this company — open all three. If the name is wrong, tap the ⭐ company below. Then press “Check”.')));
     });
     if(S.db)rows.push(S.db.ok?hl('good','✔',T('Supabase ટેબલ તૈયાર છે','Supabase tables are ready')):hl('bad','✗',T('Supabase માં supabase-tally.sql ચલાવવાનું બાકી છે','supabase-tally.sql still has to be run in Supabase'),S.db.msg||''));
     if(L0.at){
@@ -12600,17 +12728,24 @@ function tallySetupView(S){
     +sw('kt-pc',T('આ Tally વાળું કમ્પ્યુટર છે','This is the Tally computer'),pc,T('ફક્ત તે કમ્પ્યુટર પર ચાલુ કરો જ્યાં Tally ચાલે છે','Switch on only on the computer where Tally runs'))
     +sw('kt-auto',T('આપમેળે સિંક','Automatic sync'),ts.auto!==false,T('આ કમ્પ્યુટર પર ઍપ ખુલ્લી રાખો (minimize ચાલે)','Keep the app open on this computer (minimised is fine)'))
     +'<div class="kt-two"><label class="bz-f"><span>'+E(T('કેટલી વારે','How often'))+'</span><select id="kt-every">'+[2,5,10,15,30,60].map(m=>'<option value="'+m+'"'+(m===tcSet('every',5)?' selected':'')+'>'+m+' '+E(T('મિનિટ','min'))+'</option>').join('')+'</select></label>'
-    +'<label class="bz-f"><span>'+E(T('છેલ્લા કેટલા દિવસ ફરી જોવા','Re-check last'))+'</span><select id="kt-win">'+[7,14,30,60,90].map(m=>'<option value="'+m+'"'+(m===tcSet('win',14)?' selected':'')+'>'+m+' '+E(T('દિવસ','days'))+'</option>').join('')+'</select></label></div>'
+    +'<label class="bz-f"><span>'+E(T('છેલ્લા કેટલા દિવસ ફરી જોવા','Re-check last'))+'</span><select id="kt-win">'+[0,7,14,30,60,90].map(m=>'<option value="'+m+'"'+(m===(ts.win===0?0:tcSet('win',14))?' selected':'')+'>'+(m?m+' '+E(T('દિવસ','days')):E(T('બધા (શરૂઆતથી)','All (from start)')))+'</option>').join('')+'</select></label></div>'
     +'<p class="v9-note">'+E(T('જૂના દિવસમાં Tally માં ફેરફાર કર્યો હોય તો “શરૂઆતથી બધું” દબાવો.','If you changed an older day in Tally, press “Everything from start date”.'))+'</p>'
     +sw('kt-apay',T('ખેડૂતને ચૂકવણી આપમેળે ખાતામાં','Farmer payments go to khata automatically'),ts.autoPay!==false,T('નામ પાક્કું મળે તો જ; શંકા હોય તો તમને પૂછશે','Only when the name matches for sure; doubtful ones wait for you'))
     +sw('kt-mirror',T('Tally માં રદ / ફેરફાર → ખાતામાં પણ','Cancel / change in Tally → also in khata'),ts.mirror!==false,T('Tally માંથી આવેલી ખેડૂત ચૂકવણી Tally માં રદ કે બદલો તો ખાતામાં પણ બદલાય','A farmer payment that came from Tally follows it if it is cancelled or changed there'))
     +linkLine
-    +(pc?'<div class="kt-btns"><button type="button" class="kt-b" id="kt-chk">🔌 '+E(T('ચકાસો','Check'))+'</button><button type="button" class="kt-b ok" id="kt-now">🔄 '+E(T('હમણાં સિંક','Sync now'))+'</button><button type="button" class="kt-b" id="kt-full">⏮ '+E(T('શરૂઆતથી બધું','Everything from start date'))+'</button><button type="button" class="kt-b" id="kt-raw">🧪 '+E(T('Tally નો નમૂનો ફાઇલમાં','Save a Tally sample'))+'</button></div>':'')
+    +(pc?'<div class="kt-btns"><button type="button" class="kt-b" id="kt-chk">🔌 '+E(T('ચકાસો','Check'))+'</button><button type="button" class="kt-b ok" id="kt-now">🔄 '+E(T('હમણાં સિંક','Sync now'))+'</button><button type="button" class="kt-b" id="kt-full">⏮ '+E(T('શરૂઆતથી બધું','Everything from start date'))+'</button><button type="button" class="kt-b" id="kt-raw">🔬 '+E(T('Tally ની વિગતવાર તપાસ','Detailed Tally check'))+'</button></div>':'')
     +'<p class="bz-st" id="bz-st" role="status"></p></div>'
     +tapas()
+    +'<div class="kb-card kt-c"><div class="kb-ct"><span>📥 '+E(T('શું શું લેવું','What to take'))+'</span></div>'
+    +'<label class="bz-f"><span>'+E(T('કયા વાઉચર','Which vouchers'))+'</span><select id="kt-src"><option value="both"'+(ts.src!=='daybook'?' selected':'')+'>'+E(T('Day Book + બધા વાઉચર (sales, purchase, optional…)','Day Book + all vouchers (sales, purchase, optional…)'))+'</option><option value="daybook"'+(ts.src==='daybook'?' selected':'')+'>'+E(T('ફક્ત Day Book','Day Book only'))+'</option></select></label>'
+    +sw('kt-opt',T('Optional / Memorandum વાઉચર પણ લો','Also take optional / memorandum vouchers'),ts.opt!==false,T('કાચા હિસાબ માટે — Day Book માં નથી દેખાતા તે પણ','For the kacha books — the ones the Day Book does not show'))
+    +sw('kt-optpay',T('Optional વાઉચરની ખેડૂત ચૂકવણી પણ ખાતામાં','Farmer payments in optional vouchers also go to khata'),ts.optPay===true,T('સામાન્ય રીતે બંધ રાખો — પાક્કા (સાચા) વાઉચરની જ ચૂકવણી ખાતામાં જાય','Normally off — only real vouchers’ payments go to khata'))
+    +'<label class="bz-f"><span>'+E(T('પૂરી તપાસ (શરૂઆતથી બધું ફરી જોવું)','Full check (read everything from the start date again)'))+'</span><select id="kt-fev">'+[['off',T('બંધ','Off')],['1h',T('દર 1 કલાકે','Every 1 hour')],['3h',T('દર 3 કલાકે','Every 3 hours')],['6h',T('દર 6 કલાકે','Every 6 hours')],['24h',T('રોજ એક વાર','Once a day')]].map(([k,l])=>'<option value="'+k+'"'+((ts.full===undefined?'3h':ts.full)===k?' selected':'')+'>'+E(l)+'</option>').join('')+'</select></label>'
+    +'<p class="v9-note">'+E(T('જૂના દિવસમાં Tally માં સુધારો કર્યો હોય તો પૂરી તપાસ તેને પકડી લે છે. “શરૂઆતથી બધું” બટન પણ એ જ કરે છે.','If you corrected an older day in Tally, the full check catches it. The “Everything from start date” button does the same.'))+'</p></div>'
     +'<div class="kb-card kt-c"><div class="kb-ct"><span>🏢 '+E(T('ફર્મ ↔ Tally કંપની','Firms ↔ Tally companies'))+'</span></div>'
     +FIRMS().map((f,i)=>'<div class="kt-firm" data-fi="'+i+'"><label class="bz-f"><span>'+firmIc(f.id)+' <b>'+E(f.name)+'</b> — '+E(T('Tally માં કંપનીનું નામ (બરાબર એવું જ)','Company name in Tally (exactly)'))+'</span><input class="kt-in" list="kt-comps" data-fc="'+i+'" value="'+E(f.company)+'" autocomplete="off"></label>'
       +'<span class="kt-bd">'+badge(compOk(f))+'</span><div class="kt-ch" data-ch="'+i+'">'+chipsHtml(i)+'</div>'
+      +sw('kt-pur'+i,T('આ ફર્મની Purchase વાઉચર લો','Take this firm’s purchase vouchers'),takesPurchase(f.id),T('ફક્ત કાચી કંપનીની ખરીદી લેવી — પાક્કી (GST) કંપનીની નહીં','Only the kacha company’s purchases — not the pukka (GST) ones'))
       +'<label class="bz-f kt-fn"><span>'+E(T('ઍપમાં દેખાતું નામ (ફક્ત બતાવવા માટે)','Name shown in the app (display only)'))+'</span><input class="kt-in" data-fn="'+i+'" value="'+E(f.name)+'" autocomplete="off"></label></div>').join('')
     +'<datalist id="kt-comps">'+(S.comps||[]).map(c=>'<option value="'+E(c)+'"></option>').join('')+'</datalist></div>'
     +'<div class="kb-card kt-c"><div class="kb-ct"><span>📅 '+E(T('ક્યારથી ડેટા લેવો','Take data from'))+'</span></div><label class="bz-f"><span>'+E(T('શરૂઆતની તારીખ','Start date'))+'</span><input type="date" id="kt-from" value="'+E(tallyFrom())+'"></label>'
@@ -12642,6 +12777,16 @@ function tallySetupView(S){
   q('#kt-auto').addEventListener('change',e=>{SET.save({tally:{auto:e.target.checked}});});
   q('#kt-apay').addEventListener('change',e=>{SET.save({tally:{autoPay:e.target.checked}});});
   q('#kt-mirror').addEventListener('change',e=>{SET.save({tally:{mirror:e.target.checked}});});
+  q('#kt-src').addEventListener('change',e=>{SET.save({tally:{src:e.target.value}});});
+  q('#kt-opt').addEventListener('change',e=>{SET.save({tally:{opt:e.target.checked}});});
+  q('#kt-optpay').addEventListener('change',e=>{SET.save({tally:{optPay:e.target.checked}});});
+  q('#kt-fev').addEventListener('change',e=>{SET.save({tally:{full:e.target.value}});});
+  FIRMS().forEach((f,i)=>{const sw=q('#kt-pur'+i);if(!sw)return;sw.addEventListener('change',async e=>{
+    const arr=FIRMS().map(x=>Object.assign({},x));arr[i].purchase=e.target.checked;
+    await SET.save({tally:{firms:arr}});
+    if(!e.target.checked){try{purgedP.delete(f.id);await purgePurchases(f.id);toast(T('આ ફર્મની ખરીદી કાઢી નાખી','This firm’s purchases were removed'));await S.reload();}catch(er){status(body,tsqlHint(er),true);}}
+    else status(body,T('આગલા સિંકમાં ખરીદી આવશે. “શરૂઆતથી બધું” દબાવો.','Purchases come in with the next sync. Press “Everything from start date”.'));
+  });});
   q('#kt-every').addEventListener('change',e=>{SET.save({tally:{every:+e.target.value}});});
   q('#kt-win').addEventListener('change',e=>{SET.save({tally:{win:+e.target.value}});});
   q('#kt-from').addEventListener('change',e=>{if(/^\d{4}-\d{2}-\d{2}$/.test(e.target.value))SET.save({tally:{from:e.target.value}});});
@@ -12654,8 +12799,9 @@ function tallySetupView(S){
   async function probeFirm(f){
     if(!clean(f.company)){S.ok=S.ok||{};delete S.ok[f.id];return;}
     S.ok=S.ok||{};
-    try{await tcall(TM.reqVoucherTypes(resolveCompany(f.company,S.comps||[])));S.ok[f.id]=true;}
-    catch(e){S.ok[f.id]=/SVCurrentCompany|company/i.test(String(e&&e.message))?false:undefined;if(S.ok[f.id]===undefined)delete S.ok[f.id];}
+    S.st=S.st||{};
+    const r=await probeCompany(resolveCompany(f.company,S.comps||[]),S.st);
+    if(r===undefined)delete S.ok[f.id];else S.ok[f.id]=r;
   }
   const paintBadge=k=>{const box=body.querySelector('.kt-firm[data-fi="'+k+'"] .kt-bd'),f=FIRMS()[k];if(box&&f)box.innerHTML=badge(compOk(f));};
   body.querySelectorAll('.kt-ch').forEach(box=>box.addEventListener('click',async e=>{
@@ -12685,7 +12831,10 @@ function tallySetupView(S){
     status(body,T('ચકાસે છે…','Checking…'));
     S.ping=await relayPing();S.comps=null;S.ok={};
     if(S.ping&&S.ping.tally){
+      S.st={};
       try{S.comps=TM.parseCompanies(await tcall(TM.reqCompanies()));}catch(e){status(body,err(e),true);}
+      try{S.st.who=TM.parseWho(await tcall(TM.reqWho()));}catch(_){S.st.who='';}
+      S.who=S.st.who||'';
       for(const f of FIRMS())await probeFirm(f);
       /* a firm whose company Tally does not accept gets the obvious Tally company automatically (never an "old / backup" one) */
       /* a name Tally accepted only after a small correction is saved in Tally's exact spelling */
@@ -12716,18 +12865,45 @@ function tallySetupView(S){
     S.ping=await relayPing();
     if(S.view==='setup'){S.repaint();status(body,r.ok?'✔ '+T('સિંક થયું','Synced')+' • '+Object.values(r.firms).reduce((s,x)=>s+(x.n||0),0)+' '+T('વાઉચર','vouchers')+(r.review?' • '+r.review+' '+T('ચૂકવણી ચકાસવાની','payments to check'):''):(r.msg||T('સિંક ન થયું','Sync failed')),!r.ok);}
   };
-  /* support helper: saves what Tally really answers (read-only requests) so a mismatch can be fixed quickly */
+  /* detailed check: asks Tally the same things the sync does and shows its real answers (read-only requests) */
   const br=q('#kt-raw');if(br)br.addEventListener('click',async()=>{
-    status(body,T('Tally નો જવાબ ભેગો થાય છે…','Collecting Tally replies…'));
+    br.disabled=true;status(body,T('Tally ને પૂછે છે… (1-2 મિનિટ લાગી શકે)','Asking Tally… (can take 1-2 minutes)'));
+    let box=q('#kt-diag');if(!box){box=document.createElement('pre');box.id='kt-diag';box.className='kt-log kt-diag';q('#bz-st').after(box);}
+    box.textContent='…';
+    const out=[],sum=[],nv=x=>(String(x||'').match(/<VOUCHER[\s>]/gi)||[]).length,cut=(x,n)=>String(x||'').slice(0,n);
     try{
-      const out=[],comps=await tcall(TM.reqCompanies());out.push('### companies\n'+comps);
-      const f=FIRMS().find(x=>clean(x.company))||FIRMS()[0],real=TM.parseCompanies(comps).find(c=>nkey(c)===nkey(f.company))||f.company;
-      out.push('### voucher types ('+real+')\n'+(await tcall(TM.reqVoucherTypes(real))));
-      out.push('### ledgers (first 60000 chars)\n'+(await tcall(TM.reqLedgers(real))).slice(0,60000));
-      const t=today();out.push('### day book '+TL.addDays(t,-3)+' .. '+t+'\n'+(await tcall(TM.reqDayBook(real,TL.addDays(t,-3),t))).slice(0,400000));
-      dlFile('tally-reply-sample.txt',out.join('\n\n'));
-      status(body,T('✔ tally-reply-sample.txt સેવ થઈ. આ ફાઇલ મોકલો (તેમાં તમારો Tally ડેટા છે).','✔ tally-reply-sample.txt saved. Send this file (it contains your Tally data).'));
-    }catch(e){status(body,err(e),true);}
+      const ping=await relayPing();
+      sum.push('Tally Link: '+(ping?'✔ v'+(ping.v||1)+(ping.tally?' • Tally ✔':' • Tally ✗ (port)'):'✗ not running'));
+      if(ping&&ping.tally){
+        const c=await rawCall(TM.reqCompanies());out.push('### companies\n'+(c.text||c.err));
+        const comps=c.text&&!c.err?TM.parseCompanies(c.text):[];
+        sum.push('Tally company list: '+(comps.map(x=>'['+x+']').join(' ')||'—'+(c.err?' '+cut(c.err,80):'')));
+        const w=await rawCall(TM.reqWho());out.push('### company on Tally screen (TDL)\n'+(w.text||w.err));
+        const who=w.err?'':TM.parseWho(w.text);
+        sum.push('Company on Tally screen: '+(who?'['+who+']':'? '+cut(w.err||'(not in reply)',90)));
+        const t=today(),y=TL.addDays(t,-1);
+        const y30=TL.addDays(t,-30);
+        for(const f of FIRMS()){
+          if(!clean(f.company))continue;
+          const real=resolveCompany(f.company,comps),d=await rawCall(TM.reqDayBook(real,y30,t));
+          out.push('### day book ['+real+'] '+y30+'..'+t+'\n'+cut(d.text||d.err,4000));
+          const wu=await rawCall(TM.reqWho(real)),wn=wu.err?'':TM.parseWho(wu.text);
+          out.push('### company check under ['+real+']\n'+(wu.text||wu.err));
+          const cv=[];
+          for(const k of [0,1,2]){const c=await rawCall(TM.reqVouchers(real,y30,t,k));out.push('### voucher list v'+(k+1)+' ['+real+'] '+y30+'..'+t+'\n'+cut(c.text||c.err,3000));cv.push(c.err?'✗':String(nv(c.text)));}
+          sum.push(f.name+' ['+real+']: '+(d.err?'✗ '+cut(d.err,110):'Day Book '+nv(d.text))+' | '+T('બધા વાઉચર','all vouchers')+' v1/v2/v3: '+cv.join('/')+' | '+T('કંપની','company')+': '+(wn?'['+wn+']':'?'));
+        }
+        const d0=await rawCall(TM.reqDayBook('',y,t));out.push('### day book WITHOUT company\n'+cut(d0.text||d0.err,4000));
+        sum.push('Day Book without company (= screen company): '+(d0.err?'✗ '+cut(d0.err,100):'✔ '+nv(d0.text)+' vouchers'));
+        const f1=FIRMS().find(x=>clean(x.company))||FIRMS()[0],r1=resolveCompany(f1.company,comps);
+        const vt=await rawCall(TM.reqVoucherTypes(r1));out.push('### voucher types ['+r1+']\n'+cut(vt.text||vt.err,6000));
+        const lg=await rawCall(TM.reqLedgers(r1));out.push('### ledgers ['+r1+'] (first 8000 chars)\n'+cut(lg.text||lg.err,8000));
+      }
+    }catch(e){sum.push('error: '+emsg(e));}
+    box.textContent=sum.join('\n');
+    dlFile('tally-tapas.txt','SUMMARY\n'+sum.join('\n')+'\n\n'+out.join('\n\n'));
+    br.disabled=false;
+    status(body,T('✔ તપાસ પૂરી. નીચેનું લખાણ (ફોટો) અને tally-tapas.txt ફાઇલ મોકલો — તેમાં તમારો Tally ડેટા છે.','✔ Check done. Send the text below (a photo is fine) and the tally-tapas.txt file — it contains your Tally data.'));
   });
   const bn=q('#kt-now');if(bn)bn.addEventListener('click',()=>run(false));
   const bf=q('#kt-full');if(bf)bf.addEventListener('click',()=>run(true));
