@@ -6734,6 +6734,11 @@ a.bz-wabtn,#admin a.bz-wabtn,.bi-v2-modal a.bz-wabtn{flex:1 1 0;display:inline-f
 .in-gh span{display:block;min-width:0}.in-gh b{font-size:13.5px}.in-gh small{display:block;font-size:11px;color:#587276;font-weight:500}
 .in-grp .kb-rows{margin:0;border-radius:0 0 14px 14px;border-left:0;border-right:0;border-bottom:0}
 .in-dup .kt-acts{padding:6px 0 2px}
+/* ---- party ledger / sales / stock (v10) ---- */
+#admin .kp-it{color:#0b4a4d;font-size:12px;display:block;margin-top:1px}
+#admin .kp-no{color:#8a6d00}
+#admin .kb-row.kp-dim{opacity:.5}
+#admin .kp-app{border-left:4px solid #0a9297}
 
 /* ===== Laptop / desktop layer (>=1024px). Phones (<1024px) are not touched. ===== */
 @media (min-width:1024px){
@@ -6983,7 +6988,9 @@ const DEF={
   perm:{staffRate:true},
   alert:{diffKg:100,push:true,dueDays:20,dueAmt:5000},
   goal:{monthKg:0},
-  biz:{process:false,tiles:{ledger:true,expense:true,profit:true,batch:false,sale:false,tally:true,insights:true},alias:{},bankAlias:{},mannMaals:['Magfadi'],processMaals:['Magfadi'],
+  rem:{items:[]},dal:{unit:'kg',def:0,rates:{},paid:[]},
+  stock:{openKg:0,openDate:'',adjKg:0,physKg:'',physDate:'',bagKg:0,min:0},
+  biz:{partyAlias:{},partyMobile:{},billKg:{},process:false,tiles:{ledger:true,expense:true,profit:true,batch:false,sale:false,tally:true,insights:true},alias:{},bankAlias:{},mannMaals:['Magfadi'],processMaals:['Magfadi'],
     grades:[{k:'50/60',kernel:1},{k:'60/70',kernel:1},{k:'70/80',kernel:1},{k:'80/90',kernel:1},{k:'90/100',kernel:1},{k:'100/110',kernel:1},{k:'એડિબલ',kernel:1},{k:'ફાડિયા',kernel:1},{k:'ટકાલો',kernel:1},{k:'વેસ્ટેજ',kernel:0}],
     cats:['દલાલી','મજૂરી','બારદાન','ગાડી ભાડું','લાઇટ બિલ','પ્રોસેસ ખર્ચ','GST','બીજા']},
   tally:{firms:[{id:'patel',name:'Patel Enterprises',company:'PATEL ENTREPRISES',purchase:false},{id:'shreenathji',name:'Shreenathji Enterprises',company:'SHREENATHJI ENTERPRISES',purchase:false},{id:'balaji',name:'Balaji Industries',company:'BALAJI NEW',purchase:true}],from:'',auto:true,every:5,win:14,full:'3h',src:'both',opt:true,optPay:false,mirror:true,autoPay:true,payOk:false,vt:{},ignore:{},last:{}}
@@ -7740,8 +7747,20 @@ function reqVouchers(co,fromIso,toIso,variant){
   variant=variant||0;
   const id='BalajiVouchers'+(variant?String(variant+1):'');
   const ent=n=>n+'.LedgerName,'+n+'.Amount,'+n+'.IsDeemedPositive,'+VCH_BANK.split(',').map(x=>n+'.'+x).join(',');
-  const fetch=[VCH_BASE+','+ent('AllLedgerEntries'),VCH_BASE+','+ent('LedgerEntries'),VCH_BASE+',AllLedgerEntries.*,LedgerEntries.*'][variant]||VCH_BASE;
+  const inv=n=>['StockItemName','ActualQty','BilledQty','Rate','Amount'].map(x=>n+'.'+x).join(',');
+  const fetch=[VCH_BASE+','+ent('AllLedgerEntries')+','+inv('AllInventoryEntries'),VCH_BASE+','+ent('LedgerEntries')+','+inv('InventoryEntries'),VCH_BASE+',AllLedgerEntries.*,LedgerEntries.*,AllInventoryEntries.*,InventoryEntries.*'][variant]||VCH_BASE;
   return reqCollection(id,'Voucher',fetch,co,(fromIso?'<SVFROMDATE>'+tDate(fromIso)+'</SVFROMDATE>':'')+(toIso?'<SVTODATE>'+tDate(toIso)+'</SVTODATE>':''));
+}
+/* stock items with their closing balance (only when the company keeps stock items; an empty answer is fine) */
+const reqStockItems=co=>reqCollection('BalajiStock','StockItem','Name,Parent,BaseUnits,ClosingBalance,ClosingValue',co);
+function parseStockItems(xml){
+  const out=[],seen=new Set();
+  all(parseXML(xml),'STOCKITEM').forEach(n=>{
+    const name=clean(attr(n,'NAME'))||val(n,'NAME');if(!name||seen.has(name))return;seen.add(name);
+    const cb=parseQty(val(n,'CLOSINGBALANCE')),unit=val(n,'BASEUNITS')||cb.u,sign=/^\s*-/.test(val(n,'CLOSINGBALANCE'))?-1:1;
+    out.push({name,parent:val(n,'PARENT'),unit:clean(unit)||cb.u,qty:r2(sign*cb.q),value:r2(Math.abs(amt(val(n,'CLOSINGVALUE'))))});
+  });
+  return out;
 }
 function parseWho(xml){const m=/<BALAJICURCOMP>([\s\S]*?)<\/BALAJICURCOMP>/i.exec(String(xml||''));return m&&clean(m[1])?decode(m[1]):'';}
 /* Tally answers an error as LINEERROR / "Unknown Request" / an empty RESPONSE */
@@ -7837,6 +7856,15 @@ function modeOf(bankName,tt,narr){
   if(/upi/i.test(t)||/\bUPI\b|UPI[\/\-]/i.test(n))return 'upi';
   return 'bank';
 }
+/* "1,000.500 Kg"  /  " 40 Bags = 2000 Kg"  ->  {q,u}  (the base-unit part after "=" wins) */
+function parseQty(s){
+  s=clean(s);if(!s)return {q:0,u:''};
+  const eq=s.lastIndexOf('=');if(eq>=0)s=clean(s.slice(eq+1));
+  const m=/^([+\-]?[\d,]*\.?\d+)\s*(.*)$/.exec(s);if(!m)return {q:0,u:''};
+  const q=parseFloat(m[1].replace(/,/g,''));return {q:isFinite(q)?Math.abs(q):0,u:clean(m[2]).replace(/[^\p{L}.]/gu,'')};
+}
+/* "60.00/Kg" -> 60 */
+function parseRate(s){const m=/^\s*([+\-]?[\d,]*\.?\d+)/.exec(String(s||''));const r=m?parseFloat(m[1].replace(/,/g,'')):0;return isFinite(r)?Math.abs(r):0;}
 function parseVouchers(xml,base){
   base=base||baseResolver([]);
   const out=[];
@@ -7862,14 +7890,24 @@ function parseVouchers(xml,base){
     if(b==='payment'||b==='receipt'){
       const m2=moneySide.filter(e=>isBankish(e.ledger));if(m2.length)moneySide=m2;
     }
+    const oppAll=partySide===drs?crs:drs;
     const lines=partySide.map(e=>({ledger:e.ledger,amount:e.amount}));
+    const other=oppAll.map(e=>({ledger:e.ledger,amount:e.amount}));
+    const items=[];
+    v.k.forEach(c=>{
+      if(!/INVENTORYENTRIES(?:IN|OUT)?\.LIST$/i.test(c.t))return;
+      const n=val(c,'STOCKITEMNAME');if(!n)return;
+      const bq=parseQty(val(c,'BILLEDQTY')),aq=parseQty(val(c,'ACTUALQTY')),q=bq.q?bq:aq,a=r2(Math.abs(amt(val(c,'AMOUNT'))));
+      const rt=parseRate(val(c,'RATE'));
+      items.push({n,q:q.q,u:q.u,r:rt||(q.q?r2(a/q.q):0),a});
+    });
     const party=(b==='contra'||b==='journal')?'':(lines[0]&&lines[0].ledger)||val(v,'PARTYLEDGERNAME');
     const bankE=(b==='payment'||b==='receipt')?(moneySide.find(e=>e.utr)||moneySide[0]):(b==='contra'?moneySide[0]:null);
     const bank=bankE?bankE.ledger:'';
     let utr=bankE&&bankE.utr||'';
     if(!utr)utr=refFromNarr(narr);
     out.push({vkey:type.toLowerCase()+'#'+no+'@'+date,guid:val(v,'GUID')||attr(v,'REMOTEID'),date,type,base:b,no,party,amount:total,narr,bank,mode:(b==='payment'||b==='receipt')?modeOf(bank,bankE&&bankE.tt,narr):'',utr,
-      cancelled:/yes/i.test(val(v,'ISCANCELLED')),optional:/yes/i.test(val(v,'ISOPTIONAL')),alter:parseInt(val(v,'ALTERID'),10)||0,lines,src:'xml'});
+      cancelled:/yes/i.test(val(v,'ISCANCELLED')),optional:/yes/i.test(val(v,'ISOPTIONAL')),alter:parseInt(val(v,'ALTERID'),10)||0,lines,other,items,src:'xml'});
   });
   return out;
 }
@@ -8082,7 +8120,7 @@ function matchPurchases(tv,app,ctx,opts){
   return {farmers,days,app:sum('app'),tally:sum('tally'),diff:r2(sum('tally')-sum('app')),cnt};
 }
 
-const api={parseXML,all,kid,kids,val,attr,xe,tDate,isoDate,reqCompanies,reqVoucherTypes,reqLedgers,reqDayBook,reqCollection,reqWho,reqVouchers,parseWho,emptyReply,tallyError,parseCompanies,parseVoucherTypes,parseLedgers,parseVouchers,baseResolver,guessBase,groupKind,
+const api={parseXML,all,kid,kids,val,attr,xe,tDate,isoDate,reqCompanies,reqVoucherTypes,reqLedgers,reqStockItems,parseStockItems,parseQty,parseRate,reqDayBook,reqCollection,reqWho,reqVouchers,parseWho,emptyReply,tallyError,parseCompanies,parseVoucherTypes,parseLedgers,parseVouchers,baseResolver,guessBase,groupKind,
   parseDayBookItems,parseDayBookRows,parseDayDate,firmOfCompany,planPayments,cashBook,matchPurchases,amt,modeOf,isBankish,refFromNarr};
 g.BalajiTallyMath=api;
 if(typeof module!=='undefined'&&module.exports)module.exports=api;
@@ -8255,7 +8293,7 @@ function groupBy(PR,from,to,by){
   const M=new Map();let tk=0,ta=0;
   PR.forEach(r=>{
     if(!inR(r.date,from,to))return;
-    const lab=by==='day'?r.date:clean(by==='broker'?r.broker:by==='village'?r.village:by==='maal'?r.maal:'');
+    const lab=by==='day'?r.date:clean(by==='broker'?r.broker:by==='village'?r.village:by==='maal'?r.maal:by==='vehicle'?r.vehicle:'');
     const k=by==='day'?lab:nm(lab);
     let g=M.get(k);
     if(!g){g={key:k,label:lab,n:0,kg:0,kgH:0,amt:0,fs:new Set()};M.set(k,g);}
@@ -8405,6 +8443,327 @@ function payRecon(pays,vouchers,keyOf,o){
 
 const api={topBuyers,rateShift,groupBy,clean,nm,r2,addDays,diffDays,monthStart,monthEnd,weekStart,median,topFarmers,farmerActivity,aging,payList,dupFarmers,rateTrend,vehicleLoss,dataIssues,agg,periodCompare,chg,moneyPosition,expenseSplit,firmMonthly,buyerAging,goalForecast,payRecon};
 g.BalajiInsMath=api;
+if(typeof module!=='undefined'&&module.exports)module.exports=api;
+})(typeof window!=='undefined'?window:globalThis);
+
+</script>
+<script id="bi-v9-ledgermath">
+/* ================= Party ledgers (all firms together), sales bills, stock, profit, cash trend =================
+   Pure functions (no screen, no network).  READ ONLY: nothing here ever writes into Tally.
+   Sign rule everywhere: Cr = + (we owe),  Dr = − (they owe us)  - the same as Tally's closing balance in the app. */
+(function(g){
+'use strict';
+const clean=s=>String(s==null?'':s).replace(/\s+/g,' ').trim();
+const r2=n=>Math.round(n*100)/100;
+const n0=x=>{const v=Number(x);return Number.isFinite(v)?v:0;};
+const nm=s=>clean(s).toLowerCase().replace(/^m\/?s\.?\s+/,'').replace(/[\s.,\-_/()'"&:;]+/g,'');
+const p2=n=>String(n).padStart(2,'0');
+const inR=(d,f,t)=>!!d&&(!f||d>=f)&&(!t||d<=t);
+const addDays=(iso,n)=>{const a=iso.split('-').map(Number),t=new Date(Date.UTC(a[0],a[1]-1,a[2]+n));return t.getUTCFullYear()+'-'+p2(t.getUTCMonth()+1)+'-'+p2(t.getUTCDate());};
+const diffDays=(a,b)=>Math.round((Date.parse(b)-Date.parse(a))/864e5);
+
+/* ---------------- the entries of one voucher: [{ledger,amount,dr}] ---------------- */
+/* v.lines = the party side (Cr for purchase / receipt / credit note, Dr for the rest), v.other = the opposite side (new sync) */
+const CR_FIRST={purchase:1,receipt:1,creditnote:1};
+function entries(v){
+  const out=[];
+  const dr1=v.dir?v.dir==='dr':!CR_FIRST[v.base];
+  (v.lines||[]).forEach(l=>{if(l&&clean(l.ledger)&&n0(l.amount)>0)out.push({ledger:clean(l.ledger),amount:n0(l.amount),dr:dr1});});
+  (v.other||[]).forEach(l=>{if(l&&clean(l.ledger)&&n0(l.amount)>0)out.push({ledger:clean(l.ledger),amount:n0(l.amount),dr:!dr1});});
+  return out;
+}
+
+/* ---------------- parties: the same name in all firms = one party ---------------- */
+function buildParties(vouchers,leds,o){
+  o=o||{};
+  const resolve=o.resolve||(k=>k),kindOf=o.kindOf||(()=>'other'),isKacha=o.isKacha||(()=>false);
+  const P=new Map();
+  const get=name=>{
+    const k=resolve(nm(name));if(!k)return null;
+    let p=P.get(k);if(!p){p={key:k,names:new Map(),firms:{},n:0,last:''};P.set(k,p);}
+    return p;
+  };
+  const firmOf=(p,f)=>p.firms[f]||(p.firms[f]={firm:f,closing:0,tally:0,opt:0,parent:'',kind:'other',has:false});
+  (leds||[]).forEach(l=>{
+    const nmz=clean(l.name);if(!nmz||/^~S~/.test(nmz))return;
+    const p=get(nmz);if(!p)return;
+    p.names.set(nmz,(p.names.get(nmz)||0)+1);
+    const f=firmOf(p,l.firm);f.closing=r2(f.closing+n0(l.closing));f.parent=l.parent||f.parent;f.kind=kindOf(l.parent);f.has=true;
+  });
+  (vouchers||[]).forEach(v=>{
+    if(!v||v.cancelled)return;
+    entries(v).forEach(e=>{
+      const p=get(e.ledger);if(!p)return;
+      p.names.set(e.ledger,(p.names.get(e.ledger)||0)+1);firmOf(p,v.firm);
+      p.n++;if(v.date>p.last)p.last=v.date;
+      if(v.optional){const f=firmOf(p,v.firm);f.opt=r2(f.opt+(e.dr?-e.amount:e.amount));}
+    });
+  });
+  const out=[];
+  P.forEach(p=>{
+    let best='',bc=-1;p.names.forEach((c,n)=>{if(c>bc||(c===bc&&n.length>best.length)){best=n;bc=c;}});
+    p.name=best;
+    const fs=Object.keys(p.firms).map(k=>p.firms[k]);
+    fs.forEach(f=>{f.tally=f.closing;if(o.optional===true)f.closing=r2(f.tally+f.opt);});
+    p.net=r2(fs.reduce((s,f)=>s+f.closing,0));
+    p.kacha=r2(fs.filter(f=>isKacha(f.firm)).reduce((s,f)=>s+f.closing,0));
+    p.paka=r2(p.net-p.kacha);
+    let top=null;fs.forEach(f=>{if(f.has&&(!top||Math.abs(f.closing)>Math.abs(top.closing)))top=f;});
+    p.kind=top?(top.kind==='cash'?'bank':top.kind):'other';
+    p.firmIds=fs.map(f=>f.firm);
+    p.hasLedger=fs.some(f=>f.has);
+    out.push(p);
+  });
+  return out;
+}
+
+/* ---------------- one party's statement ---------------- */
+function statement(p,vouchers,o){
+  o=o||{};
+  const resolve=o.resolve||(k=>k),firmSel=o.firm||'all',from=o.from||'',to=o.to||'',incOpt=o.optional!==false,isKacha=o.isKacha||(()=>false);
+  const key=p.key,rows=[],mv={},optMv={};let partial=0;
+  (vouchers||[]).forEach(v=>{
+    if(!v||v.cancelled)return;
+    const es=entries(v).filter(e=>resolve(nm(e.ledger))===key);
+    if(!es.length)return;
+    if(v.other===null||v.other===undefined){if(v.src!=='file')partial++;}
+    let dr=0,cr=0;es.forEach(e=>{if(e.dr)dr+=e.amount;else cr+=e.amount;});
+    const net=r2(cr-dr);
+    if(v.optional)optMv[v.firm]=r2((optMv[v.firm]||0)+net);else mv[v.firm]=r2((mv[v.firm]||0)+net);
+    rows.push({date:v.date,firm:v.firm,kacha:!!isKacha(v.firm),type:v.type,base:v.base,no:v.no||'',narr:v.narr||'',dr:r2(dr),cr:r2(cr),net,optional:!!v.optional,items:v.items||[],v});
+  });
+  /* opening per firm = Tally's closing balance minus everything that happened in the synced vouchers */
+  const byFirm={};
+  Object.keys(p.firms).forEach(f=>{
+    const x=p.firms[f];
+    byFirm[f]={firm:f,kacha:!!isKacha(f),has:x.has,tallyClosing:x.has?x.tally:null,opening:x.has?r2(x.tally-(mv[f]||0)):0,dr:0,cr:0,optNet:optMv[f]||0,n:0};
+  });
+  Object.keys(mv).concat(Object.keys(optMv)).forEach(f=>{if(!byFirm[f])byFirm[f]={firm:f,kacha:!!isKacha(f),has:false,tallyClosing:null,opening:0,dr:0,cr:0,optNet:optMv[f]||0,n:0};});
+  const inFirm=r=>firmSel==='all'||r.firm===firmSel;
+  rows.forEach(r=>{const b=byFirm[r.firm];if(!b)return;b.n++;if(r.optional&&!incOpt)return;b.dr=r2(b.dr+r.dr);b.cr=r2(b.cr+r.cr);});
+  Object.keys(byFirm).forEach(f=>{const b=byFirm[f];b.closing=r2((b.has?b.tallyClosing:b.opening+(mv[f]||0))+(incOpt?b.optNet:0));});
+  /* running balance */
+  const sel=rows.filter(inFirm).sort((a,b)=>String(a.date).localeCompare(String(b.date))||String(a.firm).localeCompare(String(b.firm))||String(a.no).localeCompare(String(b.no),undefined,{numeric:true}));
+  let bal=r2(Object.keys(byFirm).filter(f=>firmSel==='all'||f===firmSel).reduce((s,f)=>s+byFirm[f].opening,0));
+  const open0=bal;let before=0;
+  const list=[];
+  sel.forEach(r=>{
+    const eff=!(r.optional&&!incOpt);
+    if(eff)bal=r2(bal+r.net);
+    r.bal=bal;r.eff=eff;
+    if(from&&r.date<from){if(eff)before=r2(before+r.net);return;}
+    if(to&&r.date>to)return;
+    list.push(r);
+  });
+  const opening=r2(open0+before);
+  const shown=list;
+  let dr=0,cr=0;shown.forEach(r=>{if(!r.eff)return;dr+=r.dr;cr+=r.cr;});
+  const closing=shown.length?shown[shown.length-1].bal:opening;
+  const F=Object.keys(byFirm).map(f=>byFirm[f]);
+  const grp=pred=>{const a=F.filter(pred);return {opening:r2(a.reduce((s,x)=>s+x.opening,0)),dr:r2(a.reduce((s,x)=>s+x.dr,0)),cr:r2(a.reduce((s,x)=>s+x.cr,0)),closing:r2(a.reduce((s,x)=>s+x.closing,0)),firms:a.map(x=>x.firm)};};
+  return {rows:shown,opening,closing,dr:r2(dr),cr:r2(cr),byFirm,firms:F,kacha:grp(x=>x.kacha),paka:grp(x=>!x.kacha),all:grp(()=>true),partial,optional:r2(Object.keys(optMv).reduce((s,f)=>s+optMv[f],0)),hasOptional:rows.some(r=>r.optional)};
+}
+
+/* two spellings of one party? (same text, or one contains the other, or very alike) */
+function dupParties(parties,sim,thr){
+  thr=thr||0.86;const out=[],L=parties.filter(p=>p.key.length>=4).slice().sort((a,b)=>a.key.localeCompare(b.key));
+  for(let i=0;i<L.length;i++){
+    for(let j=i+1;j<L.length&&j<i+60;j++){
+      const a=L[i],b=L[j];
+      const short=a.key.length<=b.key.length?a:b,long=short===a?b:a;
+      const contain=short.key.length>=8&&long.key.indexOf(short.key)===0&&long.key.length-short.key.length<=3;
+      const s=contain?0.95:(Math.abs(a.key.length-b.key.length)<=3&&sim?sim(a.key,b.key):0);
+      if(s>=thr)out.push({a,b,score:r2(s)});
+    }
+  }
+  out.sort((x,y)=>y.score-x.score||Math.abs(y.a.net)+Math.abs(y.b.net)-Math.abs(x.a.net)-Math.abs(x.b.net));
+  return out;
+}
+
+/* ---------------- quantities ---------------- */
+const UNIT_KG={kg:1,kgs:1,kilo:1,kilogram:1,kilograms:1,qtl:100,qtls:100,quintal:100,quintals:100,mt:1000,ton:1000,tons:1000,tonne:1000,tonnes:1000,gm:0.001,gms:0.001,gram:0.001,grams:0.001};
+function kgOf(q,u,bagKg){
+  const k=String(u||'').toLowerCase().replace(/[^a-z]/g,'');
+  if(UNIT_KG[k])return q*UNIT_KG[k];
+  if(/^(bag|bags|bori|gunny|katta|packet|pkt)/.test(k)&&n0(bagKg)>0)return q*bagKg;
+  return null;
+}
+/* sales (or purchase) bills with their stock lines */
+function bills(vouchers,o){
+  o=o||{};const base=o.base||'sales',from=o.from||'',to=o.to||'',firm=o.firm||'all',bagKg=n0(o.bagKg);
+  const out=[];
+  (vouchers||[]).forEach(v=>{
+    if(!v||v.cancelled||v.base!==base||!inR(v.date,from,to))return;
+    if(firm!=='all'&&v.firm!==firm)return;
+    if(o.noOptional&&v.optional)return;
+    let kg=0,kgOk=true,other=0,manual=false;
+    let items=(v.items||[]).map(i=>{const k=kgOf(n0(i.q),i.u,bagKg);if(k===null){kgOk=false;other+=n0(i.q);}else kg+=k;return Object.assign({kg:k},i);});
+    /* weight typed in by hand for a bill that has no item lines */
+    const man=n0((o.kgMap||{})[v.firm+'|'+v.vkey]);
+    if(!items.length&&man>0){const nt=netSale(v);kg=man;manual=true;items=[{n:'(manual)',q:man,u:'Kg',r:r2(nt/man),a:nt,kg:man}];}
+    out.push({v,firm:v.firm,date:v.date,type:v.type,no:v.no||'',party:clean(v.party),amount:n0(v.amount),net:netSale(v),items,hasItems:items.length>0,manual,kg:r2(kg),kgAll:kgOk,otherQty:r2(other),optional:!!v.optional});
+  });
+  out.sort((a,b)=>String(b.date).localeCompare(String(a.date))||String(b.no).localeCompare(String(a.no),undefined,{numeric:true}));
+  return out;
+}
+/* the sale without GST: the voucher amount minus its tax ledgers */
+const TAX=/gst|igst|cgst|sgst|utgst|\bcess\b|\btax\b|tcs|tds/i;
+function netSale(v){
+  let tax=0;(v.other||[]).forEach(e=>{if(TAX.test(e.ledger))tax+=n0(e.amount);});
+  return r2(Math.max(0,n0(v.amount)-tax));
+}
+/* by: buyer | item | month | firm */
+function summarize(list,by){
+  const M=new Map();let tot={n:0,amt:0,net:0,kg:0};
+  const add=(key,label,b,kg,amt)=>{
+    let g=M.get(key);if(!g){g={key,label,n:0,amt:0,net:0,kg:0,kgAmt:0,bills:new Set()};M.set(key,g);}
+    g.n++;g.amt+=amt;g.kg+=kg;
+    return g;
+  };
+  list.forEach(b=>{
+    tot.n++;tot.amt+=b.amount;tot.net+=b.net;tot.kg+=b.kg;
+    if(by==='item'){
+      if(!b.items.length){const g=add('~none~','—',b,0,b.amount);g.net+=b.net;return;}
+      b.items.forEach(i=>{const g=add(nm(i.n),clean(i.n),b,i.kg||0,n0(i.a));g.net+=n0(i.a);g.kgAmt+=i.kg?n0(i.a):0;g.unit=g.unit||i.u;});
+      return;
+    }
+    const key=by==='buyer'?nm(b.party):by==='month'?String(b.date).slice(0,7):b.firm;
+    const label=by==='buyer'?b.party:by==='month'?String(b.date).slice(0,7):b.firm;
+    const g=add(key,label,b,b.kg,b.amount);g.net+=b.net;
+    b.items.forEach(i=>{if(i.kg)g.kgAmt+=n0(i.a);});
+  });
+  const rows=[...M.values()].map(g=>({key:g.key,label:g.label,n:g.n,amt:r2(g.amt),net:r2(g.net),kg:r2(g.kg),unit:g.unit||'',avg:g.kg>0&&g.kgAmt>0?r2(g.kgAmt/g.kg):0}));
+  rows.sort((a,b)=>by==='month'?String(b.key).localeCompare(String(a.key)):(b.net-a.net||b.amt-a.amt));
+  return {rows,total:{n:tot.n,amt:r2(tot.amt),net:r2(tot.net),kg:r2(tot.kg)}};
+}
+/* the movement of every stock item: in = purchase bills, out = sales bills */
+function itemFlow(vouchers,o){
+  o=o||{};const from=o.from||'',to=o.to||'',firm=o.firm||'all',bagKg=n0(o.bagKg);
+  const M=new Map(),days=new Map();
+  (vouchers||[]).forEach(v=>{
+    if(!v||v.cancelled||!(v.items&&v.items.length)||!inR(v.date,from,to))return;
+    if(firm!=='all'&&v.firm!==firm)return;
+    const dir=v.base==='purchase'||v.base==='creditnote'?'in':v.base==='sales'||v.base==='debitnote'?'out':'';
+    if(!dir)return;
+    v.items.forEach(i=>{
+      const k=nm(i.n);let g=M.get(k);if(!g){g={key:k,name:clean(i.n),unit:i.u||'',inQ:0,outQ:0,inAmt:0,outAmt:0,inKg:0,outKg:0,last:''};M.set(k,g);}
+      const kg=kgOf(n0(i.q),i.u,bagKg);
+      if(dir==='in'){g.inQ+=n0(i.q);g.inAmt+=n0(i.a);if(kg!==null)g.inKg+=kg;}else{g.outQ+=n0(i.q);g.outAmt+=n0(i.a);if(kg!==null)g.outKg+=kg;}
+      if(v.date>g.last)g.last=v.date;
+      if(kg!==null){let d=days.get(v.date);if(!d){d={date:v.date,inKg:0,outKg:0};days.set(v.date,d);}if(dir==='in')d.inKg+=kg;else d.outKg+=kg;}
+    });
+  });
+  const rows=[...M.values()].map(g=>({key:g.key,name:g.name,unit:g.unit,inQ:r2(g.inQ),outQ:r2(g.outQ),inAmt:r2(g.inAmt),outAmt:r2(g.outAmt),inKg:r2(g.inKg),outKg:r2(g.outKg),net:r2(g.inQ-g.outQ),last:g.last,avgIn:g.inQ>0?r2(g.inAmt/g.inQ):0,avgOut:g.outQ>0?r2(g.outAmt/g.outQ):0}));
+  rows.sort((a,b)=>(b.outQ+b.inQ)-(a.outQ+a.inQ));
+  const dl=[...days.values()].map(d=>({date:d.date,inKg:r2(d.inKg),outKg:r2(d.outKg)})).sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+  return {rows,days:dl};
+}
+/* Tally's own closing stock, summed in KG (items whose unit cannot be turned into KG are listed apart) */
+function stockTotals(stock,o){
+  o=o||{};const bagKg=n0(o.bagKg),pick=o.items&&o.items.length?new Set(o.items):null;
+  let kg=0,value=0;const other=[];
+  (stock||[]).forEach(s=>{
+    if(pick&&!pick.has(nm(s.name)))return;
+    const k=kgOf(n0(s.qty),s.unit,bagKg);
+    if(k===null){other.push(s);return;}
+    kg+=k;value+=n0(s.value);
+  });
+  return {kg:r2(kg),value:r2(value),other};
+}
+/* book stock = opening + bought (app) - sold (Tally bills) +- adjustment; physical count compared with it */
+function stockEstimate(o){
+  const open=n0(o.openKg),bought=n0(o.boughtKg),sold=n0(o.soldKg),adj=n0(o.adjKg);
+  const est=r2(open+bought-sold+adj);
+  const hasPhys=o.physKg!==undefined&&o.physKg!==null&&o.physKg!=='';
+  const phys=hasPhys?n0(o.physKg):null;
+  return {open:r2(open),bought:r2(bought),sold:r2(sold),adj:r2(adj),est,phys,diff:hasPhys?r2(phys-est):null};
+}
+/* average buying rate (app) and selling rate (Tally) per KG, and what that leaves */
+function margin(PR,billList,from,to){
+  let bk=0,ba=0;
+  (PR||[]).forEach(r=>{if(r.pending||!(r.rate>0)||!(r.kg>0)||!inR(r.date,from,to))return;bk+=r.kg;ba+=r.amt;});
+  let sk=0,sa=0;
+  (billList||[]).forEach(b=>b.items.forEach(i=>{if(i.kg&&inR(b.date,from,to)){sk+=i.kg;sa+=n0(i.a);}}));
+  const buy=bk>0?ba/bk:0,sell=sk>0?sa/sk:0;
+  return {buyKg:r2(bk),buyAmt:r2(ba),buyAvg:r2(buy),sellKg:r2(sk),sellAmt:r2(sa),sellAvg:r2(sell),perKg:buy>0&&sell>0?r2(sell-buy):0,total:buy>0&&sell>0?r2((sell-buy)*sk):0};
+}
+
+/* ---------------- money trend: cash + bank at the end of each day ---------------- */
+function moneyTrend(vouchers,leds,kindOf,today,days){
+  days=days||30;
+  let cur=0;
+  (leds||[]).forEach(l=>{const k=kindOf(l.name,l);if(k==='cash'||k==='bank')cur-=n0(l.closing);});
+  const delta=new Map();let partial=0;
+  (vouchers||[]).forEach(v=>{
+    if(!v||v.cancelled||v.optional)return;
+    if(v.other===null||v.other===undefined){if(v.src!=='file')partial++;}
+    entries(v).forEach(e=>{
+      const k=kindOf(e.ledger,v);if(k!=='cash'&&k!=='bank')return;
+      delta.set(v.date,(delta.get(v.date)||0)+(e.dr?e.amount:-e.amount));
+    });
+  });
+  const out=[];let bal=r2(cur);
+  for(let i=0;i<days;i++){
+    const d=addDays(today,-i),dl=delta.get(d)||0;
+    out.push({date:d,bal:r2(bal),delta:r2(dl)});
+    bal=r2(bal-dl);
+  }
+  return {rows:out.reverse(),now:r2(cur),partial};
+}
+
+/* ---------------- brokers (dalali) ---------------- */
+function dalali(PR,from,to,rates,defRate){
+  const M=new Map();rates=rates||{};
+  (PR||[]).forEach(r=>{
+    if(!inR(r.date,from,to)||!clean(r.broker))return;
+    const k=nm(r.broker);let g=M.get(k);if(!g){g={key:k,name:clean(r.broker),n:0,kg:0,amt:0,farmers:new Set()};M.set(k,g);}
+    g.n++;g.kg+=r.kg;if(!r.pending)g.amt+=r.amt;if(r.farmer)g.farmers.add(nm(r.farmer));
+  });
+  const rows=[...M.values()].map(g=>{const rate=rates[g.key]!==undefined&&rates[g.key]!==''?n0(rates[g.key]):n0(defRate);return {key:g.key,name:g.name,n:g.n,kg:r2(g.kg),amt:r2(g.amt),farmers:g.farmers.size,rate,due:r2(g.kg*rate)};});
+  rows.sort((a,b)=>b.kg-a.kg);
+  return {rows,total:r2(rows.reduce((s,x)=>s+x.due,0)),kg:r2(rows.reduce((s,x)=>s+x.kg,0))};
+}
+
+/* ---------------- the same voucher entered twice in Tally ---------------- */
+function dupVouchers(vouchers,o){
+  o=o||{};const from=o.from||'',to=o.to||'';
+  const M=new Map();
+  (vouchers||[]).forEach(v=>{
+    if(!v||v.cancelled||!(v.amount>0)||!inR(v.date,from,to))return;
+    if(['purchase','payment','receipt','sales'].indexOf(v.base)<0)return;
+    const k=[v.firm,v.base,nm(v.party),Math.round(v.amount*100),v.date].join('|');
+    const a=M.get(k)||[];a.push(v);M.set(k,a);
+  });
+  const out=[];M.forEach(a=>{if(a.length>1)out.push({vs:a.sort((x,y)=>String(x.no).localeCompare(String(y.no),undefined,{numeric:true})),amount:a[0].amount,party:a[0].party,date:a[0].date,base:a[0].base,firm:a[0].firm});});
+  out.sort((a,b)=>String(b.date).localeCompare(String(a.date))||b.amount-a.amount);
+  return out;
+}
+
+/* ---------------- reminders ---------------- */
+function remSplit(items,today){
+  const o={over:[],today:[],soon:[],later:[],done:[]};
+  (items||[]).forEach(r=>{
+    if(!r)return;
+    if(r.done){o.done.push(r);return;}
+    if(!r.d){o.later.push(r);return;}
+    const k=diffDays(today,r.d);
+    if(k<0)o.over.push(r);else if(k===0)o.today.push(r);else if(k<=3)o.soon.push(r);else o.later.push(r);
+  });
+  const by=(a,b)=>String(a.d||'9').localeCompare(String(b.d||'9'));
+  Object.keys(o).forEach(k=>o[k].sort(by));
+  return o;
+}
+
+/* a weight written in the narration ("5000 kg", "20 qtl") - only a suggestion for the person to confirm */
+function guessKg(narr){
+  const m=/(\d[\d,]*(?:\.\d+)?)\s*(kgs?|kilos?|qtls?|quintals?|ton(?:ne)?s?|mt|કિલો|કિગ્રા)\b/i.exec(String(narr||''));
+  if(!m)return 0;
+  const q=Number(m[1].replace(/,/g,''));if(!(q>0))return 0;
+  const u=m[2].toLowerCase();
+  return r2(q*(/^(qtl|quintal)/.test(u)?100:/^(ton|mt)/.test(u)?1000:1));
+}
+const api={guessKg,clean,r2,nm,entries,buildParties,statement,dupParties,kgOf,bills,netSale,summarize,itemFlow,stockTotals,stockEstimate,margin,moneyTrend,dalali,dupVouchers,remSplit,addDays,diffDays};
+g.BalajiLedgerMath=api;
 if(typeof module!=='undefined'&&module.exports)module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);
 
@@ -10636,7 +10995,7 @@ function openDash(){
         +card('⚖️',T('ચિઠ્ઠી ચોખ્ખું KG','Chits net KG'),fmt(f.net),fmt(f.mann,2)+' '+T('મણ','mann'))+card('🏭',T('કાંટો KG','Weighbridge KG'),fmt(f.wb))
         +card('📥',T('બેગ આવ્યા','Bags in'),fmt(f.bagsIn,0),T('ગયા ','out ')+fmt(f.bagsOut,0))+'</div>'
         +(age===null||age>=7?'<div class="v9-warn">💾 '+E(age===null?T('હજી બેકઅપ લીધો નથી.','No backup taken yet.'):T(age+' દિવસથી બેકઅપ લીધો નથી.','No backup for '+age+' days.'))+' <button type="button" data-go="backup">'+E(T('હમણાં લો','Take it now'))+'</button></div>':'')
-        +(()=>{try{const B=window.BalajiBiz,tl=d.tv&&B&&B.tallyDay&&B.tallyDay.lines(d.tv,day);return tl?'<div class="v9-sec"><h3>🧾 '+E(T('Tally — આ દિવસ','Tally — this day'))+'</h3><div class="v9-list">'+tl.html.map(h=>'<div class="v9-item"><div><b>'+E(h.ic+' '+h.firm)+'</b><span>'+E(h.parts.join(' • '))+'</span></div></div>').join('')+'</div></div>':'';}catch(_){return '';}})()
+        +(()=>{try{const B=window.BalajiBiz,tl=d.tv&&B&&B.tallyDay&&B.tallyDay.lines(d.tv,day);return tl?'<div class="v9-sec"><h3>🧾 '+E(T('Tally — આ દિવસ','Tally — this day'))+'</h3><div class="v9-list">'+tl.html.map(h=>'<div class="v9-item"><div><b>'+E(h.ic+' '+h.firm)+'</b><span>'+E(h.parts.join(' • '))+'</span></div></div>').join('')+'</div>'+(tl.rows&&tl.rows.length?'<div class="v9-list" style="margin-top:8px">'+tl.rows.map(r=>'<div class="v9-item v9-att" role="button" tabindex="0" data-tp="'+E(r.party)+'"><div><b>'+E(r.party)+'</b><span>'+E(r.sub)+'</span></div><strong>'+E(r.amt)+'</strong></div>').join('')+'</div><p class="v9-note">'+E(T('નામ દબાવો → તે નામનું આખું ખાતું (કાચું + પાકું).','Tap a name → its full ledger (kacha + paka).'))+'</p>':'')+'</div>':'';}catch(_){return '';}})()
         +'<div class="v9-sec"><h3>'+E(T('છેલ્લા 7 દિવસ — ચિઠ્ઠી KG','Last 7 days — chit KG'))+'</h3>'+bars(days,vals,day)+'</div>'
         +'<div class="v9-sec"><h3>⚠ '+E(T('ગાડી ફરક','Vehicle differences'))+'</h3>'+(f.vd.length?'<div class="v9-list">'+f.vd.map(g=>'<div class="v9-item '+(Math.abs(g.diff)>lim?'bad':'')+'"><div><b>'+E(g.veh)+'</b><span>'+E(T('કાંટો ','Kanta '))+fmt(g.wbNet)+' • '+E(T('ચિઠ્ઠી ','Chits '))+fmt(g.gross)+'</span></div><strong>'+E(signed(g.diff))+' KG</strong><button type="button" data-bill="'+E(g.veh)+'" data-day="'+E(day)+'">🧾</button></div>').join('')+'</div>':'<p class="v9-note">'+E(T('કોઈ ફરક નથી ✔ (અથવા કાંટો/ચિઠ્ઠી બાકી)','No difference ✔ (or kanta/chits still pending)'))+'</p>')+'</div>'
         +'<div class="v9-sec"><h3>👨‍🌾 '+E(T('ટોપ 5 ખેડૂત','Top 5 farmers'))+'</h3>'+(top.length?'<div class="v9-list">'+top.map(o=>'<div class="v9-item"><div><b>'+E(o.n)+'</b><span>'+o.c+' '+E(T('ચિઠ્ઠી','chits'))+'</span></div><strong>'+E(fmt(o.kg))+' KG</strong></div>').join('')+'</div>':'<p class="v9-note">—</p>')+'</div>'
@@ -10650,6 +11009,7 @@ function openDash(){
           att.querySelectorAll('[data-att]').forEach(b=>{const go=()=>{try{window.BalajiBiz.attentionGo(list[+b.dataset.att]);}catch(_){}};b.addEventListener('click',go);b.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});});
         }).catch(()=>{});
       }
+      body.querySelectorAll('[data-tp]').forEach(b=>{const go=()=>{try{window.BalajiBiz.openParty(b.dataset.tp);}catch(_){}};b.addEventListener('click',go);b.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});});
       body.querySelector('#v9-day').addEventListener('change',e=>{if(e.target.value)paint(e.target.value);});
       body.querySelectorAll('[data-d]').forEach(b=>b.addEventListener('click',()=>paint(addDays(day,+b.dataset.d))));
       body.querySelectorAll('[data-bill]').forEach(b=>b.addEventListener('click',()=>window.BalajiShare&&window.BalajiShare.openVehicle(b.dataset.bill,b.dataset.day)));
@@ -11844,6 +12204,7 @@ function openFarmer(C,key){
     +'<p class="v9-note">'+E([f.village,f.mobile].filter(Boolean).join(' • ')||'—')+'</p>'
     +'<div class="bz-sum">'+kv(T('કુલ હિસાબ','Total hisab'),E(money(f.payable)))+kv(T('કુલ ચૂકવ્યું','Total paid'),E(money(f.paid)))+kv(w.txt,'<span class="'+(f.balance>=0.5?'neg':f.balance<=-0.5?'ok':'')+'">'+E(money(Math.abs(f.balance)))+'</span>','big')+'</div>'
     +'<div class="bz-btns"><button type="button" class="bz-main" id="bz-fpay">➕ '+E(T('ચૂકવણી','Payment'))+'</button><a class="bz-wabtn" id="bz-fwa" target="_blank" rel="noopener" href="'+E(waLink(f.mobile,statementText(f)))+'">📲 '+E(T('ખાતું','Share'))+'</a><button type="button" id="bz-fxl">⬇ Excel</button></div>'
+    +'<div id="bz-tl"></div>'
     +(f.pending.length?'<div class="bz-sec"><h4 class="bz-h2">⏳ '+E(T('હિસાબ બાકી ચિઠ્ઠી','Chits without hisab'))+': '+f.pending.length+'</h4><div class="v9-list">'+f.pending.slice(0,8).map(c=>'<div class="v9-item"><div><b>'+E(V().material(c.commodity_type))+' • '+E(fmt(c.weight_kg,1))+' KG</b><span>'+E(dmy(V().businessDay(c,'chit'))+(c.vehicle_number?' • '+clean(c.vehicle_number):''))+'</span></div><button type="button" data-hs="'+E(c.id)+'">'+E(T('હિસાબ ભરો','Fill'))+'</button></div>').join('')+'</div></div>':'')
     +'<div class="bz-sec"><h4 class="bz-h2">📒 '+E(T('ખાતાવહી','Ledger'))+'</h4>'
     +(rows.length?'<div class="v9-list">'+rows.map(r=>r.t==='h'
@@ -11859,6 +12220,22 @@ function openFarmer(C,key){
     +'<p class="bz-st" id="bz-st" role="status"></p></div>');
   const q=s=>m.querySelector(s);
   const again=async()=>{await C.reload();openFarmer(C,key);};
+  /* the same name in Tally (all firms together) — balance there, and a way to open its full ledger */
+  (async()=>{
+    try{
+      const [lr0,vr]=await Promise.all([qAll(TT.l,[]),qAll(TT.v,[['gte','v_date',tallyFrom()]])]);
+      const names=new Set([normName(f.name)].concat([...f.alts.values()].map(a=>normName(a))));
+      const mine=LM.buildParties(vr.map(rowToV),ledOnly(lr0),{resolve:resolveParty,kindOf:ledKind,isKacha,optional:TS().opt!==false}).filter(x=>x.hasLedger&&names.has(normName(x.name)));
+      const box=m.querySelector('#bz-tl');if(!box||!mine.length)return;
+      const net=mine.reduce((a,x)=>a+x.net,0),kc=mine.reduce((a,x)=>a+x.kacha,0),pk=net-kc,df=net-f.balance;
+      box.innerHTML='<div class="bz-sec"><h4 class="bz-h2">🧾 '+E(T('Tally માં આ નામ','This name in Tally'))+'</h4><div class="bz-sum">'
+        +kv('Tally',E(money(Math.abs(net))+(net>0.5?' Cr':net<-0.5?' Dr':'')))
+        +(Math.abs(kc)>=0.5&&Math.abs(pk)>=0.5?kv(kachaLb()+' / '+pakaLb(),E(money(Math.abs(kc))+(kc>0?' Cr':' Dr')+' / '+money(Math.abs(pk))+(pk>0?' Cr':' Dr'))):'')
+        +kv(T('ઍપ સાથે ફરક','Diff vs app'),'<span class="'+(Math.abs(df)>=1?'neg':'ok')+'">'+E(Math.abs(df)>=1?(df>0?'+':'−')+money(Math.abs(df)):'✔ '+T('સરખું','Matches'))+'</span>')+'</div>'
+        +'<div class="bz-btns"><button type="button" class="bz-main" id="bz-tlo">📒 '+E(T('Tally નું આખું ખાતું','Full Tally ledger'))+'</button></div></div>';
+      const bt=box.querySelector('#bz-tlo');if(bt)bt.addEventListener('click',()=>{V().closeModal();openParty(f.name);});
+    }catch(_){}
+  })();
   q('#bz-fpay').addEventListener('click',()=>payDialog(C,{key,done:(saved)=>{if(saved)C.reload().then(()=>openFarmer(C,key));else openFarmer(C,key);}}));
   q('#bz-fxl').addEventListener('click',()=>{
     xl(T('ખેડૂત ખાતું Export','Export ledger'),[{name:f.name.slice(0,28),title:f.name,cols:[col(T('તારીખ','Date'),'s',12),col(T('વિગત','Detail'),'s',34),col(T('હિસાબ ₹','Hisab ₹'),'n',14),col(T('ચૂકવ્યું ₹','Paid ₹'),'n',14),col(T('બાકી ₹','Balance ₹'),'n',14)],
@@ -12108,6 +12485,7 @@ function openLedger(opts){
     };
     installBank(C);
     C.repaint();
+    if(opts&&opts.farmer&&C.led.get(opts.farmer))setTimeout(()=>openFarmer(C,opts.farmer),50);
   });
 }
 
@@ -12391,7 +12769,8 @@ const tlog=m=>{try{
   const top=String(a[0]||''),mm=/^(.*?)  (.*?)(?: \(×(\d+)\))?$/s.exec(top);
   if(mm&&mm[2]===m){a[0]=now+'  '+m+' (×'+((+mm[3]||1)+1)+')';}else a.unshift(now+'  '+m);
   LSset('bi-tally-log',JSON.stringify(a.slice(0,80)));}catch(_){}};
-const tallyFrom=()=>{const f=TS().from;return /^\d{4}-\d{2}-\d{2}$/.test(f||'')?f:TL.monthStart(today());};
+const fyStart=()=>{const t=today(),y=+t.slice(0,4),m=+t.slice(5,7);return (m>=4?y:y-1)+'-04-01';};
+const tallyFrom=()=>{const f=TS().from;return /^\d{4}-\d{2}-\d{2}$/.test(f||'')?f:fyStart();};
 
 /* ---- the Tally Link program on the Tally computer (read only) ---- */
 async function fetchT(url,opt,ms){
@@ -12445,9 +12824,12 @@ const tsqlHint=e=>{
   return /does not exist|relation|schema cache|42P01|PGRST205|permission|policy|row-level|column/i.test(m)?T('Supabase માં supabase-tally.sql ચલાવો. ','Run supabase-tally.sql in Supabase. ')+m:m;
 };
 const rowToV=r=>({firm:r.firm,vkey:r.vkey,guid:r.guid||'',date:r.v_date,type:r.v_type,base:r.base_type,no:r.v_no||'',party:r.party||'',amount:n0(r.amount),narr:r.narration||'',bank:r.bank_ledger||'',mode:r.mode||'',utr:r.utr||'',
-  cancelled:!!r.cancelled,optional:r.src==='xmlo',alter:n0(r.alter_id),lines:Array.isArray(r.lines)?r.lines:[],src:r.src==='xmlo'?'xml':(r.src||'xml'),id:r.id});
+  cancelled:!!r.cancelled,optional:r.src==='xmlo',alter:n0(r.alter_id),lines:Array.isArray(r.lines)?r.lines:[],src:r.src==='xmlo'?'xml':(r.src||'xml'),id:r.id,
+  other:(Array.isArray(r.lines)&&r.lines[0]&&Array.isArray(r.lines[0].o))?r.lines[0].o:null,items:(Array.isArray(r.lines)&&r.lines[0]&&Array.isArray(r.lines[0].inv))?r.lines[0].inv:[]});
+/* the other side of the voucher (o) and its stock lines (inv) travel inside the first line, so no new column is needed */
+const linesOf=v=>{const L=(v.lines||[]).slice();if(L.length&&(Array.isArray(v.other)||(v.items&&v.items.length))){const x=Object.assign({},L[0]);if(Array.isArray(v.other))x.o=v.other.map(e=>({ledger:e.ledger,amount:e.amount}));if(v.items&&v.items.length)x.inv=v.items.map(i=>({n:i.n,q:i.q,u:i.u,r:i.r,a:i.a}));L[0]=x;}return L;};
 const vToRow=(firm,v)=>({firm,vkey:v.vkey,guid:v.guid||null,v_date:v.date,v_type:v.type,base_type:v.base,v_no:v.no||null,party:v.party||null,amount:v.amount,narration:(v.narr||'').slice(0,400)||null,
-  bank_ledger:v.bank||null,mode:v.mode||null,utr:v.utr||null,cancelled:!!v.cancelled,lines:v.lines||[],src:(v.src||'xml')==='xml'&&v.optional?'xmlo':(v.src||'xml'),alter_id:v.alter||null,synced_at:new Date().toISOString()});
+  bank_ledger:v.bank||null,mode:v.mode||null,utr:v.utr||null,cancelled:!!v.cancelled,lines:linesOf(v),src:(v.src||'xml')==='xml'&&v.optional?'xmlo':(v.src||'xml'),alter_id:v.alter||null,synced_at:new Date().toISOString()});
 async function upsertChunks(table,rows,conflict){
   for(let i=0;i<rows.length;i+=150){
     const r=await db.from(table).upsert(rows.slice(i,i+150),{onConflict:conflict});
@@ -12489,8 +12871,20 @@ async function saveVouchers(firm,vs,from,to,opts){
   }
   return {add,upd,del,skipped};
 }
+/* stock items live in tally_ledgers too (name "~S~item", closing = quantity) so that no extra table is needed */
+const isStockRow=r=>/^~S~/.test(r&&r.name||'');
+const stockOf=rows=>(rows||[]).filter(isStockRow).map(r=>{const p=String(r.parent||'').split('|');return {firm:r.firm,name:String(r.name).slice(3),unit:p[1]||'',value:n0(p[2]),group:p[3]||'',qty:n0(r.closing),at:r.updated_at||''};});
+const ledOnly=rows=>(rows||[]).filter(r=>!isStockRow(r));
+async function saveStock(firm,items){
+  const ex=(await qAll(TT.l,[['eq','firm',firm]])).filter(isStockRow);
+  const now=new Date().toISOString(),rows=items.map(i=>({firm,name:'~S~'+i.name,parent:'~STOCK|'+(i.unit||'')+'|'+r2n(i.value)+'|'+(i.parent||''),closing:i.qty,updated_at:now}));
+  if(rows.length)await upsertChunks(TT.l,rows,'firm,name');
+  const keep=new Set(items.map(i=>'~S~'+i.name));
+  for(const r of ex)if(!keep.has(r.name))await db.from(TT.l).delete().eq('id',r.id);
+}
+const r2n=n=>Math.round(n0(n)*100)/100;
 async function saveLedgers(firm,leds){
-  const ex=await qAll(TT.l,[['eq','firm',firm]]);
+  const ex=ledOnly(await qAll(TT.l,[['eq','firm',firm]]));
   const now=new Date().toISOString(),rows=leds.map(l=>({firm,name:l.name,parent:l.parent||null,closing:l.closing,updated_at:now}));
   await upsertChunks(TT.l,rows,'firm,name');
   const keep=new Set(leds.map(l=>l.name));
@@ -12554,7 +12948,7 @@ function mergeVouchers(D,C){
   const gd=new Map();D.forEach(v=>{const a=gd.get(v.vkey)||[];a.push(v);gd.set(v.vkey,a);});
   const gc=new Map();C.forEach(v=>{const a=gc.get(v.vkey)||[];a.push(v);gc.set(v.vkey,a);});
   const out=D.slice();let added=0;
-  gc.forEach((cs,k)=>{const ds=gd.get(k)||[];cs.forEach((cv,i)=>{if(i<ds.length){if(cv.optional)ds[i].optional=true;}else{out.push(cv);added++;}});});
+  gc.forEach((cs,k)=>{const ds=gd.get(k)||[];cs.forEach((cv,i)=>{if(i<ds.length){if(cv.optional)ds[i].optional=true;if(cv.items&&cv.items.length&&!(ds[i].items&&ds[i].items.length))ds[i].items=cv.items;if(Array.isArray(cv.other)&&!Array.isArray(ds[i].other))ds[i].other=cv.other;}else{out.push(cv);added++;}});});
   return {vs:out,added};
 }
 async function syncFirm(f,opt){
@@ -12576,6 +12970,11 @@ async function syncFirm(f,opt){
   const base=TM.baseResolver(types,TS().vt||{});
   let nl=0;
   if(!opt.noLedgers){const leds=TM.parseLedgers(await tcall(TM.reqLedgers(real)));await saveLedgers(f.id,leds);nl=leds.length;}
+  let nst=0;
+  if(!opt.noLedgers&&TS().stock!==false){
+    try{const si=TM.parseStockItems(await tcall(TM.reqStockItems(real)));await saveStock(f.id,si);nst=si.length;}
+    catch(e){if(e&&(e.kind==='link'||e.kind==='down'||e.kind==='busy'))throw e;}
+  }
   await purgePurchases(f.id);
   let vs=[];
   raws.forEach(x=>{
@@ -12601,14 +13000,15 @@ async function syncFirm(f,opt){
   if(TS().opt===false)vs=vs.filter(v=>!v.optional);
   /* nothing is deleted when only a part of the picture was available */
   const r=await saveVouchers(f.id,vs,from,to,{prune:complete});
-  return {n:vs.length,add:r.add,upd:r.upd,del:r.del,skipped:r.skipped||0,ledgers:nl,extra,note};
+  return {n:vs.length,add:r.add,upd:r.upd,del:r.del,skipped:r.skipped||0,ledgers:nl,stock:nst,extra,note};
 }
 
 /* ---- farmer payments from Tally vouchers -> khata ---- */
 const stmtM=m=>({upi:'upi',cheque:'cheque',cash:'cash'})[m]||'bank';
 const refOfV=(v,i)=>v.firm+'|'+v.vkey+'#'+i;
 async function loadPlanData(from){
-  const [hisab,pays,vrows,leds]=await Promise.all([getAll(TB.hisab),getAll(TB.pay),qAll(TT.v,[['gte','v_date',from||tallyFrom()]]),qAll(TT.l,[]).catch(()=>[])]);
+  const [hisab,pays,vrows,ledAll]=await Promise.all([getAll(TB.hisab),getAll(TB.pay),qAll(TT.v,[['gte','v_date',from||tallyFrom()]]),qAll(TT.l,[]).catch(()=>[])]);
+  const leds=ledOnly(ledAll),stock=stockOf(ledAll);
   let chits=[];try{const d=await TL.load();chits=(d&&d.chit)||[];}catch(_){}
   const led=buildLedger(hisab,pays,chits);
   const farmers=ledgerList(led).map(f=>({key:f.key,name:f.name,mobile:f.mobile,alts:[...f.alts.values()]}));
@@ -12618,7 +13018,7 @@ async function loadPlanData(from){
   chits.forEach(c=>{const no=digits(c.chiththi_number).replace(/^0+(?=\d)/,'');if(!no)return;const key=chitKey.get(String(c.id));if(!key)return;const a=chitNos.get(no)||[];a.push({key,date:V().businessDay(c,'chit')||''});chitNos.set(no,a);});
   const ign=TS().ignore||{};
   const vouchers=vrows.map(rowToV);
-  return {hisab,pays,chits,led,leds,farmers,chitNos,vouchers,
+  return {hisab,pays,chits,led,leds,stock,farmers,chitNos,vouchers,
     ctx:{farmers,chitNos,alias:SET.get('biz.bankAlias',{})||{},utrs:new Set(pays.map(p=>BK.normUtr(p.utr)).filter(Boolean)),resolveKey,
       pays:pays.map(p=>({key:p.farmer_key,date:p.pay_date,amount:n0(p.amount),tally_ref:p.tally_ref||''}))},
     ign};
@@ -12795,14 +13195,31 @@ function tallyVoucherDlg(S,v){
   const L=BASE_LB();
   const kv=(k,val)=>val||val===0?'<div class="bz-kv"><span>'+E(k)+'</span><b>'+E(val)+'</b></div>':'';
   const lines=(v.lines||[]).filter(l=>l&&l.ledger);
+  const manKg=n0((SET.get('biz.billKg',{})||{})[v.firm+'|'+v.vkey])||0,guessKg=v.base==='sales'?LM.guessKg(v.narr):0;
   const m=V().dialog(BASE_IC[v.base]+' '+(v.type||L[v.base]),'<div class="kb-dlg">'
     +'<div class="kb-card">'+kv(T('તારીખ','Date'),dmy(v.date))+kv(T('વાઉચર નં.','Voucher no.'),v.no)+kv(T('ફર્મ','Firm'),firmName(v.firm))+kv(T('પાર્ટી','Party'),v.party)
       +'<div class="bz-kv big"><span>'+E(T('રકમ','Amount'))+'</span><b>'+E(money(v.amount))+'</b></div>'
       +kv(T('બેંક / કેશ','Bank / cash'),v.bank)+kv(T('રીત','Mode'),v.mode?v.mode.toUpperCase():'')+kv('UTR',v.utr)+kv(T('નોંધ','Narration'),v.narr)
       +(v.optional?'<p class="v9-note">'+E(T('Optional / Memorandum વાઉચર (Tally માં પાક્કું નથી)','Optional / memorandum voucher (not final in Tally)'))+'</p>':'')
       +(v.src==='file'?'<p class="v9-note">'+E(T('છાપેલી Day Book ફાઇલમાંથી','From a Day Book file'))+'</p>':'')+'</div>'
+    +(v.items&&v.items.length?'<div class="kb-ct"><span>🥜 '+E(T('આઇટમ / વજન','Items / weight'))+'</span></div><div class="kb-rows">'+v.items.map(i=>'<div class="kb-row"><span class="kb-rt"><b>'+E(i.n)+'</b><small>'+E(fmt(i.q,i.q%1?2:0)+(i.u?' '+i.u:'')+(i.r?' @ ₹'+fmt(i.r,2):''))+'</small></span><span class="kb-ra"><b>'+E(money(i.a))+'</b></span></div>').join('')+'</div>':'')
     +(lines.length>1?'<div class="kb-ct"><span>'+E(T('બધી લાઇન','All lines'))+'</span></div><div class="kb-rows">'+lines.map(l=>'<div class="kb-row"><span class="kb-rt"><b>'+E(l.ledger)+'</b></span><span class="kb-ra"><b>'+E(money(Math.abs(l.amount)))+'</b></span></div>').join('')+'</div>':'')
+    +(v.other&&v.other.length?'<div class="kb-ct"><span>'+E(T('સામેની બાજુ (બેંક / વેચાણ / ખર્ચ…)','Other side (bank / sales / expense…)'))+'</span></div><div class="kb-rows">'+v.other.filter(l=>l&&l.ledger).map(l=>'<div class="kb-row"><span class="kb-rt"><b>'+E(l.ledger)+'</b></span><span class="kb-ra"><b>'+E(money(Math.abs(l.amount)))+'</b></span></div>').join('')+'</div>':'')
+    +(v.base==='sales'&&!(v.items&&v.items.length)?'<div class="kb-card"><div class="kb-ct"><span>⚖️ '+E(T('આ બિલનું વજન (KG)','Weight of this bill (KG)'))+'</span></div><div class="bz-g2"><label class="bz-f"><span>KG'+(manKg?'':(guessKg?' • '+T('નોંધ પરથી અંદાજ','guessed from narration'):''))+'</span><input id="kv-kg" type="text" inputmode="decimal" autocomplete="off" value="'+E(manKg||guessKg||'')+'" placeholder="0"></label><div class="bz-f"><span>&nbsp;</span><button type="button" class="kt-b ok" id="kv-kgs">'+E(T('સાચવો','Save'))+'</button></div></div><p class="v9-note">'+E(T('Tally ના આ બિલમાં આઇટમ નથી — વજન લખશો તો સ્ટોક અને નફામાં ગણાશે (ફક્ત ઍપમાં).','This Tally bill has no items — a typed weight counts in stock and profit (app only).'))+'</p></div>':'')
+    +(v.party?'<div class="kt-btns"><button type="button" class="kt-b ok" id="kv-party">📒 '+E(T('આ નામનું આખું ખાતું','Full ledger of this name'))+'</button></div>':'')
     +'</div>');
+  const kgs=m.querySelector('#kv-kgs');
+  if(kgs)kgs.addEventListener('click',async()=>{
+    const kg=Math.max(0,+String(m.querySelector('#kv-kg').value).replace(/[^\d.]/g,'')||0);
+    kgs.disabled=true;
+    try{await SET.save({biz:{billKg:{[v.firm+'|'+v.vkey]:kg}}});toast(T('✔ સાચવ્યું','✔ Saved'));V().closeModal();if(S&&S.repaint)S.repaint();}catch(e){kgs.disabled=false;toast(err(e),true);}
+  });
+  const pb=m.querySelector('#kv-party');
+  if(pb)pb.addEventListener('click',()=>{
+    const go=()=>{const p=S&&S.D?partyCtx(S).byKey.get(resolveParty(LM.nm(v.party))):null;if(p)openPartyOf(S,p);};
+    V().closeModal();
+    if(S&&S.body&&S.D&&S.live&&S.live())go();else openParty(v.party);
+  });
   return m;
 }
 /* one Tally ledger: balance + its vouchers */
@@ -12833,22 +13250,23 @@ function openTally(opts){
   TL.showPanel('🧾 Tally',async(body,live)=>{
     const t0=today();
     const S={tab:(opts&&opts.tab)||'day',view:(opts&&opts.view)||null,firm:'all',type:'all',per:'M'+TL.monthStart(t0),from:TL.monthStart(t0),to:t0,cfrom:'',cto:'',q:'',more:0,
-      vs:[],leds:[],D:null,items:[],pf:(opts&&opts.pf)||'review',lk:'creditor',lq:'',lzero:false,ping:undefined,comps:null,err:'',busy:false,fileR:null,live,body};
+      vs:[],leds:[],D:null,sk:(opts&&opts.sk)||'tally',items:[],pf:(opts&&opts.pf)||'review',lk:'creditor',lq:'',lzero:false,ping:undefined,comps:null,err:'',busy:false,fileR:null,live,body};
+    if(opts&&opts.party){S.pkey=resolveParty(LM.nm(opts.party));S.view='party';S.pp={firm:'all',per:'ALL',from:'',to:'',cfrom:'',cto:'',opt:TS().opt!==false,more:0};}
     if(opts&&opts.per==='7'){S.per='C';S.cfrom=TL.addDays(t0,-7);S.cto=t0;S.from=S.cfrom;S.to=S.cto;}
     const q=s=>body.querySelector(s);
     const keep=(sel,fn)=>{const n=body.querySelector(sel);if(!n)return;const pos=n.selectionStart;fn();const m=body.querySelector(sel);if(m){m.focus();try{m.setSelectionRange(pos,pos);}catch(_){}}};
-    S.reloadPlan=async()=>{S.D=await loadPlanData();S.items=makePlan(S.D);};
+    S.reloadPlan=async()=>{S.D=await loadPlanData();S.items=makePlan(S.D);S._pr=null;};
     S.reload=async()=>{
       S.err='';
       try{
         const fl=[];if(S.from)fl.push(['gte','v_date',S.from]);if(S.to)fl.push(['lte','v_date',S.to]);
         S.vs=(await qAll(TT.v,fl)).map(rowToV);
-        S.leds=await qAll(TT.l,[]);
+        const lr=await qAll(TT.l,[]);S.leds=ledOnly(lr);S.stock=stockOf(lr);
         await S.reloadPlan();
       }catch(e){S.err=tsqlHint(e);}
       if(live())S.repaint();
     };
-    S.repaint=()=>{if(!live())return;(S.view==='setup'?paintSetup:S.view==='file'?paintFile:paintMain)();};
+    S.repaint=()=>{if(!live())return;(S.view==='setup'?paintSetup:S.view==='file'?paintFile:S.view==='party'?paintParty:paintMain)();};
 
     /* ---------- main screen ---------- */
     function paintMain(){
@@ -12866,7 +13284,7 @@ function openTally(opts){
       let head='<div class="kb-hero"><span>'+dot+' '+E(T('Tally છેલ્લું સિંક','Tally last sync'))+': '+E(agoTxt(last.at))+'</span><b>'+vsF.length+' '+E(T('વાઉચર','vouchers'))+'</b><small>'+E(['purchase','sales','payment','receipt'].filter(b=>sums[b]).map(b=>L[b]+' '+shortMoney(sums[b])).join(' • ')||T('આ સમયમાં કોઈ વાઉચર નથી','No vouchers in this period'))+'</small></div>'
         +'<div class="kb-qas">'+qaBtn('kt-sync','🔄',pc?T('સિંક','Sync'):T('રિફ્રેશ','Refresh'))+qaBtn('kt-file','📂',T('ફાઇલ','File'))+qaBtn('kt-xl','⬇️','Excel')+gearBtn('kt-set')+'</div>'
         +'<p class="bz-st'+((last.ok===false&&last.msg)||S.err||staleTxt||L0.warn?' warn':'')+'" id="bz-st" role="status">'+E(S.err||(last.ok===false?last.msg:'')||staleTxt||(pc?L0.warn:'')||'')+'</p>'
-        +seg('kt-tab',[['day','📒 '+T('ડે બુક','Day Book')],['cash','💵 '+T('રોજમેળ','Rojmel')],['mel','🔎 '+T('ખરીદી મેળ','Purchase check')],['par','👥 '+T('ખાતા','Parties')],['pay','💳 '+T('ખેડૂત ચૂકવણી','Farmer pay')+(nrev?' ('+nrev+')':'')]],S.tab,'kb-tabs');
+        +seg('kt-tab',[['day','📒 '+T('ડે બુક','Day Book')],['cash','💵 '+T('રોજમેળ','Rojmel')],['mel','🔎 '+T('ખરીદી મેળ','Purchase check')],['par','👥 '+T('ખાતા','Parties')],['sal','🧾 '+T('વેચાણ બિલ','Sales')],['stk','📦 '+T('સ્ટોક','Stock')],['pay','💳 '+T('ખેડૂત ચૂકવણી','Farmer pay')+(nrev?' ('+nrev+')':'')]],S.tab,'kb-tabs');
       const firmSeg=FIRMS().length>1?seg('kt-firm',[['all',T('બધી ફર્મ','All firms')]].concat(FIRMS().map(f=>[f.id,firmIc(f.id)+' '+f.name])),S.firm,'kb-sub'):'';
       let main='';
       if(S.tab==='day'){
@@ -12891,27 +13309,11 @@ function openTally(opts){
       }else if(S.tab==='mel'){
         main=tallyMelHtml(S,inFirm,firmSeg);
       }else if(S.tab==='par'){
-        const kinds=[['creditor','🧑‍💼 '+T('દેવું (Creditors)','To pay (Creditors)')],['debtor','🏪 '+T('લેવાના (Debtors)','To get (Debtors)')],['bank','🏦 '+T('બેંક / કેશ','Bank / cash')],['all',T('બધા','All')]];
-        const kindOf=l=>{const k=TM.groupKind(l.parent);return k==='cash'?'bank':k;};
-        const qs=normName(S.lq);
-        let list=S.leds.filter(l=>(S.firm==='all'||l.firm===S.firm)&&(S.lk==='all'||kindOf(l)===S.lk)&&(S.lzero||Math.abs(n0(l.closing))>=0.5)&&(!qs||normName(l.name+' '+(l.parent||'')).includes(qs)));
-        list.sort((a,b)=>Math.abs(n0(b.closing))-Math.abs(n0(a.closing)));
-        const lim=100+S.more*100;
-        const owe=list.filter(l=>kindOf(l)==='creditor'&&l.closing>0).reduce((s,l)=>s+l.closing,0),get=list.filter(l=>kindOf(l)==='debtor'&&l.closing<0).reduce((s,l)=>s-l.closing,0);
-        const lab=l=>{const c=n0(l.closing),k=kindOf(l);
-          if(k==='creditor')return c>0?['due',T('દેવું','to pay')]:['over',T('એડવાન્સ','advance')];
-          if(k==='debtor')return c<0?['zero',T('લેવાના','to get')]:['over',T('એડવાન્સ','advance')];
-          return ['',c>0?'Cr':'Dr'];};
-        main=firmSeg+seg('kt-lk',kinds,S.lk,'kb-sub')
-          +'<div class="kb-search"><input id="kt-lq" type="search" autocomplete="off" placeholder="🔍 '+E(T('ખાતાનું નામ','Ledger name'))+'" value="'+E(S.lq)+'"></div>'
-          +(S.lk==='creditor'||S.lk==='all'?'<div class="kb-sumline"><span>'+E(T('કુલ દેવું','Total to pay'))+'</span><b>'+E(money(owe))+'</b></div>':'')
-          +(S.lk==='debtor'||S.lk==='all'?'<div class="kb-sumline"><span>'+E(T('કુલ લેવાના','Total to get'))+'</span><b>'+E(money(get))+'</b></div>':'')
-          +(S.lk==='debtor'&&get>0?'<div class="kt-btns"><button type="button" class="kt-b" id="kt-dlist">💬 '+E(T('લેવાના બાકી — WhatsApp પર યાદી','Receivables list — share on WhatsApp'))+'</button></div>':'')
-          +(list.length?'<div class="kb-rows">'+list.slice(0,lim).map((l,i)=>{const a=lab(l);return '<button type="button" class="kb-row" data-l="'+i+'">'+avatar(l.name,LED_IC[kindOf(l)]||'📒')+'<span class="kb-rt"><b>'+E(l.name)+'</b><small>'+E([l.parent,S.firm==='all'?firmName(l.firm):''].filter(Boolean).join(' • '))+'</small></span><span class="kb-ra '+a[0]+'"><b>'+E(money(Math.abs(n0(l.closing))))+'</b><small>'+E(a[1])+'</small></span></button>';}).join('')+'</div>'
-            +(list.length>lim?'<button type="button" class="bz-add" id="kt-more">'+E(T('વધુ બતાવો','Show more'))+' ('+(list.length-lim)+')</button>':'')
-            :'<div class="kb-empty"><span aria-hidden="true">👥</span><p>'+E(S.leds.length?T('કોઈ ખાતું મળ્યું નથી.','No ledger found.'):T('હજી Tally ના ખાતા આવ્યા નથી.','No ledgers from Tally yet.'))+'</p></div>')
-          +'<label class="kt-sw"><span>'+E(T('શૂન્ય બાકી પણ બતાવો','Show zero balances too'))+'</span><input type="checkbox" id="kt-lz"'+(S.lzero?' checked':'')+'><i></i></label>';
-        S._plist=list;
+        main=tallyPartiesHtml(S,firmSeg);
+      }else if(S.tab==='sal'){
+        main=tallySalesHtml(S,firmSeg);
+      }else if(S.tab==='stk'){
+        main=tallyStockHtml(S,firmSeg);
       }else{
         const st={review:[],ready:[],other:[],done:[],ign:[]};
         S.items.forEach(i=>{if(i.state==='review')st.review.push(i);else if(i.state==='ready')st.ready.push(i);else if(i.state==='done'||i.state==='dup')st.done.push(i);else if(i.state==='ignored'||i.state==='nonparty')st.ign.push(i);else st.other.push(i);});
@@ -12951,20 +13353,20 @@ function openTally(opts){
       });
       q('#kt-xl').addEventListener('click',()=>{
         if(S.tab==='cash'||S.tab==='mel')return tallyExtraXl(S,inFirm);
-        const L2=BASE_LB(),rows=S.tab==='par'?(S._plist||[]).map(l=>[firmName(l.firm),l.name,l.parent||'',n0(l.closing)]):S.vs.filter(v=>inFirm(v)&&!v.cancelled&&(S.type==='all'||v.base===S.type)).sort((a,b)=>String(a.date).localeCompare(String(b.date))).map(v=>[dmy(v.date),firmName(v.firm),L2[v.base]||v.type,v.type,v.no,v.party,v.amount,v.mode||'',v.utr||'',v.narr||'']);
-        if(S.tab==='par')xl('Tally – '+T('ખાતા','Parties'),[{name:T('ખાતા','Parties'),title:T('ખાતા','Parties'),cols:[col(T('ફર્મ','Firm'),'s',18),col(T('ખાતું','Ledger'),'s',28),col(T('ગ્રુપ','Group'),'s',20),col(T('બાકી (Cr +, Dr −)','Balance (Cr +, Dr −)'),'n',16)],rows,nofoot:true}],'Tally','Tally-khata-'+today());
-        else xl('Tally – '+T('ડે બુક','Day Book'),[{name:'Day Book',title:'Day Book',cols:[col(T('તારીખ','Date'),'s',12),col(T('ફર્મ','Firm'),'s',18),col(T('પ્રકાર','Kind'),'s',12),col(T('વાઉચર પ્રકાર','Voucher type'),'s',16),col(T('નં.','No.'),'s',8),col(T('પાર્ટી','Party'),'s',28),col(T('રકમ ₹','Amount ₹'),'n',14),col(T('રીત','Mode'),'s',8),col('UTR','s',20),col(T('નોંધ','Narration'),'s',30)],rows,nofoot:true}],(S.from?dmy(S.from):T('શરૂઆત','Start'))+' → '+(S.to?dmy(S.to):T('આજ','today')),'Tally-daybook-'+(S.to||today()));
+        if(S.tab==='sal'||S.tab==='stk'||S.tab==='par')return tallyListXl(S);
+        const L2=BASE_LB(),rows=S.vs.filter(v=>inFirm(v)&&!v.cancelled&&(S.type==='all'||v.base===S.type)).sort((a,b)=>String(a.date).localeCompare(String(b.date))).map(v=>[dmy(v.date),firmName(v.firm),L2[v.base]||v.type,v.type,v.no,v.party,v.amount,v.mode||'',v.utr||'',v.narr||'']);
+        xl('Tally – '+T('ડે બુક','Day Book'),[{name:'Day Book',title:'Day Book',cols:[col(T('તારીખ','Date'),'s',12),col(T('ફર્મ','Firm'),'s',18),col(T('પ્રકાર','Kind'),'s',12),col(T('વાઉચર પ્રકાર','Voucher type'),'s',16),col(T('નં.','No.'),'s',8),col(T('પાર્ટી','Party'),'s',28),col(T('રકમ ₹','Amount ₹'),'n',14),col(T('રીત','Mode'),'s',8),col('UTR','s',20),col(T('નોંધ','Narration'),'s',30)],rows,nofoot:true}],(S.from?dmy(S.from):T('શરૂઆત','Start'))+' → '+(S.to?dmy(S.to):T('આજ','today')),'Tally-daybook-'+(S.to||today()));
       });
       bindSeg(body,'kt-tab',v=>{S.tab=v;S.more=0;S.repaint();});
       bindSeg(body,'kt-firm',v=>{S.firm=v;S.more=0;S.repaint();});
       bindSeg(body,'kt-type',v=>{S.type=v;S.more=0;S.repaint();});
       bindSeg(body,'kt-lk',v=>{S.lk=v;S.more=0;S.repaint();});
       bindSeg(body,'kt-pf',v=>{S.pf=v;S.more=0;S.repaint();});
-      if(S.tab==='day'||S.tab==='cash'||S.tab==='mel')bindPer(body,S,()=>{S.more=0;S.reload();});
+      if(S.tab==='day'||S.tab==='cash'||S.tab==='mel'||S.tab==='sal'||(S.tab==='stk'&&S.sk==='move'))bindPer(body,S,()=>{S.more=0;S.reload();});
+      if(S.tab==='par')tallyPartiesBind(S,body);else if(S.tab==='sal')tallySalesBind(S,body);else if(S.tab==='stk')tallyStockBind(S,body);
       tallyExtraBind(S,body,inFirm);
       const qi=q('#kt-q');if(qi)qi.addEventListener('input',()=>{S.q=qi.value;S.more=0;keep('#kt-q',()=>S.repaint());});
       const li=q('#kt-lq');if(li)li.addEventListener('input',()=>{S.lq=li.value;S.more=0;keep('#kt-lq',()=>S.repaint());});
-      const dl=q('#kt-dlist');if(dl)dl.addEventListener('click',()=>{const lst=(S._plist||[]).filter(l=>TM.groupKind(l.parent)==='debtor'&&n0(l.closing)<0).map(l=>({name:l.name,amt:-n0(l.closing)})).sort((a,b)=>b.amt-a.amt);try{window.open(waLink('',debtorListText(lst,S.firm==='all'?'':firmName(S.firm))),'_blank','noopener');}catch(_){}});
       const lz=q('#kt-lz');if(lz)lz.addEventListener('change',()=>{S.lzero=lz.checked;S.repaint();});
       const mb=q('#kt-more');if(mb)mb.addEventListener('click',()=>{S.more++;S.repaint();});
       body.querySelectorAll('[data-v]').forEach(b=>b.addEventListener('click',()=>{
@@ -12999,8 +13401,8 @@ function openTally(opts){
       });
     }
     S.paintMain=paintMain;
-    const paintSetup=()=>tallySetupView(S),paintFile=()=>tallyFileView(S);
-    paintMain();
+    const paintSetup=()=>tallySetupView(S),paintFile=()=>tallyFileView(S),paintParty=()=>tallyPartyView(S);
+    S.repaint();
     S.reload();
   });
 }
@@ -13208,10 +13610,11 @@ function tallySetupView(S){
     +FIRMS().map((f,i)=>'<div class="kt-firm" data-fi="'+i+'"><label class="bz-f"><span>'+firmIc(f.id)+' <b>'+E(f.name)+'</b> — '+E(T('Tally માં કંપનીનું નામ (બરાબર એવું જ)','Company name in Tally (exactly)'))+'</span><input class="kt-in" list="kt-comps" data-fc="'+i+'" value="'+E(f.company)+'" autocomplete="off"></label>'
       +'<span class="kt-bd">'+badge(compOk(f))+'</span><div class="kt-ch" data-ch="'+i+'">'+chipsHtml(i)+'</div>'
       +sw('kt-pur'+i,T('આ ફર્મની Purchase વાઉચર લો','Take this firm’s purchase vouchers'),takesPurchase(f.id),T('ફક્ત કાચી કંપનીની ખરીદી લેવી — પાક્કી (GST) કંપનીની નહીં','Only the kacha company’s purchases — not the pukka (GST) ones'))
+      +sw('kt-kc'+i,T('આ કાચી ફર્મ છે (કેશ / કાચું બિલ)','This is a kacha firm (cash / kacha bills)'),isKacha(f.id),T('ખાતામાં “કાચું” અને “પાકું” અલગ બતાવવા માટે','Used to show “kacha” and “paka” apart in the khata'))
       +'<label class="bz-f kt-fn"><span>'+E(T('ઍપમાં દેખાતું નામ (ફક્ત બતાવવા માટે)','Name shown in the app (display only)'))+'</span><input class="kt-in" data-fn="'+i+'" value="'+E(f.name)+'" autocomplete="off"></label></div>').join('')
     +'<datalist id="kt-comps">'+(S.comps||[]).map(c=>'<option value="'+E(c)+'"></option>').join('')+'</datalist></div>'
     +'<div class="kb-card kt-c"><div class="kb-ct"><span>📅 '+E(T('ક્યારથી ડેટા લેવો','Take data from'))+'</span></div><label class="bz-f"><span>'+E(T('શરૂઆતની તારીખ','Start date'))+'</span><input type="date" id="kt-from" value="'+E(tallyFrom())+'"></label>'
-    +'<p class="v9-note">'+E(T('આ તારીખથી Tally નો ડેટા આવશે. ખાલી હોય તો આ મહિનાની 1 તારીખથી. ખેડૂતની જૂની ચૂકવણી ડબલ ન થાય તે માટે પહેલી વાર ખાતામાં નાખતાં પહેલાં તમને પૂછશે.','Tally data is taken from this date (default: 1st of this month). To avoid doubles, the first time you are asked before payments go to khata.'))+'</p></div>'
+    +'<p class="v9-note">'+E(T('આ તારીખથી Tally નો ડેટા આવશે. ખાલી હોય તો આ નાણાકીય વર્ષની 1 એપ્રિલથી (ખાતાવહી માટે આખું વર્ષ જોઈએ). ખેડૂતની જૂની ચૂકવણી ડબલ ન થાય તે માટે પહેલી વાર ખાતામાં નાખતાં પહેલાં તમને પૂછશે.','Tally data is taken from this date (default: 1 April of this financial year — the khata needs the whole year). To avoid doubles, the first time you are asked before payments go to khata.'))+'</p></div>'
     +'<div class="kb-card kt-c"><div class="kb-ct"><span>📥 '+E(T('Tally Link (Tally વાળા કમ્પ્યુટર પર, એક જ વાર)','Tally Link (on the Tally computer, once)'))+'</span></div>'
     +'<ol class="kt-steps"><li>'+E(T('Tally માં: F1 (Help) → Settings → Connectivity → Client/Server → TallyPrime acts as: Both (અથવા Server), Port 9000.','In Tally: F1 (Help) → Settings → Connectivity → Client/Server → TallyPrime acts as: Both (or Server), Port 9000.'))+'</li>'
     +'<li>'+E(T('ત્રણેય કંપની Tally માં ખુલ્લી રાખો.','Keep all three companies open in Tally.'))+'</li>'
@@ -13250,6 +13653,9 @@ function tallySetupView(S){
     await SET.save({tally:{firms:arr}});
     if(!e.target.checked){try{purgedP.delete(f.id);await purgePurchases(f.id);toast(T('આ ફર્મની ખરીદી કાઢી નાખી','This firm’s purchases were removed'));await S.reload();}catch(er){status(body,tsqlHint(er),true);}}
     else status(body,T('આગલા સિંકમાં ખરીદી આવશે. “શરૂઆતથી બધું” દબાવો.','Purchases come in with the next sync. Press “Everything from start date”.'));
+  });});
+  FIRMS().forEach((f,i)=>{const sw=q('#kt-kc'+i);if(!sw)return;sw.addEventListener('change',async e=>{
+    const arr=FIRMS().map(x=>Object.assign({},x));arr[i].kacha=e.target.checked;await SET.save({tally:{firms:arr}});toast(T('✔ સાચવ્યું','✔ Saved'));
   });});
   q('#kt-every').addEventListener('change',e=>{SET.save({tally:{every:+e.target.value}});});
   q('#kt-win').addEventListener('change',e=>{SET.save({tally:{win:+e.target.value}});});
@@ -13587,6 +13993,9 @@ async function attention(force){
     }catch(_){}
     /* 7. monthly KG target */
     try{const PR7=buildPR(D.hisab,D.chits),ga=goalAttention(PR7),ra=rateAttention(PR7);if(ra)out.push(ra);if(ga)out.push(ga);}catch(_){}
+    /* 8. reminders (yaad-dasht) + low stock */
+    try{const rs=LM.remSplit(remList(),t),n=rs.over.length+rs.today.length;if(n){const f=rs.over.concat(rs.today)[0];out.push({id:'rem',tone:'warn',ic:'🔔',text:T(n+' યાદ-દાસ્ત (આજ / મોડી)',n+' reminders due (today / overdue)'),sub:f&&f.t,go:{insights:'rem'}});}}catch(_){}
+    try{const la=stockAttention(D);if(la)out.push(la);}catch(_){}
     return out;
   })();
   try{const v=await _att.p;_att={at:Date.now(),v,p:null};return v;}catch(e){_att.p=null;return [];}
@@ -13595,7 +14004,7 @@ function attentionGo(it){
   const g=it&&it.go||{};
   if(g.khata)return openLedger();
   if(g.insights)return openInsights(g.insights);
-  return openTally({tab:g.tab||'day',pf:g.pf,per:g.per});
+  return openTally({tab:g.tab||'day',pf:g.pf,per:g.per,sk:g.sk});
 }
 
 /* ---------------- Tally figures for the day summary (dashboard + WhatsApp) ---------------- */
@@ -13620,7 +14029,8 @@ function tallyDayLines(rows,day){
     push.push(f.name.split(' ')[0]+' '+part.join(' '));
     html.push({firm:f.name,ic:firmIc(f.id),parts:part});
   });
-  return text.length?{text:['🧾 *Tally*'].concat(text),push:'Tally: '+push.join(' | '),html}:null;
+  const L0=BASE_LB(),prow=vs.filter(v=>clean(v.party)&&(v.base==='purchase'||v.base==='sales'||v.base==='payment'||v.base==='receipt')).sort((a,b)=>b.amount-a.amount).slice(0,12).map(v=>({party:clean(v.party),sub:[(BASE_IC[v.base]||'')+' '+(L0[v.base]||v.type),firmName(v.firm),v.mode?v.mode.toUpperCase():''].filter(Boolean).join(' • '),amt:money(v.amount)}));
+  return text.length?{text:['🧾 *Tally*'].concat(text),push:'Tally: '+push.join(' | '),html,rows:prow}:null;
 }
 /* ================= Vishleshan: 16 small tools in one place (READ ONLY - nothing is written to Tally) ================= */
 const IM=window.BalajiInsMath;
@@ -13673,7 +14083,7 @@ function insTools(){return [
   ['close','📑',T('મહિનાનું ક્લોઝિંગ','Month closing'),T('આખા મહિનાનું એક પાનું','One page for the whole month')],
   ['goal','🎯',T('મહિનાનું લક્ષ્ય','Monthly target'),T('KG લક્ષ્ય, ગતિ અને અનુમાન','KG target, pace and forecast')],
   ['recon','🔁',T('ચૂકવણી મેળ','Payments check'),T('ઍપમાં લખેલી ચૂકવણી Tally માં છે?','App payments that Tally does not have')]
-];}
+].concat(typeof INS_MORE==='function'?INS_MORE():[]);}
 
 function openInsights(sub){
   if(!isAdmin())return;
@@ -13701,6 +14111,7 @@ function openInsights(sub){
       const due=IM.payList(D.led,t0,{min:1});
       const cmp=IM.periodCompare(X.PR,t0);
       const badge={clean:nIss||'',plan:due.length||'',send:due.filter(f=>f.mobile).length||''};
+      try{const rs=LM.remSplit(remList(),t0);badge.rem=(rs.over.length+rs.today.length)||'';}catch(_){}
       body.innerHTML='<div class="kb"><div class="kb-hero"><span>🧠 '+E(T('આ મહિનો','This month'))+'</span><b>'+E(fmt(cmp.month.cur.kg,0))+' KG</b><small>'+E(money(cmp.month.cur.amt)+' • '+cmp.month.cur.farmers+' '+T('ખેડૂત','farmers')+(cmp.month.prev.kg?' • '+pctTxt(IM.chg(cmp.month.cur.kg,cmp.month.prev.kg))+' '+T('પહેલાંના સમય સામે','vs same days before'):''))+'</small></div>'
         +(goalKg()?'<div class="kb-card"><div class="bz-kv"><span>🎯 '+E(T('લક્ષ્ય','Target'))+' '+E(fmt(goalKg(),0))+' KG</span><b>'+E(fmt(gf.pct,0))+'%</b></div><div class="in-bar"><i style="width:'+Math.min(100,gf.pct)+'%"></i></div></div>':'')
         +'<div class="in-hub">'+insTools().map(t=>'<button type="button" class="in-tile" data-in="'+t[0]+'"><span class="in-ic" aria-hidden="true">'+t[1]+'</span><b>'+E(t[2])+'</b><small>'+E(t[3])+'</small>'+(badge[t[0]]?'<em class="in-bd">'+badge[t[0]]+'</em>':'')+'</button>').join('')+'</div></div>';
@@ -13744,11 +14155,11 @@ const TOOLS_UI={
     X.gb=X.gb||'broker';
     const r=IM.groupBy(X.PR,X.from,X.to,X.gb),lim=40+X.more*40,none=X.gb==='broker'?T('(દલાલ નથી)','(no broker)'):X.gb==='village'?T('(ગામ નથી)','(no village)'):T('(નક્કી નથી)','(not set)');
     const nameOfG=g=>X.gb==='day'?dayLabel(g.key):X.gb==='maal'?maalName(g.label):(g.label||none);
-    const html=periodBlock(X)+seg('in-gb',[['broker','🤝 '+T('દલાલ','Broker')],['village','🏘 '+T('ગામ','Village')],['maal','🥜 '+T('માલ','Item')],['day','📅 '+T('દિવસ','Day')]],X.gb,'kb-sub')
+    const html=periodBlock(X)+seg('in-gb',[['broker','🤝 '+T('દલાલ','Broker')],['village','🏘 '+T('ગામ','Village')],['maal','🥜 '+T('માલ','Item')],['vehicle','🚛 '+T('ગાડી','Vehicle')],['day','📅 '+T('દિવસ','Day')]],X.gb,'kb-sub')
       +'<div class="kb-sumline"><span>'+r.rows.length+' • '+E(fmt(r.kg,0))+' KG</span><b>'+E(money(r.amt))+'</b></div>'
-      +(r.rows.length?'<div class="kb-rows">'+r.rows.slice(0,lim).map(g=>kbRow(avatar(nameOfG(g),X.gb==='day'?'📅':X.gb==='broker'?'🤝':X.gb==='village'?'🏘':'🥜'),nameOfG(g),[g.farmers+' '+T('ખેડૂત','farmers'),g.n+' '+T('ચિઠ્ઠી','chits'),g.avg?'₹'+fmt(g.avg,2)+'/KG':'',X.gb==='day'?'':fmt(g.share,1)+'%'].filter(Boolean).join(' • '),fmt(g.kg,0)+' KG',money(g.amt),'')).join('')+'</div>'
+      +(r.rows.length?'<div class="kb-rows">'+r.rows.slice(0,lim).map(g=>kbRow(avatar(nameOfG(g),X.gb==='day'?'📅':X.gb==='broker'?'🤝':X.gb==='village'?'🏘':X.gb==='vehicle'?'🚛':'🥜'),nameOfG(g),[g.farmers+' '+T('ખેડૂત','farmers'),g.n+' '+T('ચિઠ્ઠી','chits'),g.avg?'₹'+fmt(g.avg,2)+'/KG':'',X.gb==='day'?'':fmt(g.share,1)+'%'].filter(Boolean).join(' • '),fmt(g.kg,0)+' KG',money(g.amt),'')).join('')+'</div>'
         +(r.rows.length>lim?'<button type="button" class="bz-add" id="in-more">'+E(T('વધુ બતાવો','Show more'))+' ('+(r.rows.length-lim)+')</button>':''):emptyBox('🧭',T('આ સમયમાં હિસાબ નથી.','No records in this period.')));
-    const per=(X.from?dmy(X.from):T('શરૂઆત','start'))+' → '+(X.to?dmy(X.to):T('આજ','today')),ttl={broker:T('દલાલ મુજબ','By broker'),village:T('ગામ મુજબ','By village'),maal:T('માલ મુજબ','By item'),day:T('દિવસ મુજબ','By day')}[X.gb];
+    const per=(X.from?dmy(X.from):T('શરૂઆત','start'))+' → '+(X.to?dmy(X.to):T('આજ','today')),ttl={broker:T('દલાલ મુજબ','By broker'),village:T('ગામ મુજબ','By village'),maal:T('માલ મુજબ','By item'),vehicle:T('ગાડી મુજબ','By vehicle'),day:T('દિવસ મુજબ','By day')}[X.gb];
     return {html,per:true,segs:{'in-gb':v=>{X.gb=v;}},
       wa:()=>['🧭 *'+ttl+'* • '+per].concat(r.rows.slice(0,25).map((g,i)=>(i+1)+'. '+nameOfG(g)+' — '+fmt(g.kg,0)+' KG • '+money(g.amt))).concat(['','*'+T('કુલ','Total')+': '+fmt(r.kg,0)+' KG • '+money(r.amt)+'*']).join('\n'),
       xl:()=>xl('🧭 '+ttl,[{name:ttl.slice(0,28),title:ttl,cols:[col(X.gb==='day'?T('તારીખ','Date'):ttl,'s',26),col(T('ખેડૂત','Farmers'),'n',10),col(T('ચિઠ્ઠી','Chits'),'n',8),col('KG','n',12),col(T('રકમ ₹','Amount ₹'),'n',14),col('₹/KG','n',10)],rows:r.rows.map(g=>[X.gb==='day'?dmy(g.key):nameOfG(g),g.farmers,g.n,g.kg,g.amt,g.avg]),nofoot:true}],per,'saransh-'+X.gb+'-'+today())};
@@ -13988,6 +14399,551 @@ function goalAttention(PR){
   const f=IM.goalForecast(PR,today(),g);
   return {id:'goal',tone:f.forecast<g*0.9&&f.dom>=10?'warn':'info',ic:'🎯',text:T('લક્ષ્ય '+fmt(f.pct,0)+'% ('+fmt(f.kg,0)+'/'+fmt(g,0)+' KG) — અનુમાન '+fmt(f.forecast,0)+' KG','Target '+fmt(f.pct,0)+'% ('+fmt(f.kg,0)+'/'+fmt(g,0)+' KG) — forecast '+fmt(f.forecast,0)+' KG'),go:{insights:'goal'}};
 }
+/* ================= Tally: parties of ALL firms together (one ledger per name), sales bills, stock  (READ ONLY) ================= */
+const LM=window.BalajiLedgerMath;
+const isKacha=id=>{const f=FIRMS().find(x=>x.id===id);return !f?false:(f.kacha!==undefined?!!f.kacha:id==='balaji');};
+const kachaLb=()=>T('કાચું','Kacha'),pakaLb=()=>T('પાકું','Paka');
+const partyAlias=()=>SET.get('biz.partyAlias',{})||{};
+const resolveParty=k=>{const al=partyAlias();let n=0;while(al[k]&&n++<6)k=al[k];return k;};
+const ledKind=parent=>{const k=TM.groupKind(parent);return k==='cash'?'bank':k;};
+const ownLb=net=>net>0.5?T('તમારે આપવાના','You owe'):net<-0.5?T('તમારે લેવાના','You get'):T('બાકી નથી','Settled');
+const crdr=n=>n>0.5?' Cr':n<-0.5?' Dr':'';
+const stk=()=>Object.assign({openKg:0,openDate:'',adjKg:0,physKg:'',physDate:'',bagKg:0,min:0},SET.get('stock',{})||{});
+const kgTxt=n=>fmt(n,0)+' KG';
+const billKgMap=()=>SET.get('biz.billKg',{})||{};
+const billsOf=(vs,o)=>LM.bills(vs,Object.assign({bagKg:stk().bagKg,kgMap:billKgMap()},o));
+const itemsTxt=(items,n)=>(items||[]).slice(0,n||3).map(i=>(i.n==='(manual)'?T('હાથે લખેલું વજન','typed weight'):i.n)+' '+fmt(i.q,i.q%1?2:0)+(i.u?' '+i.u:'')+(i.r?' @ ₹'+fmt(i.r,2):'')).join(', ')+((items||[]).length>(n||3)?' …':'');
+
+/* the parties (cached while the data does not change) */
+function partyCtx(S){
+  const vs=(S.D&&S.D.vouchers)||[],leds=S.leds||[];
+  const opt=TS().opt!==false,key=vs.length+'|'+leds.length+'|'+JSON.stringify(partyAlias()).length+'|'+(TS().firms||[]).length+'|'+opt+'|'+(S.D?S.D.hisab.length:0);
+  if(S._pc&&S._pc.key===key&&S._pc.D===S.D&&S._pc.L===S.leds)return S._pc;
+  const list=LM.buildParties(vs,leds,{resolve:resolveParty,kindOf:ledKind,isKacha,optional:opt});
+  const byKey=new Map(list.map(p=>[p.key,p]));
+  S._pc={key,list,byKey,D:S.D,L:S.leds};return S._pc;
+}
+/* is this Tally party one of our farmers (by name)? */
+function appFarmerFor(S,name){
+  const D=S.D;if(!D||!D.farmers)return null;
+  const n=normName(name);if(!n)return null;
+  const hit=D.farmers.find(f=>normName(f.name)===n||f.alts.some(a=>normName(a)===n));
+  if(hit)return {f:D.led.get(hit.key),score:1};
+  try{
+    const r=BK.matchTxn({narr:name,ref:'',date:''},D.ctx),c=r&&r.cands&&r.cands[0];
+    if(c&&c.score>=0.8)return {f:D.led.get(c.key),score:c.score};
+  }catch(_){}
+  return null;
+}
+const partyIc=k=>({creditor:'🧑‍💼',debtor:'🏪',bank:'🏦',expense:'💸',income:'💰',purchase:'🛒'}[k]||'📒');
+
+/* ---------------- the Parties tab: one row per name, all firms together ---------------- */
+function tallyPartiesHtml(S,firmSeg){
+  const pc=partyCtx(S),kinds=[['creditor','🧑‍💼 '+T('દેવું (Creditors)','To pay (Creditors)')],['debtor','🏪 '+T('લેવાના (Debtors)','To get (Debtors)')],['bank','🏦 '+T('બેંક / કેશ','Bank / cash')],['all',T('બધા','All')]];
+  const qs=normName(S.lq),fs=S.firm;
+  const balOf=p=>fs==='all'?p.net:(p.firms[fs]?p.firms[fs].closing:0);
+  let list=pc.list.filter(p=>(fs==='all'||p.firms[fs])&&(S.lk==='all'||p.kind===S.lk)&&(S.lzero||Math.abs(balOf(p))>=0.5)&&(!qs||normName(p.name).includes(qs)));
+  list.sort((a,b)=>Math.abs(balOf(b))-Math.abs(balOf(a)));
+  const lim=100+S.more*100;
+  const owe=list.filter(p=>p.kind==='creditor'&&balOf(p)>0).reduce((s,p)=>s+balOf(p),0),get=list.filter(p=>p.kind==='debtor'&&balOf(p)<0).reduce((s,p)=>s-balOf(p),0);
+  const lab=p=>{const c=balOf(p);
+    if(p.kind==='creditor')return c>0?['due',T('દેવું','to pay')]:['over',T('એડવાન્સ','advance')];
+    if(p.kind==='debtor')return c<0?['zero',T('લેવાના','to get')]:['over',T('એડવાન્સ','advance')];
+    return ['',c>0?'Cr':'Dr'];};
+  S._plist=list;
+  const fset=new Set();((S.D&&S.D.farmers)||[]).forEach(f=>{fset.add(normName(f.name));(f.alts||[]).forEach(x=>fset.add(normName(x)));});
+  const row=(p,i)=>{
+    const a=lab(p),isF=fset.has(normName(p.name)),both=fs==='all'&&p.firmIds.length>1&&Math.abs(p.kacha)>=0.5&&Math.abs(p.paka)>=0.5;
+    const sub=fs==='all'?(both?kachaLb()+' '+shortMoney(Math.abs(p.kacha))+crdr(p.kacha)+' • '+pakaLb()+' '+shortMoney(Math.abs(p.paka))+crdr(p.paka):p.firmIds.map(f=>firmIc(f)+' '+(isKacha(f)?kachaLb():pakaLb())).join('  ')):firmName(fs);
+    return '<button type="button" class="kb-row" data-pt="'+i+'">'+avatar(p.name,isF?'👨‍🌾':partyIc(p.kind))+'<span class="kb-rt"><b>'+E(p.name)+'</b><small>'+E((isF?'👨‍🌾 '+T('ખેડૂત','farmer')+' • ':'')+sub)+'</small></span><span class="kb-ra '+a[0]+'"><b>'+E(money(Math.abs(balOf(p))))+'</b><small>'+E(a[1])+'</small></span></button>';
+  };
+  return firmSeg+seg('kt-lk',kinds,S.lk,'kb-sub')
+    +'<div class="kb-search"><input id="kt-lq" type="search" autocomplete="off" placeholder="🔍 '+E(T('નામ (ખેડૂત / પાર્ટી)','Name (farmer / party)'))+'" value="'+E(S.lq)+'"></div>'
+    +'<p class="v9-note kb-hint">'+E(T('એક નામ = એક ખાતું (બધી ફર્મ ભેગી). દબાવો → આખું ખાતું, કાચું + પાકું.','One name = one ledger (all firms together). Tap → full ledger, kacha + paka.'))+'</p>'
+    +(S.lk==='creditor'||S.lk==='all'?'<div class="kb-sumline"><span>'+E(T('કુલ દેવું','Total to pay'))+'</span><b>'+E(money(owe))+'</b></div>':'')
+    +(S.lk==='debtor'||S.lk==='all'?'<div class="kb-sumline"><span>'+E(T('કુલ લેવાના','Total to get'))+'</span><b>'+E(money(get))+'</b></div>':'')
+    +(S.lk==='debtor'&&get>0?'<div class="kt-btns"><button type="button" class="kt-b" id="kt-dlist">💬 '+E(T('લેવાના બાકી — WhatsApp પર યાદી','Receivables list — share on WhatsApp'))+'</button></div>':'')
+    +(list.length?'<div class="kb-rows">'+list.slice(0,lim).map(row).join('')+'</div>'
+      +(list.length>lim?'<button type="button" class="bz-add" id="kt-more">'+E(T('વધુ બતાવો','Show more'))+' ('+(list.length-lim)+')</button>':'')
+      :'<div class="kb-empty"><span aria-hidden="true">👥</span><p>'+E(S.leds.length?T('કોઈ ખાતું મળ્યું નથી.','No ledger found.'):T('હજી Tally ના ખાતા આવ્યા નથી.','No ledgers from Tally yet.'))+'</p></div>')
+    +'<label class="kt-sw"><span>'+E(T('શૂન્ય બાકી પણ બતાવો','Show zero balances too'))+'</span><input type="checkbox" id="kt-lz"'+(S.lzero?' checked':'')+'><i></i></label>';
+}
+function openPartyOf(S,p){
+  S.pkey=p.key;S.view='party';S.pp={firm:S.firm&&S.firm!=='all'&&p.firms[S.firm]?S.firm:'all',per:'ALL',from:'',to:'',cfrom:'',cto:'',opt:TS().opt!==false,more:0};
+  S.repaint();toTop();
+}
+function tallyPartiesBind(S,body){
+  body.querySelectorAll('[data-pt]').forEach(b=>b.addEventListener('click',()=>{const p=(S._plist||[])[+b.dataset.pt];if(p)openPartyOf(S,p);}));
+  const dl=body.querySelector('#kt-dlist');
+  if(dl)dl.addEventListener('click',()=>{
+    const lst=(S._plist||[]).filter(p=>p.kind==='debtor'&&p.net<-0.5).map(p=>({name:p.name,amt:-(S.firm==='all'?p.net:(p.firms[S.firm]?p.firms[S.firm].closing:0))})).filter(x=>x.amt>0.5).sort((a,b)=>b.amt-a.amt);
+    try{window.open(waLink('',debtorListText(lst,'')),'_blank','noopener');}catch(_){}
+  });
+}
+
+/* ---------------- one party: full ledger of all firms (kacha + paka) ---------------- */
+function partyText(p,st,pp){
+  const l=['📒 *'+p.name+'* — '+T('હિસાબ','statement')+' • '+dmy(today())];
+  const rows=st.rows.filter(r=>r.eff).slice(-25);
+  if(st.rows.length>rows.length)l.push('…');
+  const LB=BASE_LB();
+  rows.forEach(r=>l.push(dmy(r.date).slice(0,5)+' • '+(LB[r.base]||T('વાઉચર','Voucher'))+(r.no?' '+r.no:'')+' • '+(r.net>0?'+':'−')+'₹'+fmt(Math.abs(r.net),0)));
+  const c=st.closing;
+  l.push('','*'+(c>0.5?T('તમને ચૂકવવાના બાકી','Balance we owe you'):c<-0.5?T('તમારે આપવાના બાકી','Balance you owe'):T('બાકી નથી','Nothing pending'))+(Math.abs(c)>0.5?': ₹'+fmt(Math.abs(c),0):'')+'*');
+  return l.join('\n');
+}
+function tallyPartyView(S){
+  const body=S.body,pp=S.pp||(S.pp={firm:'all',per:'ALL',from:'',to:'',cfrom:'',cto:'',opt:TS().opt!==false,more:0});
+  const back=()=>{S.view=null;S.repaint();toTop();};
+  const head='<div class="kb-back"><button type="button" id="kp-bk">← '+E(T('ખાતા','Parties'))+'</button><span>'+E((partyCtx(S).byKey.get(S.pkey)||{}).name||'')+'</span></div>';
+  const bindBack=()=>{const b=body.querySelector('#kp-bk');if(b)b.addEventListener('click',back);};
+  if(!S.D){body.innerHTML='<div class="kb">'+head+'<p class="v9-note">'+E(T('લોડ થાય છે…','Loading…'))+'</p></div>';bindBack();return;}
+  const pc=partyCtx(S),p=pc.byKey.get(S.pkey);
+  if(!p){body.innerHTML='<div class="kb">'+head+'<div class="kb-empty"><span aria-hidden="true">🔎</span><p>'+E(T('આ નામનું ખાતું મળ્યું નથી.','No ledger found for this name.'))+'</p></div></div>';bindBack();return;}
+  const st=LM.statement(p,S.D.vouchers,{resolve:resolveParty,isKacha,firm:pp.firm,from:pp.from,to:pp.to,optional:pp.opt});
+  const firms=Object.keys(p.firms);
+  const net=st.all.closing,fsel=pp.firm==='all';
+  const lim=60+pp.more*60,rows=st.rows.slice().reverse();
+  const farmer=appFarmerFor(S,p.name),f=farmer&&farmer.f,mobSaved=((SET.get('biz.partyMobile',{})||{})[p.key])||'';
+  const lr=p.kind==='debtor'?S.D.vouchers.filter(v=>!v.cancelled&&v.base==='receipt'&&resolveParty(LM.nm(v.party))===p.key).sort((a,b)=>String(b.date).localeCompare(String(a.date)))[0]:null;
+  const firmCards=Object.keys(st.byFirm).map(id=>{const x=st.byFirm[id];
+    return '<div class="bz-kv"><span>'+firmIc(id)+' '+E(firmName(id))+' <small class="kb-fl '+(x.kacha?'chk':'dim')+'">'+E(x.kacha?kachaLb():pakaLb())+'</small></span><b>'+E(x.has||x.n?money(Math.abs(x.closing))+crdr(x.closing):'—')+'</b></div>'
+      +(x.has?'':'<div class="in-prev">'+E(T('Tally ના ખાતાની યાદીમાં આ નામ નથી','not in the Tally ledger list'))+'</div>');}).join('');
+  const hasK=st.kacha.firms.length>0,hasP=st.paka.firms.length>0;
+  let html='<div class="kb">'+head
+    +'<div class="kb-hero"><span>'+partyIc(p.kind)+' '+E(ownLb(net))+'</span><b>'+E(money(Math.abs(net)))+(Math.abs(net)>0.5?'<small> '+(net>0?'Cr':'Dr')+'</small>':'')+'</b><small>'
+      +E((hasK?kachaLb()+' '+money(Math.abs(st.kacha.closing))+crdr(st.kacha.closing):'')+(hasK&&hasP?' • ':'')+(hasP?pakaLb()+' '+money(Math.abs(st.paka.closing))+crdr(st.paka.closing):''))+'</small></div>'
+    +'<div class="kb-card"><div class="kb-ct"><span>'+E(T('ફર્મ મુજબ (Tally બાકી)','By firm (Tally balance)'))+'</span></div>'+firmCards+'</div>'
+    +(f?'<div class="kb-card kp-app"><div class="kb-ct"><span>👨‍🌾 '+E(T('ઍપ ના ખેડૂત ખાતામાં પણ છે','Also a farmer in the app'))+(farmer.score<1?' ⭐':'')+'</span></div>'
+      +'<div class="bz-kv"><span>'+E(T('કુલ હિસાબ','Total hisab'))+'</span><b>'+E(money(f.payable))+'</b></div><div class="bz-kv"><span>'+E(T('કુલ ચૂકવ્યું','Total paid'))+'</span><b>'+E(money(f.paid))+'</b></div>'
+      +'<div class="bz-kv big"><span>'+E(f.balance>=0.5?T('ખેડૂતને બાકી','Due to farmer'):f.balance<=-0.5?T('વધારે ચૂકવ્યું','Overpaid'):T('બાકી નથી','Settled'))+'</span><b>'+E(money(Math.abs(f.balance)))+'</b></div>'
+      +'<div class="kt-btns"><button type="button" class="kt-b ok" id="kp-farm">👨‍🌾 '+E(T('ખેડૂત ખાતું ખોલો','Open farmer khata'))+'</button></div></div>':'')
+    +(firms.length>1?seg('kp-firm',[['all',T('બધી ફર્મ','All firms')]].concat(Object.keys(st.byFirm).map(id=>[id,firmIc(id)+' '+firmName(id)])),pp.firm,'kb-sub'):'')
+    +seg('kb-per',perItems(),pp.per,'kb-months')+perCustomHtml(pp)
+    +(st.hasOptional?'<label class="kt-sw"><span>'+E(T('Optional / Memorandum વાઉચર પણ ગણવા','Count optional / memorandum vouchers too'))+'</span><input type="checkbox" id="kp-opt"'+(pp.opt?' checked':'')+'><i></i></label>':'')
+    +'<div class="kb-card"><div class="bz-kv"><span>'+E(T('શરૂઆતનું બાકી','Opening'))+'</span><b>'+E(money(Math.abs(st.opening))+crdr(st.opening))+'</b></div>'
+      +'<div class="bz-kv"><span>Dr ('+E(T('આપ્યા / જમા','paid / debit'))+')</span><b>'+E(money(st.dr))+'</b></div><div class="bz-kv"><span>Cr ('+E(T('મળ્યા / ઉધાર','received / credit'))+')</span><b>'+E(money(st.cr))+'</b></div>'
+      +'<div class="bz-kv big"><span>'+E(T('છેલ્લું બાકી','Closing'))+'</span><b>'+E(money(Math.abs(st.closing))+crdr(st.closing))+'</b></div></div>'
+    +(st.partial?'<p class="v9-note kb-hint">'+E(T(st.partial+' વાઉચર જૂના સિંકના છે (સામેની બાજુ નથી). “હમણાં સિંક / પૂરી તપાસ” પછી પૂરું થશે.',st.partial+' vouchers are from an older sync (other side missing). They complete after the next full sync.'))+'</p>':'')
+    +(rows.length?'<div class="kb-ct"><span>'+E(T('ખાતાવહી','Ledger'))+' ('+rows.length+')</span></div><div class="kb-rows">'+rows.slice(0,lim).map(r=>
+        '<button type="button" class="kb-row'+(r.eff?'':' kp-dim')+'" data-kv="'+E(r.firm+'|'+r.v.vkey)+'">'+avatar(r.type,BASE_IC[r.base]||'📄')+'<span class="kb-rt"><b>'+E(r.type+(r.no?' '+r.no:''))+(r.optional?' <i class="kb-fl chk">opt</i>':'')+'</b><small>'
+        +E([dmy(r.date),(fsel&&firms.length>1?firmName(r.firm)+' ('+(r.kacha?kachaLb():pakaLb())+')':''),r.narr].filter(Boolean).join(' • '))+'</small>'
+        +(r.items.length?'<small class="kp-it">'+E(itemsTxt(r.items,2))+'</small>':'')+'</span><span class="kb-ra"><b>'+E(money(Math.abs(r.net))+(r.net>0?' Cr':' Dr'))+'</b><small>'+E(T('બાકી','Bal')+' '+money(Math.abs(r.bal))+crdr(r.bal))+'</small></span></button>').join('')+'</div>'
+      +(rows.length>lim?'<button type="button" class="bz-add" id="kp-more">'+E(T('વધુ બતાવો','Show more'))+' ('+(rows.length-lim)+')</button>':'')
+      :'<div class="kb-empty"><span aria-hidden="true">📒</span><p>'+E(T('આ સમયમાં કોઈ વાઉચર નથી.','No vouchers in this period.'))+'</p></div>')
+    +'<div class="kb-card"><label class="bz-f"><span>📱 '+E(T('મોબાઇલ (WhatsApp માટે, ફક્ત ઍપમાં)','Mobile (for WhatsApp, kept in the app only)'))+'</span><input id="kp-mob" type="text" inputmode="tel" autocomplete="off" value="'+E(mobSaved||(f&&f.mobile)||'')+'" placeholder="98xxxxxxxx"></label></div>'
+    +'<div class="kt-btns"><button type="button" class="kt-b ok" id="kp-wa">💬 '+E(T('WhatsApp પર ખાતું (પાર્ટીને)','Share ledger on WhatsApp (to the party)'))+'</button><button type="button" class="kt-b" id="kp-xl">⬇️ Excel</button><button type="button" class="kt-b" id="kp-yd">🔔 '+E(T('યાદ-દાસ્ત','Reminder'))+'</button>'
+      +(p.kind==='debtor'&&net<-0.5?'<button type="button" class="kt-b" id="kp-rem">🔔 '+E(T('યાદ અપાવો','Remind'))+'</button>':'')+'</div>'
+    +'</div>';
+  body.innerHTML=html;bindBack();
+  const q=s=>body.querySelector(s);
+  bindSeg(body,'kp-firm',v=>{pp.firm=v;pp.more=0;S.repaint();});
+  bindPer(body,pp,()=>{pp.more=0;S.repaint();});
+  const op=q('#kp-opt');if(op)op.addEventListener('change',()=>{pp.opt=op.checked;S.repaint();});
+  const mb=q('#kp-more');if(mb)mb.addEventListener('click',()=>{pp.more++;S.repaint();});
+  body.querySelectorAll('[data-kv]').forEach(b=>b.addEventListener('click',()=>{
+    const k=b.dataset.kv,i=k.indexOf('|'),firm=k.slice(0,i),vk=k.slice(i+1);
+    const v=(S.D.vouchers||[]).find(x=>x.firm===firm&&x.vkey===vk);if(v)tallyVoucherDlg(S,v);
+  }));
+  const fb=q('#kp-farm');if(fb)fb.addEventListener('click',()=>openLedger({farmer:f.key}));
+  const mobIn=q('#kp-mob'),mobNow=()=>mobIn?String(mobIn.value).replace(/\D/g,''):'';
+  if(mobIn)mobIn.addEventListener('change',()=>{SET.save({biz:{partyMobile:{[p.key]:mobNow()}}});toast(T('✔ સાચવ્યું','✔ Saved'));});
+  q('#kp-wa').addEventListener('click',()=>{try{window.open(waLink(mobNow(),partyText(p,st,pp)),'_blank','noopener');}catch(_){}});
+  q('#kp-yd').addEventListener('click',()=>remAddDlg({t:(net<-0.5?T('વસૂલી / ફોન','Collect / call')+': ':T('ચૂકવણી / ફોન','Pay / call')+': ')+p.name,d:TL.addDays(today(),3),amt:Math.abs(net)>0.5?Math.round(Math.abs(net)):'',party:p.name}));
+  const rb=q('#kp-rem');if(rb)rb.addEventListener('click',()=>{try{window.open(waLink(mobNow(),buyerText(p.name,-net,lr&&lr.date)),'_blank','noopener');}catch(_){}});
+  q('#kp-xl').addEventListener('click',()=>{
+    const per=(pp.from?dmy(pp.from):T('શરૂઆત','Start'))+' → '+(pp.to?dmy(pp.to):T('આજ','today'));
+    const all=st.rows.slice();
+    xl(p.name,[{name:T('ખાતાવહી','Ledger'),title:p.name+' — '+T('ખાતાવહી','Ledger'),
+      cols:[col(T('તારીખ','Date'),'s',12),col(T('ફર્મ','Firm'),'s',20),col(T('કાચું/પાકું','Kacha/Paka'),'s',11),col(T('પ્રકાર','Type'),'s',16),col(T('નં.','No.'),'s',9),col(T('નોંધ','Narration'),'s',26),col(T('આઇટમ','Items'),'s',28),col('Dr ₹','n',14),col('Cr ₹','n',14),col(T('બાકી (Cr +)','Balance (Cr +)'),'n',16)],
+      rows:[[T('શરૂઆતનું બાકી','Opening'),'','','','','','','','',st.opening]].concat(all.map(r=>[dmy(r.date),firmName(r.firm),r.kacha?kachaLb():pakaLb(),r.type+(r.optional?' (opt)':''),r.no,r.narr,itemsTxt(r.items,5),r.dr,r.cr,r.bal])),nofoot:true},
+      {name:T('ફર્મ મુજબ','By firm'),title:T('ફર્મ મુજબ','By firm'),cols:[col(T('ફર્મ','Firm'),'s',24),col(T('કાચું/પાકું','Kacha/Paka'),'s',11),col(T('શરૂઆત','Opening'),'n',16),col('Dr ₹','n',14),col('Cr ₹','n',14),col(T('છેલ્લું (Cr +)','Closing (Cr +)'),'n',16)],
+        rows:Object.keys(st.byFirm).map(id=>{const x=st.byFirm[id];return [firmName(id),x.kacha?kachaLb():pakaLb(),x.opening,x.dr,x.cr,x.closing];}),nofoot:true}],per,'khata-'+(ascii(p.name)||'party')+'-'+today());
+  });
+}
+
+/* ---------------- Sales bills tab ---------------- */
+const prOf=S=>S._pr||(S._pr=(S.D?buildPR(S.D.hisab,S.D.chits):[]));
+function tallySalesHtml(S,firmSeg){
+  S.sv=S.sv||'bills';
+  const bagKg=stk().bagKg,B=billsOf(S.vs,{base:'sales',firm:S.firm});
+  const sum=LM.summarize(B,S.sv==='bills'?'buyer':S.sv),t=LM.summarize(B,'buyer').total;
+  const noItems=B.filter(b=>!b.hasItems).length,mg=LM.margin(prOf(S),B,S.from,S.to);
+  S._sales={B,sum};
+  const subs=seg('kt-sv',[['bills','🧾 '+T('બિલ','Bills')],['buyer','🏪 '+T('ખરીદનાર','Buyers')],['item','🥜 '+T('આઇટમ','Items')],['month','📅 '+T('મહિના','Months')]],S.sv,'kb-sub');
+  const hero='<div class="kb-hero"><span>🧾 '+E(T('Tally વેચાણ બિલ','Tally sales bills'))+' • '+t.n+'</span><b>'+E(money(t.net))+'</b><small>'+E((t.kg?kgTxt(t.kg)+' • ':'')+(t.kg&&t.net?T('સરેરાશ','avg')+' ₹'+fmt(B.reduce((s,b)=>s+b.items.reduce((x,i)=>x+(i.kg?n0(i.a):0),0),0)/Math.max(1,B.reduce((s,b)=>s+b.items.reduce((x,i)=>x+(i.kg||0),0),0)),2)+'/KG • ':'')+T('GST વગર','without GST')+(t.amt!==t.net?' • '+T('બિલ કુલ','bills total')+' '+money(t.amt):''))+'</small></div>';
+  const mgn=mg.sellAvg>0&&mg.buyAvg>0?'<div class="kb-card"><div class="kb-ct"><span>📊 '+E(T('અંદાજ નફો / KG','Rough margin / KG'))+'</span></div>'
+    +'<div class="bz-kv"><span>'+E(T('સરેરાશ ખરીદ ભાવ (ઍપ)','Avg buying rate (app)'))+'</span><b>₹'+E(fmt(mg.buyAvg,2))+'/KG</b></div><div class="bz-kv"><span>'+E(T('સરેરાશ વેચાણ ભાવ (Tally)','Avg selling rate (Tally)'))+'</span><b>₹'+E(fmt(mg.sellAvg,2))+'/KG</b></div>'
+    +'<div class="bz-kv big"><span>'+E(T('ફરક','Difference'))+'</span><b class="'+(mg.perKg<0?'v9-bad':'')+'">'+E((mg.perKg<0?'−':'')+'₹'+fmt(Math.abs(mg.perKg),2))+'/KG • '+E(shortMoney(mg.total))+'</b></div></div>':'';
+  let main='';
+  if(S.sv==='bills'){
+    const lim=60+S.more*60;
+    main=B.length?'<div class="kb-rows">'+B.slice(0,lim).map(b=>'<button type="button" class="kb-row" data-v="'+E(b.firm+'|'+b.v.vkey)+'">'+avatar(b.party||b.type,'🧾')+'<span class="kb-rt"><b>'+E(b.party||b.type)+'</b><small>'+E([dmy(b.date),b.type+(b.no?' '+b.no:''),S.firm==='all'?firmName(b.firm):'',b.optional?'opt':''].filter(Boolean).join(' • '))+'</small>'
+      +(b.hasItems?'<small class="kp-it">'+E(itemsTxt(b.items,3))+'</small>':'<small class="kp-it kp-no">'+E(T('વજન નથી — બિલ ખોલીને લખી શકાય','no weight — open the bill to type it'))+'</small>')+'</span><span class="kb-ra"><b>'+E(money(b.net))+'</b><small>'+E(b.kg?kgTxt(b.kg):(b.otherQty?fmt(b.otherQty,0):''))+'</small></span></button>').join('')+'</div>'
+      +(B.length>lim?'<button type="button" class="bz-add" id="kt-more">'+E(T('વધુ બતાવો','Show more'))+' ('+(B.length-lim)+')</button>':''):'<div class="kb-empty"><span aria-hidden="true">🧾</span><p>'+E(S.vs.length?T('આ સમયમાં Tally માં વેચાણ બિલ નથી.','No sales bills in Tally for this period.'):T('હજી Tally માંથી ડેટા આવ્યો નથી.','No data from Tally yet.'))+'</p></div>';
+  }else{
+    main=sum.rows.length?'<div class="kb-rows">'+sum.rows.slice(0,100).map((r,i)=>'<button type="button" class="kb-row" data-sg="'+i+'">'+avatar(r.label,S.sv==='buyer'?'🏪':S.sv==='item'?'🥜':'📅')+'<span class="kb-rt"><b>'+E(r.label==='—'?T('(આઇટમ નથી)','(no items)'):r.label==='(manual)'?T('હાથે લખેલું વજન','typed weight'):S.sv==='month'?monthLabel(r.key+'-01'):r.label)+'</b><small>'+E([r.n+' '+T('બિલ','bills'),r.kg?kgTxt(r.kg):'',r.avg?'₹'+fmt(r.avg,2)+'/KG':''].filter(Boolean).join(' • '))+'</small></span><span class="kb-ra"><b>'+E(money(r.net))+'</b></span></button>').join('')+'</div>'
+      :'<div class="kb-empty"><span aria-hidden="true">🧾</span><p>'+E(T('આ સમયમાં Tally માં વેચાણ બિલ નથી.','No sales bills in Tally for this period.'))+'</p></div>';
+  }
+  return firmSeg+subs+seg('kb-per',perItems(),S.per,'kb-months')+perCustomHtml(S)+hero+(noItems?'<p class="v9-note kb-hint">'+E(T(noItems+' બિલમાં આઇટમ / વજન નથી (Tally માં item invoice ન હોય તો વજન આવતું નથી) — બિલ દબાવી વજન (KG) જાતે લખી શકાય.',noItems+' bills have no item lines / weight (Tally sends weight only for item invoices) — open a bill to type the weight (KG).'))+'</p>':'')+mgn+main;
+}
+function tallySalesBind(S,body){
+  bindSeg(body,'kt-sv',v=>{S.sv=v;S.more=0;S.repaint();});
+  body.querySelectorAll('[data-sg]').forEach(b=>b.addEventListener('click',()=>{
+    const r=S._sales&&S._sales.sum.rows[+b.dataset.sg];if(!r)return;
+    if(S.sv==='buyer'){const k=resolveParty(r.key),p=partyCtx(S).byKey.get(k);if(p)openPartyOf(S,p);}
+  }));
+}
+
+/* ---------------- Stock tab ---------------- */
+function stockNums(S){
+  const cfg=stk(),bagKg=cfg.bagKg,from=cfg.openDate||'';
+  const vs=(S.D&&S.D.vouchers)||[];
+  const sold=billsOf(vs,{base:'sales',from}),soldKg=sold.reduce((s,b)=>s+b.kg,0),soldNoKg=sold.filter(b=>!b.hasItems).length;
+  const boughtKg=prOf(S).filter(r=>!from||r.date>=from).reduce((s,r)=>s+r.kg,0);
+  const est=LM.stockEstimate({openKg:cfg.openKg,boughtKg,soldKg,adjKg:cfg.adjKg,physKg:cfg.physKg===''?null:cfg.physKg});
+  const tal=LM.stockTotals(S.stock||[],{bagKg});
+  return {cfg,est,tal,soldNoKg,from};
+}
+function tallyStockHtml(S,firmSeg){
+  S.sk=S.sk||'tally';
+  const subs=seg('kt-sk',[['tally','📦 Tally '+T('સ્ટોક','stock')],['est','🧮 '+T('અંદાજ સ્ટોક','Book stock')],['move','🔄 '+T('આવક-જાવક','In / out')]],S.sk,'kb-sub');
+  if(S.sk==='tally'){
+    const rows=(S.stock||[]).filter(x=>S.firm==='all'||x.firm===S.firm).sort((a,b)=>Math.abs(b.qty)-Math.abs(a.qty)),tt=LM.stockTotals(rows,{bagKg:stk().bagKg});
+    const at=rows.reduce((m,x)=>Math.max(m,Date.parse(x.at)||0),0);
+    return firmSeg+subs+(rows.length?'<div class="kb-hero"><span>📦 '+E(T('Tally મુજબ સ્ટોક','Stock as per Tally'))+(at?' • '+E(agoTxt(new Date(at).toISOString())):'')+'</span><b>'+E(kgTxt(tt.kg))+'</b><small>'+E(T('કિંમત','value')+' '+money(tt.value)+(tt.other.length?' • '+tt.other.length+' '+T('આઇટમ KG માં નથી','items not in KG'):''))+'</small></div>'
+      +'<div class="kb-rows">'+rows.map(x=>'<div class="kb-row">'+avatar(x.name,'📦')+'<span class="kb-rt"><b>'+E(x.name)+'</b><small>'+E([S.firm==='all'?firmName(x.firm):'',x.group].filter(Boolean).join(' • '))+'</small></span><span class="kb-ra '+(x.qty<0?'due':'')+'"><b>'+E(fmt(x.qty,x.qty%1?2:0)+' '+x.unit)+'</b><small>'+E(x.value?money(x.value):'')+'</small></span></div>').join('')+'</div>'
+      :'<div class="kb-empty"><span aria-hidden="true">📦</span><p>'+E(T('Tally માં સ્ટોક આઇટમ મળી નથી (કે હજી સિંક થયું નથી). Tally માં stock item વાપરતા ન હોય તો “અંદાજ સ્ટોક” વાપરો.','No stock items from Tally (or not synced yet). If Tally has no stock items use “Book stock”.'))+'</p></div>');
+  }
+  if(S.sk==='est'){
+    const n=stockNums(S),c=n.cfg,e=n.est;
+    const num=v=>v===''||v==null?'':String(v);
+    return firmSeg+subs+'<p class="v9-note kb-hint">'+E(T('અંદાજ સ્ટોક = શરૂઆતનો સ્ટોક + ઍપની ખરીદી (KG) − Tally ના વેચાણ બિલ (KG) ± સુધારો. સાચો સ્ટોક ગણી “ગોડાઉનમાં ખરેખર” લખશો તો ફરક દેખાશે.','Book stock = opening + app purchases (KG) − Tally sales bills (KG) ± adjustment. Enter the real godown count to see the difference.'))+'</p>'
+      +'<div class="kb-card"><div class="bz-g2"><label class="bz-f"><span>'+E(T('શરૂઆતનો સ્ટોક KG','Opening stock KG'))+'</span><input id="ks-open" type="text" inputmode="decimal" autocomplete="off" value="'+E(num(c.openKg||''))+'" placeholder="0"></label>'
+      +'<label class="bz-f"><span>'+E(T('ક્યારથી (તારીખ)','From date'))+'</span><input id="ks-od" type="date" value="'+E(c.openDate||'')+'"></label></div>'
+      +'<div class="bz-g2"><label class="bz-f"><span>'+E(T('સુધારો KG (ઘટ −, વધ +)','Adjustment KG (loss −, gain +)'))+'</span><input id="ks-adj" type="text" inputmode="decimal" autocomplete="off" value="'+E(num(c.adjKg||''))+'" placeholder="0"></label>'
+      +'<label class="bz-f"><span>'+E(T('1 બેગ = કેટલા KG (બેગ વાળા બિલ માટે)','1 bag = how many KG (for bag bills)'))+'</span><input id="ks-bag" type="text" inputmode="decimal" autocomplete="off" value="'+E(num(c.bagKg||''))+'" placeholder="0"></label></div>'
+      +'<div class="bz-g2"><label class="bz-f"><span>'+E(T('ગોડાઉનમાં ખરેખર KG (ગણેલો)','Real godown count KG'))+'</span><input id="ks-phys" type="text" inputmode="decimal" autocomplete="off" value="'+E(num(c.physKg))+'" placeholder="—"></label>'
+      +'<label class="bz-f"><span>'+E(T('ઓછો સ્ટોક ચેતવણી KG','Low stock warning KG'))+'</span><input id="ks-min" type="text" inputmode="decimal" autocomplete="off" value="'+E(num(c.min||''))+'" placeholder="0"></label></div>'
+      +'<div class="kt-btns"><button type="button" class="kt-b ok" id="ks-save">'+E(T('સાચવો','Save'))+'</button></div></div>'
+      +(c.openDate?'<div class="kb-card">'+kvRow(T('શરૂઆતનો સ્ટોક','Opening stock'),kgTxt(e.open))+kvRow('➕ '+T('ઍપની ખરીદી','App purchases'),kgTxt(e.bought))+kvRow('➖ '+T('Tally વેચાણ','Tally sales'),kgTxt(e.sold))+kvRow('± '+T('સુધારો','Adjustment'),kgTxt(e.adj))
+        +'<div class="bz-kv big"><span>'+E(T('અંદાજ સ્ટોક','Book stock'))+'</span><b class="'+(e.est<0?'v9-bad':'')+'">'+E(kgTxt(e.est))+'</b></div>'
+        +(e.phys!==null?kvRow(T('ખરેખર (ગણેલો)','Real count'),kgTxt(e.phys))+'<div class="bz-kv"><span>'+E(e.diff<0?'⚠ '+T('ઘટ','Shortage'):e.diff>0?T('વધ','Surplus'):'✔ '+T('બરાબર','Matches'))+'</span><b class="'+(e.diff<0?'v9-bad':'')+'">'+E(kgTxt(Math.abs(e.diff)))+'</b></div>':'')
+        +(n.tal.kg?kvRow('Tally '+T('સ્ટોક','stock'),kgTxt(n.tal.kg)):'')
+        +(n.soldNoKg?'<p class="v9-note">'+E(T(n.soldNoKg+' વેચાણ બિલમાં વજન નથી — તે ગણાયા નથી.',n.soldNoKg+' sales bills have no weight — not counted.'))+'</p>':'')+'</div>'
+        :'<p class="v9-note">'+E(T('શરૂઆતનો સ્ટોક અને તારીખ લખો — પછી અંદાજ દેખાશે.','Enter the opening stock and date — then the estimate shows.'))+'</p>');
+  }
+  const f=LM.itemFlow(S.vs,{firm:S.firm,bagKg:stk().bagKg});
+  return firmSeg+subs+seg('kb-per',perItems(),S.per,'kb-months')+perCustomHtml(S)
+    +(f.rows.length?'<div class="kb-ct"><span>'+E(T('આઇટમ મુજબ','By item'))+'</span></div><div class="kb-rows">'+f.rows.map(r=>'<div class="kb-row">'+avatar(r.name,'📦')+'<span class="kb-rt"><b>'+E(r.name)+'</b><small>'+E('➕ '+fmt(r.inQ,0)+' '+r.unit+(r.avgIn?' @ ₹'+fmt(r.avgIn,2):'')+'  ➖ '+fmt(r.outQ,0)+' '+r.unit+(r.avgOut?' @ ₹'+fmt(r.avgOut,2):''))+'</small></span><span class="kb-ra '+(r.net<0?'due':'')+'"><b>'+E((r.net>0?'+':'')+fmt(r.net,0)+' '+r.unit)+'</b><small>'+E(T('નેટ','net'))+'</small></span></div>').join('')+'</div>'
+      +(f.days.length?'<div class="kb-ct"><span>'+E(T('દિવસ મુજબ (KG)','By day (KG)'))+'</span></div><div class="kb-rows">'+f.days.slice(0,40).map(d=>'<div class="kb-row">'+avatar(d.date,'📅')+'<span class="kb-rt"><b>'+E(dayLabel(d.date))+'</b><small>'+E('➕ '+fmt(d.inKg,0)+'  ➖ '+fmt(d.outKg,0))+'</small></span><span class="kb-ra"><b>'+E((d.inKg-d.outKg>0?'+':'')+fmt(d.inKg-d.outKg,0))+'</b></span></div>').join('')+'</div>':'')
+      :'<div class="kb-empty"><span aria-hidden="true">🔄</span><p>'+E(T('આ સમયમાં item વાળા ખરીદ / વેચાણ બિલ નથી.','No item purchase / sales bills in this period.'))+'</p></div>');
+}
+function tallyStockBind(S,body){
+  bindSeg(body,'kt-sk',v=>{S.sk=v;S.more=0;S.repaint();});
+  const sv=body.querySelector('#ks-save');
+  if(sv)sv.addEventListener('click',async()=>{
+    const g=id=>{const e=body.querySelector(id);return e?String(e.value).replace(/[^\d.\-]/g,''):'';},num=id=>{const v=g(id);return v===''||v==='-'?0:+v;};
+    const phys=g('#ks-phys');
+    sv.disabled=true;
+    try{await SET.save({stock:{openKg:num('#ks-open'),openDate:body.querySelector('#ks-od').value||'',adjKg:num('#ks-adj'),bagKg:num('#ks-bag'),physKg:phys===''?'':+phys,physDate:phys===''?'':today(),min:num('#ks-min')}});toast(T('✔ સાચવ્યું','✔ Saved'));}catch(e){status(body,err(e),true);}
+    S.repaint();
+  });
+}
+
+/* ---------------- Excel for the Parties / Sales / Stock tabs ---------------- */
+const openParty=name=>openTally({view:'party',party:name});
+function tallyListXl(S){
+  const per=(S.from?dmy(S.from):T('શરૂઆત','Start'))+' → '+(S.to?dmy(S.to):T('આજ','today'));
+  if(S.tab==='par'){
+    const rows=(S._plist||[]).map(p=>[p.name,p.kind,p.firmIds.map(firmName).join(', '),p.kacha,p.paka,p.net]);
+    return xl('Tally – '+T('ખાતા','Parties'),[{name:T('ખાતા','Parties'),title:T('ખાતા (નામ મુજબ, બધી ફર્મ)','Parties (by name, all firms)'),cols:[col(T('નામ','Name'),'s',30),col(T('પ્રકાર','Kind'),'s',12),col(T('ફર્મ','Firms'),'s',28),col(T('કાચું (Cr +)','Kacha (Cr +)'),'n',16),col(T('પાકું (Cr +)','Paka (Cr +)'),'n',16),col(T('કુલ (Cr +, Dr −)','Total (Cr +, Dr −)'),'n',16)],rows,nofoot:true}],'Tally','Tally-khata-'+today());
+  }
+  if(S.tab==='sal'){
+    const B=(S._sales&&S._sales.B)||[];
+    const bills=B.slice().sort((a,b)=>String(a.date).localeCompare(String(b.date))).map(b=>[dmy(b.date),firmName(b.firm),b.type+(b.no?' '+b.no:''),b.party,itemsTxt(b.items,6),b.kg,b.amount,b.net]);
+    const mk=by=>LM.summarize(B,by).rows.map(r=>[r.label,r.n,r.kg,r.avg,r.net]);
+    const sc=l=>[col(l,'s',28),col(T('બિલ','Bills'),'n',8),col('KG','n',12),col(T('સરેરાશ ₹/KG','Avg ₹/KG'),'n',12),col(T('GST વગર ₹','Net ₹'),'n',16)];
+    return xl('Tally – '+T('વેચાણ બિલ','Sales bills'),[
+      {name:T('બિલ','Bills'),title:T('વેચાણ બિલ','Sales bills'),cols:[col(T('તારીખ','Date'),'s',12),col(T('ફર્મ','Firm'),'s',18),col(T('બિલ','Bill'),'s',14),col(T('ખરીદનાર','Buyer'),'s',28),col(T('આઇટમ','Items'),'s',34),col('KG','n',12),col(T('બિલ કુલ ₹','Bill total ₹'),'n',16),col(T('GST વગર ₹','Net ₹'),'n',16)],rows:bills,nofoot:true},
+      {name:T('ખરીદનાર','Buyers'),title:T('ખરીદનાર મુજબ','By buyer'),cols:sc(T('ખરીદનાર','Buyer')),rows:mk('buyer'),nofoot:true},
+      {name:T('આઇટમ','Items'),title:T('આઇટમ મુજબ','By item'),cols:sc(T('આઇટમ','Item')),rows:mk('item'),nofoot:true},
+      {name:T('મહિના','Months'),title:T('મહિના મુજબ','By month'),cols:sc(T('મહિનો','Month')),rows:mk('month'),nofoot:true}],per,'Tally-sales-'+(S.to||today()));
+  }
+  /* stock */
+  const n=stockNums(S),e=n.est,c=n.cfg;
+  const tal=(S.stock||[]).map(x=>[firmName(x.firm),x.name,x.group||'',x.unit,x.qty,x.value]);
+  const f=LM.itemFlow(S.vs,{firm:S.firm,bagKg:c.bagKg});
+  return xl('Tally – '+T('સ્ટોક','Stock'),[
+    {name:T('અંદાજ સ્ટોક','Book stock'),title:T('અંદાજ સ્ટોક (KG)','Book stock (KG)'),cols:[col(T('વિગત','Detail'),'s',34),col('KG','n',16)],rows:[[T('શરૂઆતનો સ્ટોક','Opening stock'),e.open],[T('ઍપની ખરીદી','App purchases'),e.bought],[T('Tally વેચાણ','Tally sales'),-e.sold],[T('સુધારો','Adjustment'),e.adj],[T('અંદાજ સ્ટોક','Book stock'),e.est],[T('ખરેખર (ગણેલો)','Real count'),e.phys===null?'':e.phys],[T('ફરક','Difference'),e.diff===null||e.diff===undefined?'':e.diff]],nofoot:true},
+    {name:'Tally',title:T('Tally મુજબ સ્ટોક','Stock as per Tally'),cols:[col(T('ફર્મ','Firm'),'s',20),col(T('આઇટમ','Item'),'s',28),col(T('ગ્રુપ','Group'),'s',18),col(T('એકમ','Unit'),'s',8),col(T('જથ્થો','Qty'),'n',14),col(T('કિંમત ₹','Value ₹'),'n',16)],rows:tal,nofoot:true},
+    {name:T('આવક-જાવક','In-out'),title:T('આવક-જાવક (આઇટમ)','In / out (item)'),cols:[col(T('આઇટમ','Item'),'s',28),col(T('એકમ','Unit'),'s',8),col(T('આવક','In'),'n',14),col(T('જાવક','Out'),'n',14),col(T('નેટ','Net'),'n',14)],rows:f.rows.map(r=>[r.name,r.unit,r.inQ,r.outQ,r.net]),nofoot:true}],per,'Tally-stock-'+today());
+}
+/* ================= Vishleshan: more tools (khedut mel, nafo, trend, yaad-dasht, dalali, double party / voucher, one Excel) — READ ONLY ================= */
+const inR2=(d,f,t)=>!!d&&(!f||d>=f)&&(!t||d<=t);
+const perTxt=X=>(X.from?dmy(X.from):T('શરૂઆત','start'))+' → '+(X.to?dmy(X.to):T('આજ','today'));
+const sgm=n=>(n>0?'+':n<0?'−':'')+money(Math.abs(n));
+const psOf=X=>(X._ps&&X._ps.D===X.D)?X._ps:(X._ps={D:X.D,leds:X.D.leds||[]});
+const rid=()=>'r'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+
+/* ---------- reminders (yaad-dasht): kept in the shared settings so every admin phone sees them ---------- */
+const remList=()=>{const a=SET.get('rem.items',[]);return Array.isArray(a)?a:[];};
+const remSave=items=>SET.save({rem:{items:items.slice(-400)}});
+function remAddDlg(pre,done){
+  pre=pre||{};
+  const m=V().dialog('🔔 '+T('યાદ-દાસ્ત ઉમેરો','Add a reminder'),'<div class="kb-dlg"><label class="bz-f"><span>'+E(T('શું યાદ રાખવું?','What to remember?'))+'</span><input id="rm-t" type="text" autocomplete="off" value="'+E(pre.t||'')+'" placeholder="'+E(T('જેમ કે: રમેશભાઈને ફોન કરવો','e.g. call Ramesh'))+'"></label>'
+    +'<div class="bz-g2"><label class="bz-f"><span>'+E(T('ક્યારે','When'))+'</span><input id="rm-d" type="date" value="'+E(pre.d||TL.addDays(today(),1))+'"></label><label class="bz-f"><span>'+E(T('રકમ ₹ (વૈકલ્પિક)','Amount ₹ (optional)'))+'</span><input id="rm-a" type="text" inputmode="decimal" autocomplete="off" value="'+E(pre.amt||'')+'"></label></div>'
+    +'<div class="kt-btns"><button type="button" class="kt-b ok" id="rm-s">'+E(T('સાચવો','Save'))+'</button></div></div>');
+  const s=m.querySelector('#rm-s');
+  s.addEventListener('click',async()=>{
+    const t=clean(m.querySelector('#rm-t').value);if(!t){toast(T('શું યાદ રાખવું તે લખો','Write what to remember'),true);return;}
+    const d=m.querySelector('#rm-d').value||'',amt=+String(m.querySelector('#rm-a').value).replace(/[^\d.]/g,'')||0;
+    s.disabled=true;
+    try{await remSave(remList().concat([{id:rid(),t,d,amt,party:pre.party||'',done:0}]));toast(T('✔ યાદ-દાસ્ત સાચવી','✔ Reminder saved'));V().closeModal();if(done)done();}
+    catch(e){s.disabled=false;toast(err(e),true);}
+  });
+  return m;
+}
+
+/* ---------- low stock (dashboard alert) ---------- */
+function stockAttention(D){
+  const c=stk();if(!(c.min>0)||!c.openDate)return null;
+  const S={D,stock:D.stock||[]},n=stockNums(S);
+  if(n.est.est>=c.min)return null;
+  return {id:'lowstock',tone:'warn',ic:'📦',text:T('સ્ટોક ઓછો: '+fmt(n.est.est,0)+' KG (ચેતવણી '+fmt(c.min,0)+' KG)','Stock is low: '+fmt(n.est.est,0)+' KG (warning at '+fmt(c.min,0)+' KG)'),sub:T('અંદાજ સ્ટોક — ખરીદી ઍપ મુજબ, વેચાણ Tally મુજબ','Book stock — purchases per app, sales per Tally'),go:{tab:'stk',sk:'est'}};
+}
+
+const INS_MORE=()=>[
+  ['xchk','🔗',T('ખેડૂત મેળ (Tally ↔ ઍપ)','Farmer check (Tally ↔ app)'),T('Tally નું ખાતું અને ઍપનું ખાતું સરખાવો','Compare the Tally khata with the app khata')],
+  ['twice','🧬',T('Tally માં એક જ પાર્ટી બે વાર?','Same Tally party twice?'),T('મળતા નામ શોધી એક ખાતું કરો','Find similar names, make one ledger')],
+  ['nafo','💹',T('નફો (અંદાજ)','Profit (estimate)'),T('વેચાણ − ખરીદ ભાવ − ખર્ચ','Sales − buying cost − expenses')],
+  ['trend','🌊',T('રોકડ + બેંક ટ્રેન્ડ','Cash + bank trend'),T('રોજનું બેલેન્સ — ગ્રાફ','Daily balance — chart')],
+  ['rem','🔔',T('યાદ-દાસ્ત','Reminders'),T('ફોન કરવો, ચૂકવણી, વસૂલી — તારીખ સાથે','Calls, payments, collections — with dates')],
+  ['dal','🤝',T('દલાલી હિસાબ','Broker commission'),T('દલાલને કેટલું આપવાનું','What is due to each broker')],
+  ['dupv','🧾',T('Tally ડબલ વાઉચર','Double Tally vouchers'),T('એક જ વાઉચર બે વાર ચડ્યું?','Same voucher entered twice?')],
+  ['xall','📦',T('બધું એક Excel માં','Everything in one Excel'),T('ખરીદી, ખાતા, વેચાણ, સ્ટોક, ખર્ચ','Purchases, khata, sales, stock, expenses')]
+];
+
+Object.assign(TOOLS_UI,{
+  /* ---- Tally party vs app farmer ---- */
+  xchk(X){
+    X.xs=X.xs||'diff';
+    if(!X.cache.xc){
+      const ps=psOf(X),pc=partyCtx(ps),used=new Set(),rows=[],tonly=[];
+      pc.list.forEach(p=>{
+        if(p.kind!=='creditor')return;
+        const m=appFarmerFor(ps,p.name);
+        if(m&&m.f){used.add(m.f.key);rows.push({p,f:m.f,tally:p.net,app:m.f.balance,diff:r2(p.net-m.f.balance),score:m.score});}
+        else if(Math.abs(p.net)>=1)tonly.push(p);
+      });
+      const aonly=[...X.D.led.values()].filter(f=>!used.has(f.key)&&Math.abs(f.balance)>=1);
+      X.cache.xc={rows,tonly,aonly};
+    }
+    const c=X.cache.xc,bad=c.rows.filter(r=>Math.abs(r.diff)>=1).sort((a,b)=>Math.abs(b.diff)-Math.abs(a.diff)),good=c.rows.filter(r=>Math.abs(r.diff)<1);
+    const lim=40+X.more*40;
+    const tab=X.xs;
+    let list='';
+    if(tab==='diff'||tab==='ok'){
+      const a=tab==='diff'?bad:good;
+      list=a.length?'<div class="kb-rows">'+a.slice(0,lim).map(r=>kbRow(avatar(r.p.name,'👨‍🌾'),r.p.name+(r.score<1?' ⭐':''),'Tally '+money(Math.abs(r.tally))+crdr(r.tally)+' • '+T('ઍપ','App')+' '+money(Math.abs(r.app))+(r.app>0.5?' '+T('બાકી','due'):r.app<-0.5?' '+T('વધારે ચૂકવ્યું','overpaid'):''),tab==='diff'?sgm(r.diff):'✔',tab==='diff'?T('ફરક','diff'):'',tab==='diff'?'due':'',' data-xp="'+E(r.p.name)+'"')).join('')+'</div>'
+        +(a.length>lim?'<button type="button" class="bz-add" id="in-more">'+E(T('વધુ બતાવો','Show more'))+' ('+(a.length-lim)+')</button>':''):emptyBox(tab==='diff'?'✅':'🔗',tab==='diff'?T('કોઈ ફરક નથી — Tally અને ઍપ સરખા છે.','No differences — Tally and app agree.'):T('હજી કોઈ મળ્યું નથી.','None yet.'));
+    }else if(tab==='tonly'){
+      list=c.tonly.length?'<p class="v9-note">'+E(T('Tally માં દેવાદાર / લેણદાર છે પણ ઍપમાં આ નામનો ખેડૂત નથી (વેપારી, ભાડું… પણ હોઈ શકે).','In Tally but no farmer with this name in the app (could be traders, rent…).'))+'</p><div class="kb-rows">'+c.tonly.slice().sort((a,b)=>Math.abs(b.net)-Math.abs(a.net)).slice(0,lim).map(p=>kbRow(avatar(p.name,'🧑‍💼'),p.name,p.firmIds.map(f=>firmIc(f)+' '+(isKacha(f)?kachaLb():pakaLb())).join('  '),money(Math.abs(p.net)),crdr(p.net).trim(),'',' data-xp="'+E(p.name)+'"')).join('')+'</div>':emptyBox('✅',T('બધા Tally ના લેણદાર ઍપમાં મળી ગયા.','Every Tally creditor was found in the app.'));
+    }else{
+      list=c.aonly.length?'<p class="v9-note">'+E(T('ઍપમાં બાકી / વધારે છે પણ Tally માં આ નામ મળ્યું નથી — નામ જુદું લખ્યું હશે.','Open in the app but no Tally ledger with this name — probably spelt differently.'))+'</p><div class="kb-rows">'+c.aonly.slice().sort((a,b)=>Math.abs(b.balance)-Math.abs(a.balance)).slice(0,lim).map(f=>kbRow(avatar(f.name,'👨‍🌾'),f.name,f.mobile||'',money(Math.abs(f.balance)),f.balance>0?T('બાકી','due'):T('વધારે','over'),'',' data-xf="'+E(f.key)+'"')).join('')+'</div>':emptyBox('✅',T('ઍપના બધા ખેડૂત Tally માં મળ્યા.','All app farmers were found in Tally.'));
+    }
+    const html=seg('in-xs',[['diff','⚠ '+T('ફરક','Differences')+' '+bad.length],['ok','✔ '+T('સરખા','Match')+' '+good.length],['tonly','🧑‍💼 '+T('ફક્ત Tally','Tally only')+' '+c.tonly.length],['aonly','👨‍🌾 '+T('ફક્ત ઍપ','App only')+' '+c.aonly.length]],tab,'kb-sub')
+      +'<p class="v9-note kb-hint">'+E(T('Tally ના લેણદારનું બાકી (કાચું + પાકું) અને ઍપમાં એ જ નામના ખેડૂતનું બાકી સરખાવ્યું. દબાવો → આખું ખાતું.','Tally creditor balance (kacha + paka) against the app balance of the same-named farmer. Tap → full ledger.'))+'</p>'+list;
+    return {html,segs:{'in-xs':v=>{X.xs=v;}},
+      wa:()=>['🔗 *'+T('ખેડૂત મેળ','Farmer check')+'* • '+dmy(today())].concat(bad.slice(0,20).map(r=>'• '+r.p.name+': Tally '+money(Math.abs(r.tally))+' / '+T('ઍપ','App')+' '+money(Math.abs(r.app))+' ('+sgm(r.diff)+')')).join('\n'),
+      xl:()=>xl(T('ખેડૂત મેળ','Farmer check'),[{name:T('ફરક','Differences'),title:T('Tally ↔ ઍપ','Tally ↔ app'),cols:[col(T('નામ','Name'),'s',30),col('Tally (Cr +)','n',16),col(T('ઍપ બાકી','App due'),'n',16),col(T('ફરક','Diff'),'n',14)],rows:c.rows.map(r=>[r.p.name,r.tally,r.app,r.diff]),nofoot:true},
+        {name:T('ફક્ત Tally','Tally only'),title:T('ફક્ત Tally','Tally only'),cols:[col(T('નામ','Name'),'s',30),col('Tally (Cr +)','n',16)],rows:c.tonly.map(p=>[p.name,p.net]),nofoot:true},
+        {name:T('ફક્ત ઍપ','App only'),title:T('ફક્ત ઍપ','App only'),cols:[col(T('નામ','Name'),'s',30),col(T('ઍપ બાકી','App due'),'n',16)],rows:c.aonly.map(f=>[f.name,f.balance]),nofoot:true}],dmy(today()),'khedut-mel-'+today()),
+      bind:body=>{
+        body.querySelectorAll('[data-xp]').forEach(b=>b.addEventListener('click',()=>openParty(b.dataset.xp)));
+        body.querySelectorAll('[data-xf]').forEach(b=>b.addEventListener('click',()=>openLedger({farmer:b.dataset.xf})));
+      }};
+  },
+
+  /* ---- same party spelt two ways in Tally ---- */
+  twice(X){
+    if(!X.cache.tw){const ps=psOf(X);X.cache.tw=LM.dupParties(partyCtx(ps).list.filter(p=>p.n>0||p.hasLedger),sim,0.86);}
+    const nd=lsMap('bi-ins-nopar'),pid=p=>[p.a.key,p.b.key].sort().join('~'),list=X.cache.tw.filter(p=>!nd[pid(p)]),lim=20+X.more*20;
+    const html='<p class="v9-note">'+E(T('Tally માં એક જ પાર્ટી બે રીતે લખાઈ હોય તો બંને ખાતા ઍપમાં એક થઈ જશે (Tally માં કંઈ બદલાતું નથી). ભૂલ થાય તો ↩ પાછું લઈ શકાય.','If one party is spelt two ways in Tally, the app shows one ledger (nothing changes in Tally). ↩ Undo is available.'))+'</p>'
+      +(list.length?list.slice(0,lim).map(p=>{const A=p.a.n>=p.b.n?p.a:p.b,B=A===p.a?p.b:p.a;
+        return '<div class="kb-card in-dup"><div class="bz-kv"><span>'+E(A.name)+'</span><b>'+E(money(Math.abs(A.net))+crdr(A.net))+'</b></div><div class="bz-kv"><span>'+E(B.name)+'</span><b>'+E(money(Math.abs(B.net))+crdr(B.net))+'</b></div>'
+          +'<div class="kt-acts"><button type="button" class="kt-b ok" data-pm="'+E(pid(p))+'">✔ '+E(T('એક જ છે — જોડો','Same party — join'))+'</button><button type="button" class="kt-b no" data-pn="'+E(pid(p))+'">✖ '+E(T('અલગ છે','Different'))+'</button></div></div>';}).join('')
+        +(list.length>lim?'<button type="button" class="bz-add" id="in-more">'+E(T('વધુ બતાવો','Show more'))+' ('+(list.length-lim)+')</button>':''):emptyBox('✅',T('મળતા નામ નથી — બધું સરસ છે.','No similar names found.')))
+      +(X.lastPJoin?'<div class="kt-btns"><button type="button" class="kt-b" id="in-pundo">↩ '+E(T('છેલ્લું જોડાણ પાછું લો','Undo last join'))+': '+E(X.lastPJoin.name)+'</button></div>':'');
+    return {html,bind:body=>{
+      body.querySelectorAll('[data-pn]').forEach(b=>b.addEventListener('click',()=>{lsMark('bi-ins-nopar',b.dataset.pn,1);X.repaint();}));
+      body.querySelectorAll('[data-pm]').forEach(b=>b.addEventListener('click',async()=>{
+        const p=X.cache.tw.find(x=>pid(x)===b.dataset.pm);if(!p)return;const A=p.a.n>=p.b.n?p.a:p.b,B=A===p.a?p.b:p.a;
+        if(!(await askJoin(T('“'+B.name+'” ને “'+A.name+'” માં જોડવું? (ફક્ત ઍપમાં)','Join “'+B.name+'” into “'+A.name+'”? (app only)'),T('હા, જોડો','Yes, join'))))return;
+        b.disabled=true;
+        try{await SET.save({biz:{partyAlias:{[B.key]:A.key}}});X.lastPJoin={from:B.key,name:B.name+' → '+A.name};X.cache={};X.msg=T('✔ જોડાઈ ગયા.','✔ Joined.');}catch(e){X.msg=err(e);}
+        X.repaint();}));
+      const u=body.querySelector('#in-pundo');if(u)u.addEventListener('click',async()=>{try{await SET.save({biz:{partyAlias:{[X.lastPJoin.from]:''}}});X.lastPJoin=null;X.cache={};X.msg=T('↩ પાછું લીધું.','↩ Undone.');}catch(e){X.msg=err(e);}X.repaint();});
+    }};
+  },
+
+  /* ---- profit estimate ---- */
+  nafo(X){
+    const useApp=LS('bi-nf-app','1')!=='0',useTal=LS('bi-nf-tal','1')!=='0';
+    const from=X.from,to=X.to,vs=X.D.vouchers||[];
+    const B=billsOf(vs,{base:'sales',from,to}),mg=LM.margin(X.PR,B,from,to),a=IM.agg(X.PR,from,to);
+    const sNet=B.reduce((s,b)=>s+b.net,0),noKg=B.filter(b=>!b.kg),noKgNet=noKg.reduce((s,b)=>s+b.net,0);
+    const eApp=(X.exps||[]).filter(x=>inR2(x.exp_date,from,to)).reduce((s,x)=>s+n0(x.amount),0),eTal=IM.expenseSplit(vs.filter(v=>!v.cancelled),X.kind,from,to).total;
+    const exp=(useApp?eApp:0)+(useTal?eTal:0);
+    const gross=mg.total,net=gross-exp,cashView=sNet-a.amt-exp;
+    const html=periodBlock(X)
+      +'<div class="kb-hero"><span>💹 '+E(T('નફો (અંદાજ)','Profit (estimate)'))+'</span><b class="'+(net<0?'v9-bad':'')+'">'+E((net<0?'−':'')+money(Math.abs(net)))+'</b><small>'+E(T('વેચાણ KG × (વેચાણ ભાવ − સરેરાશ ખરીદ ભાવ) − ખર્ચ','sold KG × (selling rate − avg buying rate) − expenses'))+'</small></div>'
+      +'<div class="kb-card"><div class="kb-ct"><span>🧮 '+E(T('ગણતરી','Working'))+'</span></div>'
+      +kvRow('🧾 '+T('Tally વેચાણ (GST વગર)','Tally sales (without GST)'),money(sNet))
+      +kvRow('⚖️ '+T('વજન વાળા બિલ KG','KG on bills with weight'),fmt(mg.sellKg,0)+' KG')
+      +kvRow('➖ '+T('સરેરાશ ખરીદ ભાવ (ઍપ)','Avg buying rate (app)'),mg.buyAvg?'₹'+fmt(mg.buyAvg,2)+'/KG':'—')
+      +kvRow('➕ '+T('સરેરાશ વેચાણ ભાવ (Tally)','Avg selling rate (Tally)'),mg.sellAvg?'₹'+fmt(mg.sellAvg,2)+'/KG':'—')
+      +kvRow(T('કુલ નફો (ખર્ચ પહેલાં)','Gross profit (before expenses)'),(gross<0?'−':'')+money(Math.abs(gross)),true)
+      +'</div>'
+      +'<div class="kb-card"><div class="kb-ct"><span>💸 '+E(T('ખર્ચ','Expenses'))+'</span></div>'
+      +'<label class="kt-sw"><span>'+E(T('ઍપ ખર્ચ ગણો','Count app expenses'))+'<small>'+E(money(eApp))+'</small></span><input type="checkbox" id="nf-app"'+(useApp?' checked':'')+'><i></i></label>'
+      +'<label class="kt-sw"><span>'+E(T('Tally ખર્ચ ગણો','Count Tally expenses'))+'<small>'+E(money(eTal))+'</small></span><input type="checkbox" id="nf-tal"'+(useTal?' checked':'')+'><i></i></label>'
+      +'<p class="v9-note">'+E(T('એક જ ખર્ચ ઍપમાં અને Tally બંનેમાં લખ્યો હોય તો બે વાર ગણાય — એક બંધ કરો.','If the same expense is in both app and Tally it is counted twice — switch one off.'))+'</p>'
+      +kvRow(T('ગણેલો ખર્ચ','Counted expenses'),money(exp),true)+'</div>'
+      +'<div class="kb-card"><div class="kb-ct"><span>🔁 '+E(T('રોકડ નજરે (સરખામણી)','Cash view (comparison)'))+'</span></div>'
+      +kvRow(T('વેચાણ','Sales'),money(sNet))+kvRow(T('ખરીદી (ઍપ હિસાબ)','Purchases (app hisab)'),money(a.amt))+kvRow(T('ખર્ચ','Expenses'),money(exp))
+      +kvRow(T('વેચાણ − ખરીદી − ખર્ચ','Sales − purchases − expenses'),(cashView<0?'−':'')+money(Math.abs(cashView)),true)
+      +'<p class="v9-note">'+E(T('આ રીતમાં સ્ટોક વધ-ઘટ ગણાતી નથી — માલ ખરીદ્યો પણ વેચ્યો ન હોય તો નફો ઓછો દેખાય.','This view ignores stock change — goods bought but not yet sold make profit look lower.'))+'</p></div>'
+      +(noKg.length?'<p class="v9-note kb-hint">'+E(T(noKg.length+' વેચાણ બિલ ('+money(noKgNet)+') માં વજન નથી — તેનો નફો ગણાયો નથી.',noKg.length+' sales bills ('+money(noKgNet)+') have no weight — their profit is not counted.'))+'</p>':'')
+      +(!mg.sellKg||!mg.buyAvg?'<p class="v9-note kb-hint">'+E(T('અંદાજ માટે આ સમયમાં ખરીદ ભાવ (ઍપ) અને વજન વાળા વેચાણ બિલ (Tally) જોઈએ.','For an estimate this period needs buying rates (app) and sales bills with weight (Tally).'))+'</p>':'');
+    return {html,per:true,
+      wa:()=>['💹 *'+T('નફો (અંદાજ)','Profit (estimate)')+'* • '+perTxt(X),'🧾 '+T('વેચાણ','Sales')+': '+money(sNet),'⚖️ '+fmt(mg.sellKg,0)+' KG • ₹'+fmt(mg.sellAvg,2)+' − ₹'+fmt(mg.buyAvg,2)+' = ₹'+fmt(mg.perKg,2)+'/KG','💰 '+T('કુલ નફો','Gross')+': '+money(gross),'💸 '+T('ખર્ચ','Expenses')+': '+money(exp),'*'+T('ચોખ્ખો નફો (અંદાજ)','Net profit (est.)')+': '+(net<0?'−':'')+money(Math.abs(net))+'*'].join('\n'),
+      xl:()=>xl(T('નફો (અંદાજ)','Profit (estimate)'),[{name:T('નફો','Profit'),title:T('નફો (અંદાજ)','Profit (estimate)'),cols:[col(T('વિગત','Item'),'s',40),col(T('રકમ / KG','Value'),'n',18)],rows:[[T('Tally વેચાણ (GST વગર)','Tally sales (no GST)'),sNet],[T('વજન વાળા બિલ KG','KG on weighed bills'),mg.sellKg],[T('સરેરાશ ખરીદ ભાવ','Avg buying rate'),mg.buyAvg],[T('સરેરાશ વેચાણ ભાવ','Avg selling rate'),mg.sellAvg],[T('કુલ નફો','Gross profit'),gross],[T('ઍપ ખર્ચ','App expenses'),eApp],[T('Tally ખર્ચ','Tally expenses'),eTal],[T('ગણેલો ખર્ચ','Counted expenses'),exp],[T('ચોખ્ખો નફો (અંદાજ)','Net profit (est.)'),net],[T('ખરીદી (ઍપ)','Purchases (app)'),a.amt],[T('વેચાણ − ખરીદી − ખર્ચ','Sales − purchases − expenses'),cashView]],nofoot:true}],perTxt(X),'nafo-'+today()),
+      bind:body=>{
+        const ch=(id,k)=>{const e=body.querySelector(id);if(e)e.addEventListener('change',()=>{LSset(k,e.checked?'1':'0');X.repaint();});};
+        ch('#nf-app','bi-nf-app');ch('#nf-tal','bi-nf-tal');
+      }};
+  },
+
+  /* ---- cash + bank trend ---- */
+  trend(X){
+    const maxD=Math.max(7,Math.min(180,LM.diffDays(tallyFrom(),today())+1));
+    X.td=Math.min(X.td||30,maxD);
+    const tr=LM.moneyTrend(X.D.vouchers||[],X.D.leds||[],X.kind,today(),X.td),rows=tr.rows;
+    const hi=rows.reduce((m,r)=>r.bal>m.bal?r:m,rows[0]||{bal:0,date:''}),lo=rows.reduce((m,r)=>r.bal<m.bal?r:m,rows[0]||{bal:0,date:''});
+    const first=rows[0]?rows[0].bal:0,chg=tr.now-first;
+    const lastOpt=Math.min(maxD,90),opts=[7,30,60,90].filter(x=>x<lastOpt).concat([lastOpt]).map(x=>[x,String(x)]);
+    const html=seg('in-td',opts.map(x=>[x[0],x[1]+' '+T('દિવસ','days')]),X.td,'kb-sub')
+      +(X.D.leds&&X.D.leds.length?'':emptyBox('🌊',T('હજી Tally ના ખાતા આવ્યા નથી — Tally સિંક કરો.','No Tally ledgers yet — sync Tally.')))
+      +'<div class="kb-hero"><span>🌊 '+E(T('રોકડ + બેંક અત્યારે','Cash + bank now'))+'</span><b>'+E(money(tr.now))+'</b><small>'+E(T('છેલ્લા '+X.td+' દિવસમાં ','In the last '+X.td+' days ')+(chg>=0?'▲ ':'▼ ')+money(Math.abs(chg)))+'</small></div>'
+      +(rows.length>1?lineSvg(rows.map(r=>({date:r.date,min:r.bal,max:r.bal,avg:r.bal}))):'')
+      +'<div class="kb-card">'+kvRow('⬆️ '+T('સૌથી વધુ','Highest'),money(hi.bal)+' • '+dmy(hi.date).slice(0,5))+kvRow('⬇️ '+T('સૌથી ઓછું','Lowest'),money(lo.bal)+' • '+dmy(lo.date).slice(0,5))+'</div>'
+      +(tr.partial?'<p class="v9-note kb-hint">'+E(T(tr.partial+' વાઉચર જૂના સિંકના છે (સામેની બાજુ નથી) — “પૂરી તપાસ” પછી ગ્રાફ સાચો થશે.',tr.partial+' vouchers are from an older sync (other side missing) — the chart gets exact after a full sync.'))+'</p>':'')
+      +(X.td>=maxD&&maxD<90?'<p class="v9-note">'+E(T('Tally ની શરૂઆતની તારીખ '+dmy(tallyFrom())+' છે, એટલે તેનાથી પહેલાંનું નથી બતાવ્યું.','Tally start date is '+dmy(tallyFrom())+', so nothing earlier is shown.'))+'</p>':'')
+      +'<div class="kb-ct"><span>'+E(T('છેલ્લા દિવસો','Recent days'))+'</span></div><div class="kb-rows">'+rows.slice(-14).reverse().map(r=>kbRow(avatar(r.date,'📅'),dayLabel(r.date),'',money(r.bal),r.delta?(r.delta>0?'+':'−')+shortMoney(Math.abs(r.delta)):'',r.delta<0?'due':r.delta>0?'zero':'')).join('')+'</div>';
+    return {html,segs:{'in-td':v=>{X.td=+v;}},
+      wa:()=>['🌊 *'+T('રોકડ + બેંક','Cash + bank')+'* • '+dmy(today()),T('અત્યારે','Now')+': '+money(tr.now)].concat(rows.slice(-7).map(r=>dmy(r.date).slice(0,5)+' • '+money(r.bal)+(r.delta?' ('+(r.delta>0?'+':'−')+shortMoney(Math.abs(r.delta))+')':''))).join('\n'),
+      xl:()=>xl(T('રોકડ + બેંક ટ્રેન્ડ','Cash + bank trend'),[{name:T('ટ્રેન્ડ','Trend'),title:T('રોકડ + બેંક','Cash + bank'),cols:[col(T('તારીખ','Date'),'s',12),col(T('દિવસનો ફેરફાર','Day change'),'n',16),col(T('બેલેન્સ ₹','Balance ₹'),'n',16)],rows:rows.map(r=>[dmy(r.date),r.delta,r.bal]),nofoot:true}],X.td+' '+T('દિવસ','days'),'paisa-trend-'+today())};
+  },
+
+  /* ---- reminders ---- */
+  rem(X){
+    const all=remList(),sp=LM.remSplit(all,today()),L=T;
+    const grp=[['over','⏰ '+L('મોડી','Overdue'),sp.over],['today','📌 '+L('આજ','Today'),sp.today],['soon','🕒 '+L('આવતા 3 દિવસ','Next 3 days'),sp.soon],['later','🗓 '+L('પછી','Later'),sp.later]];
+    const item=r=>'<div class="kb-card kt-it"><div class="bz-kv"><span>'+E(r.t)+(r.party?'<small> • '+E(r.party)+'</small>':'')+'</span><b>'+E(r.amt?money(r.amt):'')+'</b></div><div class="bz-kv"><span>'+E(r.d?dayLabel(r.d):L('તારીખ નથી','No date'))+'</span><b></b></div>'
+      +'<div class="kt-acts"><button type="button" class="kt-b ok" data-rd="'+E(r.id)+'">✔ '+E(L('થઈ ગયું','Done'))+'</button><button type="button" class="kt-b" data-rs="'+E(r.id)+'">⏭ +1 '+E(L('દિવસ','day'))+'</button><button type="button" class="kt-b no" data-rx="'+E(r.id)+'">🗑</button></div></div>';
+    const html='<div class="kt-btns"><button type="button" class="kt-b ok" id="rm-add">➕ '+E(L('નવી યાદ-દાસ્ત','New reminder'))+'</button></div>'
+      +(all.filter(r=>!r.done).length?grp.filter(g=>g[2].length).map(g=>'<div class="kb-ct"><span>'+E(g[1])+' ('+g[2].length+')</span></div>'+g[2].map(item).join('')).join(''):emptyBox('🔔',L('કોઈ યાદ-દાસ્ત નથી. ઉપર “નવી” દબાવો.','No reminders. Tap “New” above.')))
+      +(sp.done.length?'<div class="kb-ct"><span>✔ '+E(L('પૂરી થયેલી','Done'))+' ('+sp.done.length+')</span></div><div class="kb-rows">'+sp.done.slice(-8).reverse().map(r=>kbRow(avatar(r.t,'✔'),r.t,(r.d?dmy(r.d):'')+(r.party?' • '+r.party:''),r.amt?money(r.amt):'','','',' data-ru="'+E(r.id)+'"')).join('')+'</div><p class="v9-note">'+E(L('પૂરી થયેલી દબાવો → પાછી ચાલુ.','Tap a done one → reopen it.'))+'</p>':'');
+    const wa=()=>['🔔 *'+L('યાદ-દાસ્ત','Reminders')+'* • '+dmy(today())].concat(sp.over.concat(sp.today,sp.soon,sp.later).slice(0,20).map(r=>'• '+(r.d?dmy(r.d).slice(0,5)+' ':'')+r.t+(r.amt?' ('+money(r.amt)+')':''))).join('\n');
+    return {html,wa,bind:body=>{
+      const upd=async fn=>{try{await remSave(fn(remList().slice()));}catch(e){X.msg=err(e);}X.repaint();};
+      body.querySelector('#rm-add').addEventListener('click',()=>remAddDlg({},()=>X.repaint()));
+      body.querySelectorAll('[data-rd]').forEach(b=>b.addEventListener('click',()=>upd(a=>a.map(r=>r.id===b.dataset.rd?Object.assign({},r,{done:1,doneAt:today()}):r))));
+      body.querySelectorAll('[data-ru]').forEach(b=>b.addEventListener('click',()=>upd(a=>a.map(r=>r.id===b.dataset.ru?Object.assign({},r,{done:0}):r))));
+      body.querySelectorAll('[data-rs]').forEach(b=>b.addEventListener('click',()=>upd(a=>a.map(r=>r.id===b.dataset.rs?Object.assign({},r,{d:TL.addDays(r.d&&r.d>today()?r.d:today(),1)}):r))));
+      body.querySelectorAll('[data-rx]').forEach(b=>b.addEventListener('click',async()=>{if(await ask(T('આ યાદ-દાસ્ત કાઢી નાખવી?','Delete this reminder?'),T('હા','Yes')))upd(a=>a.filter(r=>r.id!==b.dataset.rx));}));
+    }};
+  },
+
+  /* ---- broker commission ---- */
+  dal(X){
+    const cfg=Object.assign({unit:'kg',def:0,rates:{},paid:[]},SET.get('dal',{})||{}),unit=cfg.unit||'kg';
+    const dl=LM.dalali(X.PR,X.from,X.to,cfg.rates,cfg.def);
+    const dueOf=r=>unit==='pct'?r2(r.amt*r.rate/100):unit==='mann'?r2(r.kg/20*r.rate):r2(r.kg*r.rate);
+    const paidOf=k=>(cfg.paid||[]).filter(p=>p.k===k&&inR2(p.d,X.from,X.to)).reduce((s,p)=>s+n0(p.amt),0);
+    const rows=dl.rows.map(r=>{const due=dueOf(r),paid=paidOf(r.key);return Object.assign({},r,{due,paid,left:r2(due-paid)});});
+    const tot={due:r2(rows.reduce((s,r)=>s+r.due,0)),paid:r2(rows.reduce((s,r)=>s+r.paid,0))};
+    const ul={kg:T('₹ / KG','₹ / KG'),mann:T('₹ / મણ (20 KG)','₹ / mann (20 KG)'),pct:T('% રકમ પર','% of amount')}[unit];
+    const html=periodBlock(X)+seg('in-du',[['kg','₹/KG'],['mann',T('₹/મણ','₹/mann')],['pct','%']],unit,'kb-sub')
+      +'<div class="kb-card"><label class="bz-f"><span>'+E(T('બધા દલાલનો સામાન્ય દર','Default rate for all brokers'))+' ('+E(ul)+')</span><input id="dl-def" type="text" inputmode="decimal" autocomplete="off" value="'+(cfg.def||'')+'" placeholder="0"></label></div>'
+      +'<div class="kb-sumline"><span>'+rows.length+' '+E(T('દલાલ','brokers'))+' • '+E(T('ચૂકવ્યું','paid'))+' '+E(money(tot.paid))+'</span><b>'+E(money(tot.due))+'</b></div>'
+      +(rows.length?rows.map(r=>'<div class="kb-card"><div class="bz-kv"><span><b>'+E(r.name)+'</b></span><b>'+E(money(r.due))+'</b></div>'
+        +'<div class="bz-kv"><span>'+E(fmt(r.kg,0)+' KG • '+r.n+' '+T('ચિઠ્ઠી','chits')+' • '+r.farmers+' '+T('ખેડૂત','farmers'))+'</span><b></b></div>'
+        +'<div class="bz-g2"><label class="bz-f"><span>'+E(T('દર','Rate'))+' ('+E(ul)+')</span><input type="text" inputmode="decimal" autocomplete="off" data-dr="'+E(r.key)+'" value="'+(cfg.rates[r.key]!==undefined&&cfg.rates[r.key]!==''?E(String(cfg.rates[r.key])):'')+'" placeholder="'+E(String(cfg.def||0))+'"></label>'
+        +'<div class="bz-f"><span>'+E(T('બાકી','Balance'))+'</span><b class="'+(r.left>0.5?'v9-bad':'')+'">'+E(money(r.left))+'</b></div></div>'
+        +'<div class="kt-acts"><button type="button" class="kt-b ok" data-dp="'+E(r.key)+'">💸 '+E(T('ચૂકવ્યું','Paid'))+'</button><button type="button" class="kt-b" data-dw="'+E(r.key)+'">💬 '+E(T('દલાલને મોકલો','Send'))+'</button></div></div>').join(''):emptyBox('🤝',T('આ સમયમાં દલાલ વાળી ચિઠ્ઠી નથી.','No broker chits in this period.')))
+      +'<p class="v9-note">'+E(T('દલાલી ફક્ત ગણતરી માટે છે — ઍપ કે Tally માં કોઈ એન્ટ્રી થતી નથી. “ચૂકવ્યું” દબાવો તો ફક્ત અહીં નોંધ રહેશે.','Commission is a calculation only — no entry is made in the app or Tally. “Paid” just keeps a note here.'))+'</p>';
+    const wText=r=>['🤝 *'+T('દલાલી હિસાબ','Commission statement')+'* • '+perTxt(X),T('દલાલ','Broker')+': '+r.name,fmt(r.kg,0)+' KG • '+r.n+' '+T('ચિઠ્ઠી','chits'),T('દર','Rate')+': '+r.rate+' ('+ul+')','*'+T('દલાલી','Commission')+': '+money(r.due)+'*',r.paid?T('ચૂકવ્યું','Paid')+': '+money(r.paid):'','*'+T('બાકી','Balance')+': '+money(r.left)+'*'].filter(Boolean).join('\n');
+    return {html,per:true,segs:{'in-du':v=>{SET.save({dal:{unit:v}});}},
+      wa:()=>['🤝 *'+T('દલાલી હિસાબ','Commission')+'* • '+perTxt(X)].concat(rows.map(r=>'• '+r.name+' — '+fmt(r.kg,0)+' KG • '+money(r.due)+(r.left!==r.due?' ('+T('બાકી','left')+' '+money(r.left)+')':''))).concat(['','*'+T('કુલ','Total')+': '+money(tot.due)+'*']).join('\n'),
+      xl:()=>xl(T('દલાલી હિસાબ','Broker commission'),[{name:T('દલાલી','Commission'),title:T('દલાલી હિસાબ','Broker commission'),cols:[col(T('દલાલ','Broker'),'s',26),col(T('ચિઠ્ઠી','Chits'),'n',8),col(T('ખેડૂત','Farmers'),'n',8),col('KG','n',12),col(T('હિસાબ રકમ ₹','Hisab ₹'),'n',14),col(T('દર','Rate'),'n',10),col(T('દલાલી ₹','Commission ₹'),'n',14),col(T('ચૂકવ્યું ₹','Paid ₹'),'n',14),col(T('બાકી ₹','Balance ₹'),'n',14)],rows:rows.map(r=>[r.name,r.n,r.farmers,r.kg,r.amt,r.rate,r.due,r.paid,r.left]),nofoot:true}],perTxt(X)+' • '+ul,'dalali-'+today()),
+      bind:body=>{
+        const d=body.querySelector('#dl-def');if(d)d.addEventListener('change',async()=>{await SET.save({dal:{def:+String(d.value).replace(/[^\d.]/g,'')||0}});X.repaint();});
+        body.querySelectorAll('[data-dr]').forEach(i=>i.addEventListener('change',async()=>{const v=String(i.value).replace(/[^\d.]/g,'');await SET.save({dal:{rates:{[i.dataset.dr]:v===''?'':+v}}});X.repaint();}));
+        body.querySelectorAll('[data-dw]').forEach(b=>b.addEventListener('click',()=>{const r=rows.find(x=>x.key===b.dataset.dw);if(r)waOpen('',wText(r));}));
+        body.querySelectorAll('[data-dp]').forEach(b=>b.addEventListener('click',()=>{
+          const r=rows.find(x=>x.key===b.dataset.dp);if(!r)return;
+          const m=V().dialog('💸 '+r.name,'<div class="kb-dlg"><div class="bz-g2"><label class="bz-f"><span>'+E(T('રકમ ₹','Amount ₹'))+'</span><input id="dp-a" type="text" inputmode="decimal" autocomplete="off" value="'+(r.left>0?Math.round(r.left):'')+'"></label><label class="bz-f"><span>'+E(T('તારીખ','Date'))+'</span><input id="dp-d" type="date" value="'+E(today())+'"></label></div><div class="kt-btns"><button type="button" class="kt-b ok" id="dp-s">'+E(T('સાચવો','Save'))+'</button></div></div>');
+          m.querySelector('#dp-s').addEventListener('click',async()=>{
+            const amt=+String(m.querySelector('#dp-a').value).replace(/[^\d.]/g,'')||0;if(!(amt>0))return;
+            try{await SET.save({dal:{paid:(cfg.paid||[]).concat([{k:r.key,name:r.name,d:m.querySelector('#dp-d').value||today(),amt}]).slice(-600)}});V().closeModal();X.repaint();}catch(e){toast(err(e),true);}
+          });
+        }));
+      }};
+  },
+
+  /* ---- the same voucher twice ---- */
+  dupv(X){
+    const nd=lsMap('bi-ins-nodv'),gid=g=>g.vs.map(v=>v.firm+'|'+v.vkey).join('~');
+    const all=LM.dupVouchers(X.D.vouchers||[],{from:X.from,to:X.to}).filter(g=>!nd[gid(g)]),lim=25+X.more*25,L0=BASE_LB();
+    const html=periodBlock(X)+'<p class="v9-note">'+E(T('એક જ ફર્મ, એક જ પાર્ટી, એક જ રકમ, એક જ તારીખના 2 વાઉચર — ભૂલથી બે વાર ચડ્યા હોઈ શકે. Tally માં જઈને ચકાસો (અહીંથી કંઈ બદલાતું નથી).','Two vouchers with the same firm, party, amount and date — may have been entered twice. Check in Tally (nothing is changed from here).'))+'</p>'
+      +(all.length?all.slice(0,lim).map(g=>'<div class="kb-card"><div class="kb-ct"><span>'+E((BASE_IC[g.base]||'')+' '+(L0[g.base]||g.base)+' • '+g.party)+'</span></div>'
+        +kvRow(T('રકમ','Amount'),money(g.amount))+kvRow(T('તારીખ','Date'),dmy(g.date))+kvRow(T('ફર્મ','Firm'),firmName(g.firm))+kvRow(T('વાઉચર નંબર','Voucher nos.'),g.vs.map(v=>v.no||'—').join(', '))
+        +'<div class="kt-acts"><button type="button" class="kt-b" data-dv="'+E(gid(g))+'">🔍 '+E(T('જુઓ','View'))+'</button><button type="button" class="kt-b no" data-dn2="'+E(gid(g))+'">✖ '+E(T('બરાબર છે','It is fine'))+'</button></div></div>').join('')
+        +(all.length>lim?'<button type="button" class="bz-add" id="in-more">'+E(T('વધુ બતાવો','Show more'))+' ('+(all.length-lim)+')</button>':''):emptyBox('✅',T('આ સમયમાં ડબલ વાઉચર નથી.','No double vouchers in this period.')));
+    return {html,per:true,
+      wa:()=>['🧾 *'+T('ડબલ વાઉચર','Double vouchers')+'* • '+perTxt(X)].concat(all.slice(0,15).map(g=>'• '+dmy(g.date).slice(0,5)+' '+g.party+' '+money(g.amount)+' ('+g.vs.map(v=>v.no||'—').join(', ')+')')).join('\n'),
+      bind:body=>{
+        body.querySelectorAll('[data-dn2]').forEach(b=>b.addEventListener('click',()=>{lsMark('bi-ins-nodv',b.dataset.dn2,1);X.repaint();}));
+        body.querySelectorAll('[data-dv]').forEach(b=>b.addEventListener('click',()=>{const g=all.find(x=>gid(x)===b.dataset.dv);if(g)tallyVoucherDlg({},g.vs[0]);}));
+      }};
+  },
+
+  /* ---- everything in one Excel ---- */
+  xall(X){
+    const from=X.from,to=X.to,vs=(X.D.vouchers||[]).filter(v=>!v.cancelled),PRp=X.PR.filter(r=>inR2(r.date,from,to));
+    const pays=(X.D.pays||[]).filter(p=>inR2(p.pay_date,from,to)),exps=(X.exps||[]).filter(x=>inR2(x.exp_date,from,to));
+    const B=billsOf(vs,{base:'sales',from,to}),ps=psOf(X),pl=partyCtx(ps).list.filter(p=>Math.abs(p.net)>=0.5);
+    const tex=IM.expenseSplit(vs,X.kind,from,to),tr=LM.moneyTrend(X.D.vouchers||[],X.D.leds||[],X.kind,today(),30),sn=stockNums({D:X.D,stock:X.D.stock||[]});
+    const farmers=[...X.D.led.values()];
+    const counts=[['🌾',T('ખરીદી (ચિઠ્ઠી)','Purchases (chits)'),PRp.length],['👨‍🌾',T('ખેડૂત ખાતા','Farmer khata'),farmers.length],['💳',T('ચૂકવણી','Payments'),pays.length],['💸',T('ખર્ચ','Expenses'),exps.length+tex.ledgers.length],['🧾',T('Tally વેચાણ બિલ','Tally sales bills'),B.length],['👥',T('Tally ખાતા (નામ મુજબ)','Tally parties (by name)'),pl.length],['📦',T('સ્ટોક','Stock'),(X.D.stock||[]).length+1],['🌊',T('રોકડ ટ્રેન્ડ','Cash trend'),tr.rows.length]];
+    const html=periodBlock(X)+'<p class="v9-note">'+E(T('આ સમયનો બધો હિસાબ એક Excel ફાઇલમાં — અલગ અલગ શીટ. ખેડૂત ખાતા અને Tally ખાતા અત્યારના બાકી છે.','All records of this period in one Excel file — a sheet each. Farmer khata and Tally parties are current balances.'))+'</p>'
+      +'<div class="kb-card">'+counts.map(c=>kvRow(c[0]+' '+c[1],String(c[2]))).join('')+'</div>'
+      +'<div class="kt-btns"><button type="button" class="kt-b ok" id="xa-go">⬇️ '+E(T('Excel બનાવો','Make Excel'))+'</button></div>';
+    const make=()=>xl(T('બધો હિસાબ','All records'),[
+      {name:T('ખરીદી','Purchases'),title:T('ખરીદી (ચિઠ્ઠી)','Purchases (chits)'),cols:[col(T('તારીખ','Date'),'s',12),col(T('ચિઠ્ઠી','Chit'),'s',10),col(T('ખેડૂત','Farmer'),'s',26),col(T('ગામ','Village'),'s',16),col(T('દલાલ','Broker'),'s',16),col(T('માલ','Item'),'s',14),col('KG','n',12),col(T('ભાવ','Rate'),'n',10),col(T('રકમ ₹','Amount ₹'),'n',14)],rows:PRp.slice().sort((a,b)=>String(a.date).localeCompare(String(b.date))).map(r=>[dmy(r.date),r.no,r.farmer,r.village,r.broker,maalName(r.maal),r.kg,r.rate||'',r.pending?'':r.amt]),nofoot:true},
+      {name:T('ખેડૂત ખાતા','Farmer khata'),title:T('ખેડૂત ખાતા (અત્યારે)','Farmer khata (now)'),cols:[col(T('ખેડૂત','Farmer'),'s',28),col(T('મોબાઇલ','Mobile'),'s',14),col(T('કુલ હિસાબ ₹','Payable ₹'),'n',16),col(T('ચૂકવ્યું ₹','Paid ₹'),'n',16),col(T('બાકી ₹','Balance ₹'),'n',16)],rows:farmers.sort((a,b)=>b.balance-a.balance).map(f=>[f.name,f.mobile||'',f.payable,f.paid,f.balance]),nofoot:true},
+      {name:T('ચૂકવણી','Payments'),title:T('ચૂકવણી','Payments'),cols:[col(T('તારીખ','Date'),'s',12),col(T('ખેડૂત','Farmer'),'s',26),col(T('રીત','Mode'),'s',10),col(T('પ્રકાર','Kind'),'s',12),col(T('રકમ ₹','Amount ₹'),'n',14),col('UTR','s',20)],rows:pays.slice().sort((a,b)=>String(a.pay_date).localeCompare(String(b.pay_date))).map(p=>[dmy(p.pay_date),clean(p.farmer_name),p.mode||'',p.kind||'',n0(p.amount),p.utr||'']),nofoot:true},
+      {name:T('ખર્ચ','Expenses'),title:T('ખર્ચ (ઍપ + Tally)','Expenses (app + Tally)'),cols:[col(T('સ્ત્રોત','Source'),'s',12),col(T('તારીખ / ફર્મ','Date / firm'),'s',22),col(T('ખાતું / પ્રકાર','Ledger / category'),'s',28),col(T('રકમ ₹','Amount ₹'),'n',14)],rows:exps.map(x=>['App',dmy(x.exp_date),x.category||'',n0(x.amount)]).concat(tex.ledgers.map(l=>['Tally',firmName(l.firm),l.name,l.amt])),nofoot:true},
+      {name:T('Tally વેચાણ','Tally sales'),title:T('Tally વેચાણ બિલ','Tally sales bills'),cols:[col(T('તારીખ','Date'),'s',12),col(T('ફર્મ','Firm'),'s',18),col(T('બિલ','Bill'),'s',14),col(T('ખરીદનાર','Buyer'),'s',28),col(T('આઇટમ','Items'),'s',34),col('KG','n',12),col(T('બિલ કુલ ₹','Bill total ₹'),'n',16),col(T('GST વગર ₹','Net ₹'),'n',16)],rows:B.slice().sort((a,b)=>String(a.date).localeCompare(String(b.date))).map(b=>[dmy(b.date),firmName(b.firm),b.type+(b.no?' '+b.no:''),b.party,itemsTxt(b.items,6),b.kg,b.amount,b.net]),nofoot:true},
+      {name:T('Tally ખાતા','Tally parties'),title:T('Tally ખાતા (નામ મુજબ)','Tally parties (by name)'),cols:[col(T('નામ','Name'),'s',30),col(T('પ્રકાર','Kind'),'s',12),col(T('કાચું (Cr +)','Kacha (Cr +)'),'n',16),col(T('પાકું (Cr +)','Paka (Cr +)'),'n',16),col(T('કુલ (Cr +)','Total (Cr +)'),'n',16)],rows:pl.sort((a,b)=>Math.abs(b.net)-Math.abs(a.net)).map(p=>[p.name,p.kind,p.kacha,p.paka,p.net]),nofoot:true},
+      {name:T('સ્ટોક','Stock'),title:T('સ્ટોક','Stock'),cols:[col(T('વિગત','Item'),'s',34),col(T('જથ્થો','Qty'),'n',16),col(T('એકમ','Unit'),'s',8)],rows:[[T('અંદાજ સ્ટોક','Book stock'),sn.est.est,'KG'],[T('ખરેખર (ગણેલો)','Real count'),sn.est.phys===null?'':sn.est.phys,'KG']].concat((X.D.stock||[]).map(x=>['Tally: '+x.name+' ('+firmName(x.firm)+')',x.qty,x.unit])),nofoot:true},
+      {name:T('રોકડ ટ્રેન્ડ','Cash trend'),title:T('રોકડ + બેંક (30 દિવસ)','Cash + bank (30 days)'),cols:[col(T('તારીખ','Date'),'s',12),col(T('ફેરફાર ₹','Change ₹'),'n',16),col(T('બેલેન્સ ₹','Balance ₹'),'n',16)],rows:tr.rows.map(r=>[dmy(r.date),r.delta,r.bal]),nofoot:true}
+    ],perTxt(X),'badhu-hisab-'+today());
+    return {html,per:true,bind:body=>{body.querySelector('#xa-go').addEventListener('click',make);}};
+  }
+});
 /* ---------- tiles on the admin home (each can be switched on/off in the settings) ---------- */
 TL.extra.push(
   {key:'ledger',ic:'📒',label:()=>T('ખાતા','Khata'),fn:()=>openLedger()},
@@ -14001,7 +14957,7 @@ TL.extra.push(
 TL.afterTiles=applyTiles;
 SET.onChange(()=>{try{applyTiles();}catch(_){}});
 let _t=0;const _iv=setInterval(()=>{_t++;try{applyTiles();}catch(_){}if(_t>60)clearInterval(_iv);},1000);
-window.BalajiBiz={openLedger,buildLedger,fKey,matchFarmers,receiptText,statementText,openBatch,openExp,openSale,openProfit,openBizSettings,openTally,syncTally:syncAll,scopes,scopeLabel,saleText,loadAll,applyTiles,buildPR,attention,attentionGo,openInsights,tallyDay:{load:tallyDayLoad,lines:tallyDayLines}};
+window.BalajiBiz={openLedger,buildLedger,fKey,matchFarmers,receiptText,statementText,openBatch,openExp,openSale,openProfit,openBizSettings,openTally,syncTally:syncAll,scopes,scopeLabel,saleText,loadAll,applyTiles,buildPR,attention,attentionGo,openInsights,openParty,tallyDay:{load:tallyDayLoad,lines:tallyDayLines}};
 })();
 
 </script>
