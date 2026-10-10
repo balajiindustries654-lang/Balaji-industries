@@ -6851,6 +6851,19 @@ a.bz-wabtn,#admin a.bz-wabtn,.bi-v2-modal a.bz-wabtn{flex:1 1 0;display:inline-f
 .kt-bd:empty{display:none}.kt-bd{display:block}
 .kt-fn span{font-size:11px!important;color:#6a8184}
 .kt-firm label>span b{font-weight:800}
+.kt-two{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0 2px}
+.kt-ch:empty{display:none}.kt-ch small{display:block;font-size:11px;color:#6a8184;margin:2px 0 4px}
+.kt-chs{display:flex;flex-wrap:wrap;gap:6px}
+#admin button.kt-chip{width:auto;flex:none;min-height:32px;margin:0;padding:0 11px;border:1px solid #cfe3e4;border-radius:999px;background:#fff;color:#0b4a4d;font-size:12px;font-weight:800;box-shadow:none}
+#admin button.kt-chip.on{background:#e3f3f3;border-color:#0a9297}
+.kt-hl{display:flex;gap:9px;align-items:flex-start;padding:7px 2px;border-bottom:1px solid #eef3f3;font-size:12.5px;font-weight:700;color:#173438}
+.kt-hl:last-child{border-bottom:0}
+.kt-hl>b{flex:none;width:20px;text-align:center}
+.kt-hl>span{display:grid;gap:2px;min-width:0}
+.kt-hl small{font-size:11px;font-weight:500;color:#5c7478}
+.kt-hl.good>b{color:#17803d}.kt-hl.warn>b{color:#b07800}.kt-hl.bad>b{color:#a3202f}
+.kt-hl.bad>span{color:#a3202f}
+.kt-tips{margin:8px 0 0;padding-left:18px;display:grid;gap:6px;font-size:12px;color:#35575b}
 </style>
 <script id="bi-v9-qr">
 /* ================= Small QR-code maker (byte mode, level L or M, versions 1-14) ================= */
@@ -6938,7 +6951,7 @@ const DEF={
   biz:{process:false,tiles:{ledger:true,expense:true,profit:true,batch:false,sale:false,tally:true},alias:{},bankAlias:{},mannMaals:['Magfadi'],processMaals:['Magfadi'],
     grades:[{k:'50/60',kernel:1},{k:'60/70',kernel:1},{k:'70/80',kernel:1},{k:'80/90',kernel:1},{k:'90/100',kernel:1},{k:'100/110',kernel:1},{k:'એડિબલ',kernel:1},{k:'ફાડિયા',kernel:1},{k:'ટકાલો',kernel:1},{k:'વેસ્ટેજ',kernel:0}],
     cats:['દલાલી','મજૂરી','બારદાન','ગાડી ભાડું','લાઇટ બિલ','પ્રોસેસ ખર્ચ','GST','બીજા']},
-  tally:{firms:[{id:'patel',name:'Patel Enterprises',company:'PATEL ENTREPRISES'},{id:'shreenathji',name:'Shreenathji Enterprises',company:'SHREENATHJI ENTERPRISES'},{id:'balaji',name:'Balaji Industries',company:'BALAJI INDUSTRIES'}],from:'',auto:true,autoPay:true,payOk:false,vt:{},ignore:{},last:{}}
+  tally:{firms:[{id:'patel',name:'Patel Enterprises',company:'PATEL ENTREPRISES'},{id:'shreenathji',name:'Shreenathji Enterprises',company:'SHREENATHJI ENTERPRISES'},{id:'balaji',name:'Balaji Industries',company:'BALAJI INDUSTRIES'}],from:'',auto:true,every:5,win:14,mirror:true,autoPay:true,payOk:false,vt:{},ignore:{},last:{}}
 };
 const clone=o=>JSON.parse(JSON.stringify(o));
 const merge=(a,b)=>{if(!b||typeof b!=='object')return a;Object.keys(b).forEach(k=>{if(a[k]&&typeof a[k]==='object'&&!Array.isArray(a[k])&&b[k]&&typeof b[k]==='object')merge(a[k],b[k]);else if(b[k]!==undefined)a[k]=b[k];});return a;};
@@ -7945,7 +7958,7 @@ if(typeof module!=='undefined'&&module.exports)module.exports=api;
 
 </script>
 <script id="bi-v9-tally_ps">
-window.BalajiTallyLinkPS="# ===================================================================\n#  BALAJI TALLY LINK  -  READ ONLY\n#  App  <-  Tally   (data only comes OUT of Tally; nothing is ever written into Tally)\n#  Listens on 127.0.0.1 only. Needs TallyPrime running with its\n#  XML server ON (F1 Help > Settings > Connectivity > Client/Server, port 9000).\n# ===================================================================\n$ErrorActionPreference = 'Continue'\n$ListenPort = __PORT__\n$TallyHost  = '127.0.0.1'\n$TallyPort  = __TALLYPORT__\n$Allowed    = @(__ORIGINS__)\n$Latin1     = [System.Text.Encoding]::GetEncoding(28591)\n\ntry { $Host.UI.RawUI.WindowTitle = 'Balaji Tally Link - chalu rakho (minimize karo, band na karo)' } catch { }\nfunction Log([string]$m) { Write-Host ('[' + (Get-Date).ToString('HH:mm:ss') + '] ' + $m) }\n\n# ---- optional: start with Windows ---------------------------------\ntry {\n  $self = $env:BALAJI_LINK_SELF\n  if ($self -and -not $env:BALAJI_LINK_NOASK) {\n    $lnk = Join-Path ([Environment]::GetFolderPath('Startup')) 'Balaji Tally Link.lnk'\n    if (-not (Test-Path -LiteralPath $lnk)) {\n      Write-Host ''\n      $a = Read-Host 'Computer chalu thay tyare aa Tally Link auto chalu thay? (Y = haa / N = na)'\n      if ($a -match '^[Yy]') {\n        $ws = New-Object -ComObject WScript.Shell\n        $s = $ws.CreateShortcut($lnk)\n        $s.TargetPath = $self\n        $s.WindowStyle = 7\n        $s.Save()\n        Log 'Auto-start set thai gayu.'\n      }\n    }\n  }\n} catch { Log ('Auto-start set na thayu: ' + $_.Exception.Message) }\n\n# ---- helpers --------------------------------------------------------\nfunction Test-Tally {\n  try {\n    $c = New-Object System.Net.Sockets.TcpClient\n    $iar = $c.BeginConnect($TallyHost, $TallyPort, $null, $null)\n    $ok = $iar.AsyncWaitHandle.WaitOne(800, $false)\n    if ($ok -and $c.Connected) { $c.Close(); return $true }\n    $c.Close(); return $false\n  } catch { return $false }\n}\n\nfunction Decode-Tally([byte[]]$b) {\n  if ($b.Length -ge 2 -and $b[0] -eq 0xFF -and $b[1] -eq 0xFE) { return [System.Text.Encoding]::Unicode.GetString($b, 2, $b.Length - 2) }\n  if ($b.Length -ge 2 -and $b[0] -eq 0xFE -and $b[1] -eq 0xFF) { return [System.Text.Encoding]::BigEndianUnicode.GetString($b, 2, $b.Length - 2) }\n  if ($b.Length -ge 3 -and $b[0] -eq 0xEF -and $b[1] -eq 0xBB -and $b[2] -eq 0xBF) { return [System.Text.Encoding]::UTF8.GetString($b, 3, $b.Length - 3) }\n  if ($b.Length -ge 4 -and $b[1] -eq 0 -and $b[3] -eq 0) { return [System.Text.Encoding]::Unicode.GetString($b) }\n  return [System.Text.Encoding]::UTF8.GetString($b)\n}\n\nfunction Clean-Xml([string]$t) {\n  # Tally sometimes writes control characters that are illegal in XML\n  $t = [regex]::Replace($t, '&#(?:[0-8]|1[1-2]|1[4-9]|2[0-9]|3[0-1]);', '')\n  $t = [regex]::Replace($t, '&#x(?:[0-8]|0?[bBcC]|0?[eEfF]|1[0-9a-fA-F]);', '')\n  $t = [regex]::Replace($t, '[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F]', '')\n  $t = [regex]::Replace($t, '^\\s*<\\?xml[^>]*\\?>', '<?xml version=\"1.0\" encoding=\"UTF-8\"?>')\n  return $t\n}\n\nfunction Is-ReadOnly([string]$x) {\n  if ($x -notmatch '(?is)<TALLYREQUEST>\\s*Export') { return $false }\n  if ($x -match '(?is)<TALLYREQUEST>\\s*Import|IMPORTDATA|<TALLYMESSAGE|ACTION\\s*=\\s*\"?\\s*(Create|Alter|Delete|Cancel)') { return $false }\n  return $true\n}\n\nfunction Call-Tally([byte[]]$body) {\n  $req = [System.Net.HttpWebRequest]::Create('http://' + $TallyHost + ':' + $TallyPort + '/')\n  $req.Method = 'POST'\n  $req.ContentType = 'text/xml; charset=utf-8'\n  $req.Timeout = 600000\n  $req.ReadWriteTimeout = 600000\n  $req.KeepAlive = $false\n  $req.Proxy = $null\n  $req.ContentLength = $body.Length\n  $rs = $req.GetRequestStream(); $rs.Write($body, 0, $body.Length); $rs.Close()\n  $resp = $req.GetResponse()\n  $st = $resp.GetResponseStream()\n  $ms = New-Object System.IO.MemoryStream\n  $buf = New-Object byte[] 65536\n  while (($n = $st.Read($buf, 0, $buf.Length)) -gt 0) { $ms.Write($buf, 0, $n) }\n  $resp.Close()\n  return ,$ms.ToArray()\n}\n\nfunction Send-Reply($stream, [int]$code, [string]$reason, [string]$ctype, [byte[]]$body, [string]$origin) {\n  $h = 'HTTP/1.1 ' + $code + ' ' + $reason + \"`r`n\"\n  $h += 'Content-Type: ' + $ctype + \"`r`n\"\n  $h += 'Content-Length: ' + $body.Length + \"`r`n\"\n  if ($origin) {\n    $h += 'Access-Control-Allow-Origin: ' + $origin + \"`r`n\"\n    $h += \"Access-Control-Allow-Methods: GET, POST, OPTIONS`r`n\"\n    $h += \"Access-Control-Allow-Headers: Content-Type`r`n\"\n    $h += \"Access-Control-Allow-Private-Network: true`r`n\"\n    $h += \"Access-Control-Max-Age: 600`r`n\"\n    $h += \"Vary: Origin`r`n\"\n  }\n  $h += \"Cache-Control: no-store`r`nConnection: close`r`n`r`n\"\n  $hb = $Latin1.GetBytes($h)\n  $stream.Write($hb, 0, $hb.Length)\n  if ($body.Length -gt 0) { $stream.Write($body, 0, $body.Length) }\n  $stream.Flush()\n}\nfunction Reply-Text($stream, [int]$code, [string]$reason, [string]$text, [string]$origin) {\n  Send-Reply $stream $code $reason 'text/plain; charset=utf-8' ([System.Text.Encoding]::UTF8.GetBytes($text)) $origin\n}\n\nfunction Handle-Client($client) {\n  $client.ReceiveTimeout = 20000\n  $stream = $client.GetStream()\n  $ms = New-Object System.IO.MemoryStream\n  $buf = New-Object byte[] 65536\n  $headEnd = -1\n  while ($headEnd -lt 0) {\n    $n = $stream.Read($buf, 0, $buf.Length)\n    if ($n -le 0) { return }\n    $ms.Write($buf, 0, $n)\n    $headEnd = $Latin1.GetString($ms.ToArray()).IndexOf(\"`r`n`r`n\")\n    if ($ms.Length -gt 65536 -and $headEnd -lt 0) { return }\n  }\n  $all = $ms.ToArray()\n  $head = $Latin1.GetString($all, 0, $headEnd)\n  $lines = $head -split \"`r`n\"\n  $rl = $lines[0] -split ' '\n  $method = $rl[0].ToUpper(); $path = $rl[1]\n  $origin = ''; $clen = 0\n  foreach ($ln in $lines | Select-Object -Skip 1) {\n    $i = $ln.IndexOf(':'); if ($i -lt 1) { continue }\n    $k = $ln.Substring(0, $i).Trim().ToLower(); $v = $ln.Substring($i + 1).Trim()\n    if ($k -eq 'origin') { $origin = $v }\n    if ($k -eq 'content-length') { $clen = [int]$v }\n  }\n  $allow = ''\n  if ($origin) {\n    if ($Allowed -contains $origin) { $allow = $origin }\n    else { Log ('BLOCKED origin: ' + $origin); Reply-Text $stream 403 'Forbidden' 'origin not allowed' ''; return }\n  }\n  if ($method -eq 'OPTIONS') { Send-Reply $stream 204 'No Content' 'text/plain' (New-Object byte[] 0) $allow; return }\n  if ($method -eq 'GET' -and $path -like '/ping*') {\n    $t = if (Test-Tally) { 'true' } else { 'false' }\n    Reply-Text $stream 200 'OK' ('{\"ok\":true,\"tally\":' + $t + ',\"readonly\":true,\"v\":1}') $allow\n    return\n  }\n  if ($method -eq 'POST' -and $path -like '/tally*') {\n    $start = $headEnd + 4\n    $body = New-Object System.IO.MemoryStream\n    if ($all.Length -gt $start) { $body.Write($all, $start, $all.Length - $start) }\n    if ($clen -gt 20971520) { Reply-Text $stream 413 'Too Large' 'too big' $allow; return }\n    while ($body.Length -lt $clen) {\n      $n = $stream.Read($buf, 0, $buf.Length)\n      if ($n -le 0) { break }\n      $body.Write($buf, 0, $n)\n    }\n    $bytes = $body.ToArray()\n    $txt = [System.Text.Encoding]::UTF8.GetString($bytes)\n    if (-not (Is-ReadOnly $txt)) {\n      Log 'BLOCKED: request would change Tally (only Export is allowed)'\n      Reply-Text $stream 403 'Forbidden' 'READ-ONLY link: only Export requests are allowed' $allow\n      return\n    }\n    try {\n      $raw = Call-Tally $bytes\n      $out = Clean-Xml (Decode-Tally $raw)\n      Send-Reply $stream 200 'OK' 'text/xml; charset=utf-8' ([System.Text.Encoding]::UTF8.GetBytes($out)) $allow\n      Log ('Tally -> app: ' + $out.Length + ' chars')\n    } catch {\n      Log ('Tally error: ' + $_.Exception.Message)\n      Reply-Text $stream 502 'Bad Gateway' ('Tally ne pahonchi shakyu nahi: ' + $_.Exception.Message) $allow\n    }\n    return\n  }\n  Reply-Text $stream 404 'Not Found' 'not found' $allow\n}\n\n# ---- run ------------------------------------------------------------\n$listener = New-Object System.Net.Sockets.TcpListener([System.Net.IPAddress]::Loopback, $ListenPort)\ntry { $listener.Start() } catch {\n  Write-Host ''\n  Write-Host 'Aa port ma Tally Link pehla thi chalu chhe (athva port busy). Biji window band karo.'\n  Start-Sleep -Seconds 8\n  exit 1\n}\nWrite-Host '=========================================================='\nWrite-Host ' BALAJI TALLY LINK  -  chalu chhe  (fakt vanchva mate)'\nWrite-Host ' Tally -> App.  App thi Tally ma kai jatu nathi.'\nWrite-Host ' Aa window minimize karo, band na karo.'\nWrite-Host '=========================================================='\nif (Test-Tally) { Log ('Tally mali gayu (port ' + $TallyPort + ').') } else { Log 'Tally hamna nathi mantu - Tally chalu karo ane XML server ON karo.' }\nwhile ($true) {\n  if (-not $listener.Pending()) { Start-Sleep -Milliseconds 80; continue }\n  $client = $listener.AcceptTcpClient()\n  try { Handle-Client $client } catch { Log ('error: ' + $_.Exception.Message) } finally { try { $client.Close() } catch { } }\n}\n";
+window.BalajiTallyLinkPS="# ===================================================================\n#  BALAJI TALLY LINK  -  READ ONLY\n#  App  <-  Tally   (data only comes OUT of Tally; nothing is ever written into Tally)\n#  Listens on 127.0.0.1 only. Needs TallyPrime running with its\n#  XML server ON (F1 Help > Settings > Connectivity > Client/Server, port 9000).\n# ===================================================================\n$ErrorActionPreference = 'Continue'\n$ListenPort = __PORT__\n$TallyHost  = '127.0.0.1'\n$TallyPort  = __TALLYPORT__\n$Allowed    = @(__ORIGINS__)\n$Latin1     = [System.Text.Encoding]::GetEncoding(28591)\n\ntry { $Host.UI.RawUI.WindowTitle = 'Balaji Tally Link - chalu rakho (minimize karo, band na karo)' } catch { }\n\n# ---- everything the workers need (each request runs on its own thread, so a slow\n# ---- Tally can never make the link look \"not running\") --------------------------\n$Lib = @'\nfunction Log([string]$m) { [Console]::WriteLine('[' + (Get-Date).ToString('HH:mm:ss') + '] ' + $m) }\n\nfunction Test-Tally([int]$ms = 800) {\n  try {\n    $c = New-Object System.Net.Sockets.TcpClient\n    $iar = $c.BeginConnect($TallyHost, $TallyPort, $null, $null)\n    $ok = $iar.AsyncWaitHandle.WaitOne($ms, $false)\n    if ($ok -and $c.Connected) { $c.Close(); return $true }\n    $c.Close(); return $false\n  } catch { return $false }\n}\n\nfunction Decode-Tally([byte[]]$b) {\n  if ($b.Length -ge 2 -and $b[0] -eq 0xFF -and $b[1] -eq 0xFE) { return [System.Text.Encoding]::Unicode.GetString($b, 2, $b.Length - 2) }\n  if ($b.Length -ge 2 -and $b[0] -eq 0xFE -and $b[1] -eq 0xFF) { return [System.Text.Encoding]::BigEndianUnicode.GetString($b, 2, $b.Length - 2) }\n  if ($b.Length -ge 3 -and $b[0] -eq 0xEF -and $b[1] -eq 0xBB -and $b[2] -eq 0xBF) { return [System.Text.Encoding]::UTF8.GetString($b, 3, $b.Length - 3) }\n  if ($b.Length -ge 4 -and $b[1] -eq 0 -and $b[3] -eq 0) { return [System.Text.Encoding]::Unicode.GetString($b) }\n  return [System.Text.Encoding]::UTF8.GetString($b)\n}\n\nfunction Clean-Xml([string]$t) {\n  # Tally sometimes writes control characters that are illegal in XML\n  $t = [regex]::Replace($t, '&#(?:[0-8]|1[1-2]|1[4-9]|2[0-9]|3[0-1]);', '')\n  $t = [regex]::Replace($t, '&#x(?:[0-8]|0?[bBcC]|0?[eEfF]|1[0-9a-fA-F]);', '')\n  $t = [regex]::Replace($t, '[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F]', '')\n  $t = [regex]::Replace($t, '^\\s*<\\?xml[^>]*\\?>', '<?xml version=\"1.0\" encoding=\"UTF-8\"?>')\n  return $t\n}\n\nfunction Is-ReadOnly([string]$x) {\n  if ($x -notmatch '(?is)<TALLYREQUEST>\\s*Export') { return $false }\n  if ($x -match '(?is)<TALLYREQUEST>\\s*Import|IMPORTDATA|<TALLYMESSAGE|ACTION\\s*=\\s*\"?\\s*(Create|Alter|Delete|Cancel)') { return $false }\n  return $true\n}\n\nfunction Call-Tally([byte[]]$body) {\n  $req = [System.Net.HttpWebRequest]::Create('http://' + $TallyHost + ':' + $TallyPort + '/')\n  $req.Method = 'POST'\n  $req.ContentType = 'text/xml; charset=utf-8'\n  $req.Timeout = 600000\n  $req.ReadWriteTimeout = 600000\n  $req.KeepAlive = $false\n  $req.Proxy = $null\n  $req.ContentLength = $body.Length\n  $rs = $req.GetRequestStream(); $rs.Write($body, 0, $body.Length); $rs.Close()\n  $resp = $req.GetResponse()\n  $st = $resp.GetResponseStream()\n  $ms = New-Object System.IO.MemoryStream\n  $buf = New-Object byte[] 65536\n  while (($n = $st.Read($buf, 0, $buf.Length)) -gt 0) { $ms.Write($buf, 0, $n) }\n  $resp.Close()\n  return ,$ms.ToArray()\n}\n\nfunction Send-Reply($stream, [int]$code, [string]$reason, [string]$ctype, [byte[]]$body, [string]$origin) {\n  $h = 'HTTP/1.1 ' + $code + ' ' + $reason + \"`r`n\"\n  $h += 'Content-Type: ' + $ctype + \"`r`n\"\n  $h += 'Content-Length: ' + $body.Length + \"`r`n\"\n  if ($origin) {\n    $h += 'Access-Control-Allow-Origin: ' + $origin + \"`r`n\"\n    $h += \"Access-Control-Allow-Methods: GET, POST, OPTIONS`r`n\"\n    $h += \"Access-Control-Allow-Headers: Content-Type`r`n\"\n    $h += \"Access-Control-Allow-Private-Network: true`r`n\"\n    $h += \"Access-Control-Max-Age: 600`r`n\"\n    $h += \"Vary: Origin`r`n\"\n  }\n  $h += \"Cache-Control: no-store`r`nConnection: close`r`n`r`n\"\n  $hb = $Latin1.GetBytes($h)\n  $stream.Write($hb, 0, $hb.Length)\n  if ($body.Length -gt 0) { $stream.Write($body, 0, $body.Length) }\n  $stream.Flush()\n}\nfunction Reply-Text($stream, [int]$code, [string]$reason, [string]$text, [string]$origin) {\n  Send-Reply $stream $code $reason 'text/plain; charset=utf-8' ([System.Text.Encoding]::UTF8.GetBytes($text)) $origin\n}\n\nfunction Handle-Client($client) {\n  $client.ReceiveTimeout = 20000\n  $stream = $client.GetStream()\n  $ms = New-Object System.IO.MemoryStream\n  $buf = New-Object byte[] 65536\n  $headEnd = -1\n  while ($headEnd -lt 0) {\n    $n = $stream.Read($buf, 0, $buf.Length)\n    if ($n -le 0) { return }\n    $ms.Write($buf, 0, $n)\n    $headEnd = $Latin1.GetString($ms.ToArray()).IndexOf(\"`r`n`r`n\")\n    if ($ms.Length -gt 65536 -and $headEnd -lt 0) { return }\n  }\n  $all = $ms.ToArray()\n  $head = $Latin1.GetString($all, 0, $headEnd)\n  $lines = $head -split \"`r`n\"\n  $rl = $lines[0] -split ' '\n  $method = $rl[0].ToUpper(); $path = $rl[1]\n  $origin = ''; $clen = 0\n  foreach ($ln in $lines | Select-Object -Skip 1) {\n    $i = $ln.IndexOf(':'); if ($i -lt 1) { continue }\n    $k = $ln.Substring(0, $i).Trim().ToLower(); $v = $ln.Substring($i + 1).Trim()\n    if ($k -eq 'origin') { $origin = $v }\n    if ($k -eq 'content-length') { $clen = [int]$v }\n  }\n  $allow = ''\n  if ($origin) {\n    if ($Allowed -contains $origin) { $allow = $origin }\n    else { Log ('BLOCKED origin: ' + $origin); Reply-Text $stream 403 'Forbidden' 'origin not allowed' ''; return }\n  }\n  if ($method -eq 'OPTIONS') { Send-Reply $stream 204 'No Content' 'text/plain' (New-Object byte[] 0) $allow; return }\n  if ($method -eq 'GET' -and $path -like '/ping*') {\n    $t = if (Test-Tally 800) { 'true' } else { 'false' }\n    $bz = if ($TallyLock.CurrentCount -eq 0) { 'true' } else { 'false' }\n    Reply-Text $stream 200 'OK' ('{\"ok\":true,\"tally\":' + $t + ',\"busy\":' + $bz + ',\"readonly\":true,\"v\":2}') $allow\n    return\n  }\n  if ($method -eq 'POST' -and $path -like '/tally*') {\n    $start = $headEnd + 4\n    $body = New-Object System.IO.MemoryStream\n    if ($all.Length -gt $start) { $body.Write($all, $start, $all.Length - $start) }\n    if ($clen -gt 20971520) { Reply-Text $stream 413 'Too Large' 'too big' $allow; return }\n    while ($body.Length -lt $clen) {\n      $n = $stream.Read($buf, 0, $buf.Length)\n      if ($n -le 0) { break }\n      $body.Write($buf, 0, $n)\n    }\n    $bytes = $body.ToArray()\n    $txt = [System.Text.Encoding]::UTF8.GetString($bytes)\n    if (-not (Is-ReadOnly $txt)) {\n      Log 'BLOCKED: request would change Tally (only Export is allowed)'\n      Reply-Text $stream 403 'Forbidden' 'READ-ONLY link: only Export requests are allowed' $allow\n      return\n    }\n    $what = [regex]::Match($txt, '<ID>([^<]*)</ID>').Groups[1].Value\n    $co = [regex]::Match($txt, '<SVCURRENTCOMPANY>([^<]*)</SVCURRENTCOMPANY>').Groups[1].Value\n    $label = ($what + ' ' + $co).Trim()\n    # Tally answers one request at a time, so ours go to it one by one (pings are never held up)\n    $got = $TallyLock.Wait(900000)\n    if (-not $got) { Reply-Text $stream 503 'Busy' 'Tally bijo kaam kare chhe, thodi var pachi.' $allow; return }\n    try {\n      if (-not (Test-Tally 3000)) {\n        Log ('Tally error: port ' + $TallyPort + ' jawab nathi aapto (Tally band chhe athva XML server OFF chhe)')\n        Reply-Text $stream 502 'Bad Gateway' ('Tally ne pahonchi shakyu nahi: port ' + $TallyPort + ' jawab nathi aapto') $allow\n        return\n      }\n      try {\n        $raw = Call-Tally $bytes\n        $out = Clean-Xml (Decode-Tally $raw)\n        Send-Reply $stream 200 'OK' 'text/xml; charset=utf-8' ([System.Text.Encoding]::UTF8.GetBytes($out)) $allow\n        Log ('Tally -> app: ' + $out.Length + ' chars  [' + $label + ']')\n        $le = [regex]::Match($out, '<LINEERROR>([^<]*)</LINEERROR>')\n        if ($le.Success) { $m = $le.Groups[1].Value; if ($m.Length -gt 160) { $m = $m.Substring(0, 160) }; Log ('   Tally e error aapyo: ' + $m) }\n      } catch {\n        Log ('Tally error: ' + $_.Exception.Message)\n        Reply-Text $stream 502 'Bad Gateway' ('Tally ne pahonchi shakyu nahi: ' + $_.Exception.Message) $allow\n      }\n    } finally { [void]$TallyLock.Release() }\n    return\n  }\n  Reply-Text $stream 404 'Not Found' 'not found' $allow\n}\n'@\n. ([scriptblock]::Create($Lib))\n\n$TallyLock = New-Object System.Threading.SemaphoreSlim(1, 1)\n\n# ---- optional: start with Windows ---------------------------------\ntry {\n  $self = $env:BALAJI_LINK_SELF\n  if ($self -and -not $env:BALAJI_LINK_NOASK) {\n    $lnk = Join-Path ([Environment]::GetFolderPath('Startup')) 'Balaji Tally Link.lnk'\n    if (-not (Test-Path -LiteralPath $lnk)) {\n      Write-Host ''\n      $a = Read-Host 'Computer chalu thay tyare aa Tally Link auto chalu thay? (Y = haa / N = na)'\n      if ($a -match '^[Yy]') {\n        $ws = New-Object -ComObject WScript.Shell\n        $s = $ws.CreateShortcut($lnk)\n        $s.TargetPath = $self\n        $s.WindowStyle = 7\n        $s.Save()\n        Log 'Auto-start set thai gayu.'\n      }\n    }\n  }\n} catch { Log ('Auto-start set na thayu: ' + $_.Exception.Message) }\n\n# ---- run ------------------------------------------------------------\n$Worker = {\n  param($client, $Lib, $TallyHost, $TallyPort, $Allowed, $TallyLock)\n  $Latin1 = [System.Text.Encoding]::GetEncoding(28591)\n  . ([scriptblock]::Create($Lib))\n  try { Handle-Client $client }\n  catch {\n    $m = $_.Exception.Message\n    if ($m -match 'aborted|forcibly closed|connection was closed') { Log 'App e connection band kari (vandho nathi).' }\n    else { Log ('error: ' + $m) }\n  }\n  finally { try { $client.Close() } catch { } }\n}\n$WorkerText = $Worker.ToString()\n\n$listener = New-Object System.Net.Sockets.TcpListener([System.Net.IPAddress]::Loopback, $ListenPort)\ntry { $listener.Start() } catch {\n  Write-Host ''\n  Write-Host 'Aa port ma Tally Link pehla thi chalu chhe (athva port busy). Biji window band karo.'\n  Start-Sleep -Seconds 8\n  exit 1\n}\n$pool = [runspacefactory]::CreateRunspacePool(1, 12)\n$pool.Open()\n$jobs = New-Object System.Collections.ArrayList\nWrite-Host '=========================================================='\nWrite-Host ' BALAJI TALLY LINK  -  chalu chhe  (fakt vanchva mate)'\nWrite-Host ' Tally -> App.  App thi Tally ma kai jatu nathi.'\nWrite-Host ' Aa window minimize karo, band na karo.'\nWrite-Host '=========================================================='\nif (Test-Tally 800) { Log ('Tally mali gayu (port ' + $TallyPort + ').') } else { Log 'Tally hamna nathi mantu - Tally chalu karo ane XML server ON karo.' }\n$lastClean = Get-Date\nwhile ($true) {\n  if ($listener.Pending()) {\n    $client = $listener.AcceptTcpClient()\n    try {\n      $ps = [powershell]::Create()\n      $ps.RunspacePool = $pool\n      [void]$ps.AddScript($WorkerText).AddArgument($client).AddArgument($Lib).AddArgument($TallyHost).AddArgument($TallyPort).AddArgument($Allowed).AddArgument($TallyLock)\n      $h = $ps.BeginInvoke()\n      [void]$jobs.Add(@($ps, $h))\n    } catch { Log ('error: ' + $_.Exception.Message); try { $client.Close() } catch { } }\n  } else { Start-Sleep -Milliseconds 40 }\n  if (((Get-Date) - $lastClean).TotalSeconds -gt 3) {\n    $lastClean = Get-Date\n    for ($i = $jobs.Count - 1; $i -ge 0; $i--) {\n      $j = $jobs[$i]\n      if ($j[1].IsCompleted) { try { [void]$j[0].EndInvoke($j[1]) } catch { }; try { $j[0].Dispose() } catch { }; $jobs.RemoveAt($i) }\n    }\n  }\n}\n";
 </script>
 <script id="bi-v9-core">
 /* ================= Balaji core: utilities, page painter, PDF + XLSX writers, delivery ================= */
@@ -11906,7 +11919,11 @@ const firmIc=id=>FIRM_IC[Math.max(0,FIRMS().findIndex(x=>x.id===id))%FIRM_IC.len
 const isTallyPC=()=>LS('bi-tally-pc','0')==='1';
 const RELAY=()=>LS('bi-tally-relay','http://127.0.0.1:9100');
 const lastLocal=()=>{try{return JSON.parse(LS('bi-tally-last','{}'))||{};}catch(_){return {};}};
-const tlog=m=>{try{const a=JSON.parse(LS('bi-tally-log','[]'));a.unshift(new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata',hour12:false})+'  '+m);LSset('bi-tally-log',JSON.stringify(a.slice(0,60)));}catch(_){}};
+const tlog=m=>{try{
+  const a=JSON.parse(LS('bi-tally-log','[]')),now=new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata',hour12:false});
+  const top=String(a[0]||''),mm=/^(.*?)  (.*?)(?: \(×(\d+)\))?$/s.exec(top);
+  if(mm&&mm[2]===m){a[0]=now+'  '+m+' (×'+((+mm[3]||1)+1)+')';}else a.unshift(now+'  '+m);
+  LSset('bi-tally-log',JSON.stringify(a.slice(0,80)));}catch(_){}};
 const tallyFrom=()=>{const f=TS().from;return /^\d{4}-\d{2}-\d{2}$/.test(f||'')?f:TL.monthStart(today());};
 
 /* ---- the Tally Link program on the Tally computer (read only) ---- */
@@ -11915,16 +11932,25 @@ async function fetchT(url,opt,ms){
   try{return await fetch(url,Object.assign({},opt||{},ac?{signal:ac.signal}:{}));}finally{if(t)clearTimeout(t);}
 }
 async function relayPing(){
-  try{const r=await fetchT(RELAY()+'/ping',{cache:'no-store'},2500);if(!r.ok)return null;return await r.json();}catch(_){return null;}
+  for(let i=0;i<2;i++){
+    try{const r=await fetchT(RELAY()+'/ping',{cache:'no-store'},i?6000:3500);if(r.ok){const j=await r.json();if(j&&typeof j==='object')return j;}}catch(_){}
+    await new Promise(r=>setTimeout(r,350));
+  }
+  return null;
 }
+/* errors from the link carry a kind: link (program not running) | down (Tally not answering) | busy | blocked | company | other */
+const kerr=(kind,msg)=>{const e=new Error(msg);e.kind=kind;return e;};
+const MSG_LINK=()=>T('Tally Link પ્રોગ્રામ ચાલુ નથી (Tally વાળા કમ્પ્યુટર પર Tally-Link.bat ચલાવો) — અથવા Chrome માં “Local network access” Block છે.','Tally Link is not running (run Tally-Link.bat on the Tally computer) — or Chrome has “Local network access” blocked.');
+const MSG_DOWN=()=>T('Tally જવાબ આપતું નથી — Tally ચાલુ છે? F1 → Settings → Connectivity → Client/Server → Both, Port 9000.','Tally is not answering — is Tally open? F1 → Settings → Connectivity → Client/Server → Both, Port 9000.');
 async function tcall(xml){
   let r;
   try{r=await fetchT(RELAY()+'/tally',{method:'POST',headers:{'Content-Type':'text/plain'},body:xml,cache:'no-store'},600000);}
-  catch(_){throw new Error(T('Tally Link program chalu nathi (aa computer par).','Tally Link program is not running (on this computer).'));}
+  catch(_){throw kerr('link',MSG_LINK());}
   const t=await r.text();
-  if(r.status===403)throw new Error(T('Tally Link e request block kari.','Tally Link blocked the request.'));
-  if(!r.ok)throw new Error(T('Tally sudhi pahonchaayu nahi — Tally chalu chhe ane XML server ON chhe?','Could not reach Tally — is Tally open with the XML server ON?'));
-  const er=TM.tallyError(t);if(er)throw new Error(er);
+  if(r.status===403)throw kerr('blocked',T('Tally Link એ request બ્લોક કરી.','Tally Link blocked the request.'));
+  if(r.status===503)throw kerr('busy',T('Tally બીજું કામ કરે છે — થોડી વારમાં ફરી પ્રયત્ન થશે.','Tally is busy with something else — will try again shortly.'));
+  if(!r.ok)throw kerr('down',MSG_DOWN());
+  const er=TM.tallyError(t);if(er)throw kerr(/SVCurrentCompany|company/i.test(er)?'company':'other',er);
   return t;
 }
 
@@ -11970,12 +11996,15 @@ async function saveVouchers(firm,vs,from,to,opts){
     rows.push(vToRow(firm,v));
   });
   await upsertChunks(TT.v,rows,'firm,vkey');
-  let del=0;
+  let del=0,skipped=0;
   if(opts.prune){
     const fresh=new Set(vs.map(v=>v.vkey));
-    for(const r of ex){if(r.src==='xml'&&!fresh.has(r.vkey)){await db.from(TT.v).delete().eq('id',r.id);del++;}}
+    const gone=ex.filter(r=>r.src==='xml'&&!fresh.has(r.vkey));
+    /* safety: if Tally suddenly "forgets" most of what we had (wrong company / period / half answer), keep our copy */
+    if(gone.length>Math.max(5,Math.floor(ex.length*0.4)))skipped=gone.length;
+    else for(const r of gone){await db.from(TT.v).delete().eq('id',r.id);del++;}
   }
-  return {add,upd,del};
+  return {add,upd,del,skipped};
 }
 async function saveLedgers(firm,leds){
   const ex=await qAll(TT.l,[['eq','firm',firm]]);
@@ -12001,11 +12030,11 @@ function resolveCompany(typed,comps){
 const noCompany=(f,comps)=>new Error(T('Tally ma "'+f.company+'" company khuli nathi (athva naam alag chhe). Tally ni company: ','Company "'+f.company+'" is not open in Tally (or the name differs). Tally companies: ')+((comps||[]).join(', ')||'—'));
 async function syncFirm(f,opt){
   opt=opt||{};
-  const comps=TM.parseCompanies(await tcall(TM.reqCompanies()));
+  const comps=opt.comps||TM.parseCompanies(await tcall(TM.reqCompanies()));
   const real=resolveCompany(f.company,comps);
   let types;
   try{types=TM.parseVoucherTypes(await tcall(TM.reqVoucherTypes(real)));}
-  catch(e){if(/SVCurrentCompany|company/i.test(String(e&&e.message)))throw noCompany(f,comps);throw e;}
+  catch(e){if(e&&e.kind==='company'||/SVCurrentCompany|company/i.test(String(e&&e.message))){const ne=noCompany(f,comps);ne.kind='company';throw ne;}throw e;}
   const base=TM.baseResolver(types,TS().vt||{});
   let nl=0;
   if(!opt.noLedgers){const leds=TM.parseLedgers(await tcall(TM.reqLedgers(real)));await saveLedgers(f.id,leds);nl=leds.length;}
@@ -12017,7 +12046,7 @@ async function syncFirm(f,opt){
     vs.push(...part);a=TL.addDays(b,1);
   }
   const r=await saveVouchers(f.id,vs,from,to,{prune:true});
-  return {n:vs.length,add:r.add,upd:r.upd,del:r.del,ledgers:nl};
+  return {n:vs.length,add:r.add,upd:r.upd,del:r.del,skipped:r.skipped||0,ledgers:nl};
 }
 
 /* ---- farmer payments from Tally vouchers -> khata ---- */
@@ -12092,29 +12121,39 @@ async function mirrorPayments(D,ranges){
 
 /* ---- one full cycle (only on the Tally computer) ---- */
 let tBusy=false;
+const tcSet=(k,d)=>{const v=n0(TS()[k]);return v>0?v:d;};
 async function syncAll(opt){
   opt=opt||{};
   if(tBusy)return {busy:true};
-  tBusy=true;const res={ok:true,firms:{},msg:''};
+  tBusy=true;const res={ok:true,firms:{},msg:'',kind:''};
   try{
     const ping=await relayPing();
-    if(!ping){res.ok=false;res.msg=T('Tally Link program chalu nathi','Tally Link is not running');return res;}
-    if(!ping.tally){res.ok=false;res.msg=T('Tally chalu nathi (athva XML server band chhe)','Tally is not running (or its XML server is off)');return res;}
+    if(!ping){res.ok=false;res.kind='link';res.msg=MSG_LINK();tlog('✗ '+res.msg);return res;}
+    if(!ping.tally){res.ok=false;res.kind='down';res.msg=MSG_DOWN();tlog('✗ '+res.msg);return res;}
     const t=today(),floor=tallyFrom(),ranges=[];let sqlBad=false;
-    const from=opt.full?floor:(()=>{const w=TL.addDays(t,-14);return w<floor?floor:w;})();
+    const win=Math.max(3,Math.min(120,tcSet('win',14)));
+    const from=opt.full?floor:(()=>{const w=TL.addDays(t,-win);return w<floor?floor:w;})();
+    /* the list of companies Tally has is asked once per round (not once per firm) */
+    let comps=null;
+    try{comps=TM.parseCompanies(await tcall(TM.reqCompanies()));}
+    catch(e){if(e&&(e.kind==='link'||e.kind==='down'||e.kind==='busy')){res.ok=false;res.kind=e.kind;res.msg=emsg(e);tlog('✗ '+emsg(e));return res;}}
     for(const f of FIRMS()){
       if(!clean(f.company))continue;
       try{
-        const r=await syncFirm(f,{from,to:t});res.firms[f.id]=r;ranges.push({firm:f.id,from,to:t,n:r.n});tlog(f.name+': '+r.n+' voucher ('+r.add+' navi, '+r.upd+' jaana, '+r.del+' kadhya), '+r.ledgers+' khata');
+        const r=await syncFirm(f,{from,to:t,comps});res.firms[f.id]=r;ranges.push({firm:f.id,from,to:t,n:r.n});
+        tlog(f.name+': '+r.n+' voucher ('+r.add+' navi, '+r.upd+' jaana, '+r.del+' kadhya), '+r.ledgers+' khata');
+        if(r.skipped){tlog('⚠ '+f.name+': Tally e ghana ochha voucher aapya — jaana '+r.skipped+' voucher kadhya nathi (safety). Tally ma company/tarikh barabar chhe?');res.warn=(res.warn?res.warn+' • ':'')+f.name+': '+r.skipped+' '+T('જૂના વાઉચર રાખ્યા (સલામતી)','old vouchers kept (safety)');}
       }catch(e){
         const h=tsqlHint(e);
         if(/supabase-tally/.test(h)){res.ok=false;res.msg=h;tlog('✗ '+h);sqlBad=true;break;}
+        /* link / Tally down / busy would fail the same way for every firm: stop the round with one clear message */
+        if(e&&(e.kind==='link'||e.kind==='down'||e.kind==='busy')){res.ok=false;res.kind=e.kind;res.msg=emsg(e);tlog('✗ '+emsg(e));break;}
         res.firms[f.id]={err:emsg(e)};res.ok=false;res.msg=(res.msg?res.msg+' • ':'')+f.name+': '+emsg(e);tlog(f.name+' ✗ '+emsg(e));
       }
     }
-    if(!sqlBad)try{
+    if(!sqlBad&&!res.kind)try{
       const D=await loadPlanData();
-      const ch=await mirrorPayments(D,ranges);
+      const ch=TS().mirror===false?0:await mirrorPayments(D,ranges);
       if(ch){const D2=await loadPlanData();Object.assign(D,D2);}
       const items=makePlan(D),ready=items.filter(i=>i.state==='ready');
       res.ready=ready.length;res.review=items.filter(i=>i.state==='review').length;
@@ -12123,16 +12162,26 @@ async function syncAll(opt){
   }catch(e){res.ok=false;res.msg=err(e);}
   finally{
     tBusy=false;
-    /* kept on this computer only: saving it in the shared settings every 5 minutes could overwrite a change made on another device */
-    LSset('bi-tally-last',JSON.stringify({at:new Date().toISOString(),ok:res.ok,msg:res.msg||'',n:Object.values(res.firms).reduce((s,x)=>s+(x.n||0),0),imp:res.imported||0}));
+    /* kept on this computer only: saving it in the shared settings every few minutes could overwrite a change made on another device */
+    LSset('bi-tally-last',JSON.stringify({at:new Date().toISOString(),ok:res.ok,kind:res.kind||'',msg:res.msg||'',warn:res.warn||'',n:Object.values(res.firms).reduce((s,x)=>s+(x.n||0),0),imp:res.imported||0,review:res.review||0}));
   }
   return res;
 }
-let tTimer=0;
+let tTimer=0,tLastTry=0;
+const everyMs=()=>Math.max(1,tcSet('every',5))*60*1000;
+function tallyTick(force){
+  try{
+    if(!(isAdmin()&&isTallyPC()&&TS().auto!==false))return;
+    if(!force&&Date.now()-tLastTry<everyMs()-5000)return;
+    tLastTry=Date.now();syncAll({});
+  }catch(_){}
+}
 function tallyAuto(){
   if(tTimer)return;
-  tTimer=setInterval(()=>{try{if(isAdmin()&&isTallyPC()&&TS().auto!==false)syncAll({});}catch(_){}},5*60*1000);
-  setTimeout(()=>{try{if(isAdmin()&&isTallyPC()&&TS().auto!==false)syncAll({});}catch(_){}},25000);
+  tTimer=setInterval(()=>tallyTick(false),30*1000);
+  setTimeout(()=>tallyTick(true),25000);
+  /* a minimised / sleeping browser wakes up late: catch up as soon as the screen is back */
+  try{document.addEventListener('visibilitychange',()=>{if(!document.hidden&&Date.now()-tLastTry>everyMs())tallyTick(true);});}catch(_){}
 }
 setTimeout(tallyAuto,3000);
 /* ================= Tally screen (READ ONLY: Tally -> app): Day Book / Parties / Farmer payments ================= */
@@ -12233,10 +12282,14 @@ function openTally(opts){
       const vsF=S.vs.filter(v=>inFirm(v)&&!v.cancelled);
       const sums={},cnt={};vsF.forEach(v=>{sums[v.base]=(sums[v.base]||0)+v.amount;cnt[v.base]=(cnt[v.base]||0)+1;});
       const nrev=S.items.filter(i=>i.state==='review'||(i.state==='ready'&&!(TS().autoPay!==false&&TS().payOk))).length;
-      const dot=last.at?(last.ok===false?'🟠':'🟢'):'⚪';
+      const evm=tcSet('every',5),age=last.at?(Date.now()-Date.parse(last.at))/60000:null;
+      /* nothing synced for a long time = the Tally computer / Tally Link / Tally is probably off */
+      const stale=age!==null&&(pc?(TS().auto!==false&&age>evm*3+2):age>90);
+      const dot=last.at?(last.ok===false||stale?'🟠':'🟢'):'⚪';
+      const staleTxt=stale?(pc?T('ઘણી વારથી સિંક થયું નથી — ઍપ ખુલ્લી છે અને Tally Link ચાલુ છે?','No sync for a while — is the app open and Tally Link running?'):T('Tally વાળા કમ્પ્યુટર પરથી ઘણી વારથી સિંક થયું નથી — ત્યાં Tally, Tally Link અને ઍપ ચાલુ છે?','No sync from the Tally computer for a while — are Tally, Tally Link and the app running there?')):'';
       let head='<div class="kb-hero"><span>'+dot+' '+E(T('Tally છેલ્લું સિંક','Tally last sync'))+': '+E(agoTxt(last.at))+'</span><b>'+vsF.length+' '+E(T('વાઉચર','vouchers'))+'</b><small>'+E(['purchase','sales','payment','receipt'].filter(b=>sums[b]).map(b=>L[b]+' '+shortMoney(sums[b])).join(' • ')||T('આ સમયમાં કોઈ વાઉચર નથી','No vouchers in this period'))+'</small></div>'
         +'<div class="kb-qas">'+qaBtn('kt-sync','🔄',pc?T('સિંક','Sync'):T('રિફ્રેશ','Refresh'))+qaBtn('kt-file','📂',T('ફાઇલ','File'))+qaBtn('kt-xl','⬇️','Excel')+gearBtn('kt-set')+'</div>'
-        +'<p class="bz-st'+((last.ok===false&&last.msg)||S.err?' warn':'')+'" id="bz-st" role="status">'+E(S.err||(last.ok===false?last.msg:''))+'</p>'
+        +'<p class="bz-st'+((last.ok===false&&last.msg)||S.err||staleTxt||L0.warn?' warn':'')+'" id="bz-st" role="status">'+E(S.err||(last.ok===false?last.msg:'')||staleTxt||(pc?L0.warn:'')||'')+'</p>'
         +seg('kt-tab',[['day','📒 '+T('ડે બુક','Day Book')],['par','👥 '+T('ખાતા','Parties')],['pay','💳 '+T('ખેડૂત ચૂકવણી','Farmer pay')+(nrev?' ('+nrev+')':'')]],S.tab,'kb-tabs');
       const firmSeg=FIRMS().length>1?seg('kt-firm',[['all',T('બધી ફર્મ','All firms')]].concat(FIRMS().map(f=>[f.id,firmIc(f.id)+' '+f.name])),S.firm,'kb-sub'):'';
       let main='';
@@ -12473,6 +12526,18 @@ function tallyFileView(S){
   });
 }
 
+/* which of Tally's companies belongs to this firm? (looks at the firm's first word; skips "old / backup / copy" companies) */
+const OLDRX=/\b(old|backup|bkp|copy|test|demo|trial)\b/i;
+function guessCompany(f,comps){
+  const toks=[nkey(String(f.name||'').split(/\s+/)[0]),nkey(f.id)].filter(x=>x.length>=4);
+  const seen=new Set(),all=[];(comps||[]).forEach(c=>{const k=nkey(c);if(k&&!seen.has(k)){seen.add(k);all.push(c);}});
+  let hit=all.filter(c=>toks.some(t=>nkey(c).includes(t)));
+  if(hit.length>1){const fresh=hit.filter(c=>!OLDRX.test(c));if(fresh.length)hit=fresh;}
+  if(hit.length===1)return hit[0];
+  if(hit.length>1){const k=nkey(f.company);const sc=hit.map(c=>[c,1-BK.lev(nkey(c),k)/Math.max(nkey(c).length,k.length,1)]).sort((a,b)=>b[1]-a[1]);if(sc[0][1]>=0.7&&sc[0][1]-sc[1][1]>=0.05)return sc[0][0];}
+  return '';
+}
+
 /* ---------- Setup screen ---------- */
 function tallySetupView(S){
   const body=S.body,q=s=>body.querySelector(s),ts=TS(),pc=isTallyPC();
@@ -12488,17 +12553,64 @@ function tallySetupView(S){
   const tmap=new Map();(S.vs||[]).forEach(v=>{if(v.type&&!tmap.has(v.type))tmap.set(v.type,v.base);});
   const L=BASE_LB();
   let log=[];try{log=JSON.parse(LS('bi-tally-log','[]'));}catch(_){}
+  const hl=(cls,ic,txt,fix)=>'<div class="kt-hl '+cls+'"><b>'+ic+'</b><span>'+E(txt)+(fix?'<small>'+E(fix)+'</small>':'')+'</span></div>';
+  const tapas=()=>{
+    if(!pc)return '';
+    const rows=[],L0=lastLocal(),evm=tcSet('every',5);
+    if(pg===undefined)rows.push(hl('','⏳',T('ચકાસે છે…','Checking…')));
+    else{
+      if(!pg)rows.push(hl('bad','✗',T('Tally Link પ્રોગ્રામ ચાલુ નથી','Tally Link is not running'),T('Downloads માંથી Tally-Link.bat ડબલ-ક્લિક કરો, કાળી વિન્ડો ખુલ્લી રાખો. ચાલુ હોય તો Chrome માં address bar ના 🔒 → Site settings → “Local network access” → Allow.','Double-click Tally-Link.bat (Downloads) and keep the black window open. If it is running: Chrome address bar 🔒 → Site settings → “Local network access” → Allow.')));
+      else{
+        const old=(pg.v||1)<2;
+        rows.push(hl(old?'warn':'good',old?'⚠':'✔',T('Tally Link ચાલુ છે','Tally Link is running')+' (v'+(pg.v||1)+')',old?T('જૂનું વર્ઝન છે — નીચેથી નવું Tally-Link.bat ડાઉનલોડ કરો, જૂની કાળી વિન્ડો બંધ કરી નવું ચલાવો.','Old version — download the new Tally-Link.bat below, close the old black window and run the new one.'):''));
+        rows.push(pg.tally?hl('good','✔',T('Tally જવાબ આપે છે','Tally is answering')+(pg.busy?' ('+T('કામ કરે છે','busy')+')':''))
+          :hl('warn','⚠',T('Tally જવાબ આપતું નથી','Tally is not answering'),T('Tally ખુલ્લું છે? Gateway of Tally પર આવો → F1 → Settings → Connectivity → Client/Server → Both, Port 9000.','Is Tally open? Go to Gateway of Tally → F1 → Settings → Connectivity → Client/Server → Both, Port 9000.')));
+      }
+    }
+    (S.autoNames||[]).forEach(x=>rows.push(hl('good','🪄',T('આપમેળે ભર્યું: ','Filled automatically: ')+x)));
+    FIRMS().forEach(f=>{
+      const ok=compOk(f);
+      if(!clean(f.company))rows.push(hl('warn','⚠',f.name+': '+T('કંપનીનું નામ ખાલી છે','company name is empty'),T('નીચે Tally ની કંપની દબાવીને પસંદ કરો.','Tap one of the Tally companies below.')));
+      else if(ok===true)rows.push(hl('good','✔',f.name+' → '+(resolveCompany(f.company,S.comps||[]))));
+      else if(ok===false)rows.push(hl('bad','✗',f.name+': '+T('આ નામની કંપની Tally માં ખુલ્લી નથી','no company with this name is open in Tally'),T('નીચે ⭐ વાળી / Tally ની કંપની દબાવો. Tally માં કંપની ખુલ્લી (Select Company) હોવી જોઈએ.','Tap the ⭐ / a Tally company below. The company must be loaded in Tally (Select Company).')));
+    });
+    if(S.db)rows.push(S.db.ok?hl('good','✔',T('Supabase ટેબલ તૈયાર છે','Supabase tables are ready')):hl('bad','✗',T('Supabase માં supabase-tally.sql ચલાવવાનું બાકી છે','supabase-tally.sql still has to be run in Supabase'),S.db.msg||''));
+    if(L0.at){
+      const age=(Date.now()-Date.parse(L0.at))/60000,stale=ts.auto!==false&&age>evm*3+2;
+      rows.push(hl(L0.ok===false||stale?'warn':'good',L0.ok===false||stale?'⚠':'✔',T('છેલ્લું સિંક: ','Last sync: ')+agoTxt(L0.at)+(L0.ok===false&&L0.msg?' — '+L0.msg.slice(0,160):''),stale&&L0.ok!==false?T('ઘણી વારથી સિંક થયું નથી — ઍપ આ કમ્પ્યુટર પર ખુલ્લી છે?','No sync for a while — is the app open on this computer?'):''));
+    }else rows.push(hl('','•',T('હજી સિંક થયું નથી','No sync yet')));
+    rows.push(ts.payOk?hl('good','✔',T('ખેડૂત ચૂકવણી આપમેળે ખાતામાં: ચાલુ','Farmer payments to khata automatically: on'))
+      :hl('','•',T('ખેડૂત ચૂકવણી: પહેલી વાર Tally → “ખેડૂત ચૂકવણી” ટૅબમાં “બધી ખાતામાં નાખો” દબાવો','Farmer payments: the first time, press “Add all to khata” in Tally → “Farmer pay” tab')));
+    return '<div class="kb-card kt-c"><div class="kb-ct"><span>🩺 '+E(T('તપાસ','Health check'))+'</span></div>'+rows.join('')+'</div>';
+  };
+  const chipsHtml=k=>{
+    const f=FIRMS()[k],cs=S.comps||[];if(!f||!cs.length)return '';
+    const g=guessCompany(f,cs),seen=new Set();
+    return '<small>'+E(T('Tally ની કંપની — દબાવીને પસંદ કરો:','Tally companies — tap to choose:'))+'</small><div class="kt-chs">'
+      +cs.filter(c=>{const kk=nkey(c);if(seen.has(kk))return false;seen.add(kk);return true;}).map(c=>'<button type="button" class="kt-chip'+(nkey(c)===nkey(f.company)?' on':'')+'" data-pick="'+k+'" data-name="'+E(c)+'">'+(g&&c===g&&nkey(c)!==nkey(f.company)?'⭐ ':'')+E(c)+'</button>').join('')+'</div>';
+  };
+  const dbCheck=async()=>{
+    try{
+      for(const [tb,col] of [[TT.v,'id'],[TT.l,'id'],[TB.pay,'tally_ref']]){const r=await db.from(tb).select(col).limit(1);if(r&&r.error)return {ok:false,msg:tsqlHint(r.error)};}
+      return {ok:true};
+    }catch(e){return {ok:false,msg:tsqlHint(e)};}
+  };
   body.innerHTML='<div class="kb"><div class="kb-back"><button type="button" id="kt-bk">← Tally</button><span>⚙️ '+E(T('Tally સેટઅપ','Tally setup'))+'</span></div>'
     +'<div class="kb-card kt-c"><div class="kb-ct"><span>🖥 '+E(T('આ કમ્પ્યુટર','This computer'))+'</span></div>'
     +sw('kt-pc',T('આ Tally વાળું કમ્પ્યુટર છે','This is the Tally computer'),pc,T('ફક્ત તે કમ્પ્યુટર પર ચાલુ કરો જ્યાં Tally ચાલે છે','Switch on only on the computer where Tally runs'))
-    +sw('kt-auto',T('દર 5 મિનિટે આપમેળે સિંક','Auto-sync every 5 minutes'),ts.auto!==false,T('આ કમ્પ્યુટર પર ઍપ ખુલ્લી રાખો (minimize ચાલે)','Keep the app open on this computer (minimised is fine)'))
+    +sw('kt-auto',T('આપમેળે સિંક','Automatic sync'),ts.auto!==false,T('આ કમ્પ્યુટર પર ઍપ ખુલ્લી રાખો (minimize ચાલે)','Keep the app open on this computer (minimised is fine)'))
+    +'<div class="kt-two"><label class="bz-f"><span>'+E(T('કેટલી વારે','How often'))+'</span><select id="kt-every">'+[2,5,10,15,30,60].map(m=>'<option value="'+m+'"'+(m===tcSet('every',5)?' selected':'')+'>'+m+' '+E(T('મિનિટ','min'))+'</option>').join('')+'</select></label>'
+    +'<label class="bz-f"><span>'+E(T('છેલ્લા કેટલા દિવસ ફરી જોવા','Re-check last'))+'</span><select id="kt-win">'+[7,14,30,60,90].map(m=>'<option value="'+m+'"'+(m===tcSet('win',14)?' selected':'')+'>'+m+' '+E(T('દિવસ','days'))+'</option>').join('')+'</select></label></div>'
+    +'<p class="v9-note">'+E(T('જૂના દિવસમાં Tally માં ફેરફાર કર્યો હોય તો “શરૂઆતથી બધું” દબાવો.','If you changed an older day in Tally, press “Everything from start date”.'))+'</p>'
     +sw('kt-apay',T('ખેડૂતને ચૂકવણી આપમેળે ખાતામાં','Farmer payments go to khata automatically'),ts.autoPay!==false,T('નામ પાક્કું મળે તો જ; શંકા હોય તો તમને પૂછશે','Only when the name matches for sure; doubtful ones wait for you'))
+    +sw('kt-mirror',T('Tally માં રદ / ફેરફાર → ખાતામાં પણ','Cancel / change in Tally → also in khata'),ts.mirror!==false,T('Tally માંથી આવેલી ખેડૂત ચૂકવણી Tally માં રદ કે બદલો તો ખાતામાં પણ બદલાય','A farmer payment that came from Tally follows it if it is cancelled or changed there'))
     +linkLine
     +(pc?'<div class="kt-btns"><button type="button" class="kt-b" id="kt-chk">🔌 '+E(T('ચકાસો','Check'))+'</button><button type="button" class="kt-b ok" id="kt-now">🔄 '+E(T('હમણાં સિંક','Sync now'))+'</button><button type="button" class="kt-b" id="kt-full">⏮ '+E(T('શરૂઆતથી બધું','Everything from start date'))+'</button><button type="button" class="kt-b" id="kt-raw">🧪 '+E(T('Tally નો નમૂનો ફાઇલમાં','Save a Tally sample'))+'</button></div>':'')
     +'<p class="bz-st" id="bz-st" role="status"></p></div>'
+    +tapas()
     +'<div class="kb-card kt-c"><div class="kb-ct"><span>🏢 '+E(T('ફર્મ ↔ Tally કંપની','Firms ↔ Tally companies'))+'</span></div>'
     +FIRMS().map((f,i)=>'<div class="kt-firm" data-fi="'+i+'"><label class="bz-f"><span>'+firmIc(f.id)+' <b>'+E(f.name)+'</b> — '+E(T('Tally માં કંપનીનું નામ (બરાબર એવું જ)','Company name in Tally (exactly)'))+'</span><input class="kt-in" list="kt-comps" data-fc="'+i+'" value="'+E(f.company)+'" autocomplete="off"></label>'
-      +'<span class="kt-bd">'+badge(compOk(f))+'</span>'
+      +'<span class="kt-bd">'+badge(compOk(f))+'</span><div class="kt-ch" data-ch="'+i+'">'+chipsHtml(i)+'</div>'
       +'<label class="bz-f kt-fn"><span>'+E(T('ઍપમાં દેખાતું નામ (ફક્ત બતાવવા માટે)','Name shown in the app (display only)'))+'</span><input class="kt-in" data-fn="'+i+'" value="'+E(f.name)+'" autocomplete="off"></label></div>').join('')
     +'<datalist id="kt-comps">'+(S.comps||[]).map(c=>'<option value="'+E(c)+'"></option>').join('')+'</datalist></div>'
     +'<div class="kb-card kt-c"><div class="kb-ct"><span>📅 '+E(T('ક્યારથી ડેટા લેવો','Take data from'))+'</span></div><label class="bz-f"><span>'+E(T('શરૂઆતની તારીખ','Start date'))+'</span><input type="date" id="kt-from" value="'+E(tallyFrom())+'"></label>'
@@ -12510,6 +12622,15 @@ function tallySetupView(S){
     +'<li>'+E(T('એ જ કમ્પ્યુટર પર આ ઍપ ખોલો, ઉપર “આ Tally વાળું કમ્પ્યુટર છે” ચાલુ કરો, ને બ્રાઉઝર પૂછે તો “Allow” દબાવો.','Open this app on that computer, switch on “This is the Tally computer” and press “Allow” if the browser asks.'))+'</li></ol>'
     +'<button type="button" class="bz-main" id="kt-dl">⬇ Tally-Link.bat</button>'
     +'<p class="v9-note">'+E(T('Tally Link ફક્ત વાંચે છે — ઍપ માંથી Tally માં કંઈ જતું નથી, અને તે લખવાની કોઈ પણ વિનંતી રોકી દે છે.','Tally Link is read-only — nothing goes from the app into Tally, and it blocks any request that would write.'))+'</p></div>'
+    +'<details class="kb-card kt-det"><summary>💡 '+E(T('સૂચનો (ભૂલ વગર ચલાવવા)','Tips (to keep it running smoothly)'))+'</summary><ul class="kt-tips">'
+      +[T('Tally વાળા કમ્પ્યુટરને Sleep માં ન જવા દો: Windows Settings → System → Power → Screen and sleep → “Never” (plugged in).','Do not let the Tally computer sleep: Windows Settings → System → Power → Screen and sleep → “Never” (plugged in).'),
+        T('Chrome માં આ ઍપ ખુલ્લી રાખો (minimize ચાલે) અને કાળી “Balaji Tally Link” વિન્ડો બંધ ન કરો.','Keep this app open in Chrome (minimised is fine) and do not close the black “Balaji Tally Link” window.'),
+        T('Tally માં ત્રણેય કંપની ખુલ્લી (Select Company) રાખો. Tally બંધ હોય તો સિંક થોભી જાય છે અને Tally ચાલુ થતાં પોતે ચાલુ થશે.','Keep all three companies loaded in Tally. If Tally is closed, the sync waits and continues by itself when Tally is back.'),
+        T('Tally માં ખેડૂતના ખાતાનું નામ ઍપના નામ જેવું રાખો અને નોંધ (narration) માં UTR / ચિઠ્ઠી નંબર લખો — પછી ચૂકવણી આપમેળે બરાબર ખાતામાં જાય છે.','Keep the farmer’s ledger name in Tally like the name in the app and write the UTR / chiththi no. in the narration — payments then land in the right khata by themselves.'),
+        T('Chrome પૂછે “Local network access” તો Allow દબાવો.','If Chrome asks for “Local network access”, press Allow.'),
+        T('Tally Link ને Windows સાથે ચાલુ કરવાનું પહેલી વાર “Y” લખીને થઈ જાય છે. પછી કમ્પ્યુટર ચાલુ થાય એટલે આપમેળે ચાલશે.','Tally Link starts with Windows once you answer “Y” the first time.'),
+        T('અઠવાડિયે એક વાર Tally નો Data Backup લો — ઍપ Tally માં કંઈ લખતી નથી, પણ Tally નો ડેટા તમારો મુખ્ય રેકોર્ડ છે.','Take a Tally data backup once a week — the app never writes into Tally, but Tally is your main record.')]
+      .map(x=>'<li>'+E(x)+'</li>').join('')+'</ul></details>'
     +(tmap.size?'<details class="kb-card kt-det"><summary>🏷 '+E(T('વાઉચરના પ્રકાર (જો ખોટા ઓળખાયા હોય)','Voucher types (if recognised wrongly)'))+'</summary>'
       +[...tmap.entries()].map(([t,b],i)=>'<label class="bz-f kt-vt"><span>'+E(t)+'</span><select data-vt="'+i+'">'+BASE_ORDER.map(k=>'<option value="'+k+'"'+(k===b?' selected':'')+'>'+E(L[k])+'</option>').join('')+'</select></label>').join('')+'</details>':'')
     +'<details class="kb-card kt-det"><summary>📜 '+E(T('લોગ','Log'))+' ('+log.length+')</summary><pre class="kt-log">'+E(log.join('\n')||'—')+'</pre></details></div>';
@@ -12520,6 +12641,9 @@ function tallySetupView(S){
   });
   q('#kt-auto').addEventListener('change',e=>{SET.save({tally:{auto:e.target.checked}});});
   q('#kt-apay').addEventListener('change',e=>{SET.save({tally:{autoPay:e.target.checked}});});
+  q('#kt-mirror').addEventListener('change',e=>{SET.save({tally:{mirror:e.target.checked}});});
+  q('#kt-every').addEventListener('change',e=>{SET.save({tally:{every:+e.target.value}});});
+  q('#kt-win').addEventListener('change',e=>{SET.save({tally:{win:+e.target.value}});});
   q('#kt-from').addEventListener('change',e=>{if(/^\d{4}-\d{2}-\d{2}$/.test(e.target.value))SET.save({tally:{from:e.target.value}});});
   const saveFirms=()=>{
     const arr=FIRMS().map(f=>Object.assign({},f));
@@ -12534,6 +12658,12 @@ function tallySetupView(S){
     catch(e){S.ok[f.id]=/SVCurrentCompany|company/i.test(String(e&&e.message))?false:undefined;if(S.ok[f.id]===undefined)delete S.ok[f.id];}
   }
   const paintBadge=k=>{const box=body.querySelector('.kt-firm[data-fi="'+k+'"] .kt-bd'),f=FIRMS()[k];if(box&&f)box.innerHTML=badge(compOk(f));};
+  body.querySelectorAll('.kt-ch').forEach(box=>box.addEventListener('click',async e=>{
+    const b=e.target.closest('[data-pick]');if(!b)return;
+    const k=+b.dataset.pick,inp=body.querySelector('[data-fc="'+k+'"]');if(!inp)return;
+    inp.value=b.dataset.name;saveFirms();
+    if(isTallyPC()){await probeFirm(FIRMS()[k]);S.repaint();}else paintBadge(k);
+  }));
   body.querySelectorAll('.kt-in').forEach(i=>i.addEventListener('change',async()=>{
     saveFirms();
     /* no re-draw while a field is being left; just refresh that firm's badge */
@@ -12557,7 +12687,23 @@ function tallySetupView(S){
     if(S.ping&&S.ping.tally){
       try{S.comps=TM.parseCompanies(await tcall(TM.reqCompanies()));}catch(e){status(body,err(e),true);}
       for(const f of FIRMS())await probeFirm(f);
+      /* a firm whose company Tally does not accept gets the obvious Tally company automatically (never an "old / backup" one) */
+      /* a name Tally accepted only after a small correction is saved in Tally's exact spelling */
+      {const arr=FIRMS().map(x=>Object.assign({},x));let ch=false;
+        arr.forEach(f=>{if(S.ok[f.id]!==true)return;const real=resolveCompany(f.company,S.comps||[]);if(real&&real!==f.company&&(S.comps||[]).indexOf(real)>=0){f.company=real;ch=true;}});
+        if(ch)await SET.save({tally:{firms:arr}});}
+      S.autoNames=[];
+      const fl=FIRMS();
+      for(let k=0;k<fl.length;k++){
+        const f=fl[k];if(clean(f.company)&&S.ok[f.id]!==false)continue;
+        const g=guessCompany(f,S.comps||[]);if(!g||nkey(g)===nkey(f.company))continue;
+        const prev=f.company,arr=FIRMS().map(x=>Object.assign({},x));arr[k].company=g;await SET.save({tally:{firms:arr}});
+        await probeFirm(FIRMS()[k]);
+        if(S.ok[f.id]){S.autoNames.push(f.name+' → '+g);tlog('Auto: '+f.name+' → '+g);}
+        else{arr[k].company=prev;await SET.save({tally:{firms:arr}});await probeFirm(FIRMS()[k]);}
+      }
     }
+    S.db=await dbCheck();
     S.repaint();
   }
   const bc=q('#kt-chk');if(bc)bc.addEventListener('click',check);
