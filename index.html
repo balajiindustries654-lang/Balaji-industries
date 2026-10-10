@@ -6814,6 +6814,40 @@ a.bz-wabtn,#admin a.bz-wabtn,.bi-v2-modal a.bz-wabtn{flex:1 1 0;display:inline-f
 .bi-v2-record.kr>footer{grid-column:1/-1;display:flex;justify-content:flex-end;margin:2px 0 0!important;padding:0!important;border:0!important;background:transparent!important}
 .bi-v2-record.kr>footer:empty{display:none}
 #admin .bi-v2-record.kr>footer button{min-height:30px!important;padding:0 12px!important;font-size:12px!important;border-radius:999px!important;width:auto!important}
+
+/* ---- Tally screen (read-only link) ---- */
+#admin .kt-it{border:1px solid #dbe8e9;border-radius:14px;background:#fff;margin:0 0 8px;overflow:hidden}
+#admin .kt-it .kb-row{border-bottom:0}
+.kt-it .kb-fls{padding:0 12px 4px}
+.kt-acts{display:flex;flex-wrap:wrap;gap:6px;padding:2px 12px 10px}
+#admin button.kt-b,.bi-v2-modal button.kt-b{width:auto;flex:none;min-height:34px;margin:0;padding:0 12px;border:1px solid #cfe3e4;border-radius:999px;background:#fff;color:#0b4a4d;font-size:12.5px;font-weight:800;box-shadow:none}
+#admin button.kt-b.ok{background:#e3f3f3;border-color:#0a9297}
+#admin button.kt-b.no{color:#8a2430;border-color:#efc9ce;background:#fff7f8}
+#admin button.kt-b:disabled{opacity:.5}
+.kt-btns{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 4px}
+.kt-go{display:grid;gap:4px;margin:0 0 10px;padding:11px 13px;border:1px solid #bfe3c9;border-radius:14px;background:#effaf2}
+.kt-go b{font-size:14px;color:#17803d}
+.kt-go small{font-size:11.5px;color:#44625f}
+#admin .kt-go .bz-main{margin-top:4px}
+#admin label.kt-sw{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0;padding:9px 2px;border-bottom:1px solid #eef3f3;font-size:13.5px;font-weight:700;color:#173438;cursor:pointer}
+#admin label.kt-sw>span{display:grid;gap:1px;min-width:0}
+#admin label.kt-sw small{font-size:11px;font-weight:500;color:#6a8184}
+#admin label.kt-sw input{position:absolute;opacity:0;width:1px!important;height:1px;min-height:0!important;margin:0}
+.kt-sw i{flex:none;width:40px;height:23px;border-radius:99px;background:#cdd9da;position:relative;transition:background .15s}
+.kt-sw i::after{content:'';position:absolute;top:3px;left:3px;width:17px;height:17px;border-radius:50%;background:#fff;transition:transform .15s;box-shadow:0 1px 2px #0003}
+.kt-sw input:checked+i{background:#0a9297}
+.kt-sw input:checked+i::after{transform:translateX(17px)}
+.kt-msg{margin:8px 0 2px;padding:8px 10px;border-radius:10px;font-size:12.5px;font-weight:700}
+.kt-msg.good{background:#e4f5ea;color:#17803d}.kt-msg.warn{background:#fff0c9;color:#8a6400}.kt-msg.bad{background:#fde8ea;color:#a3202f}
+.kt-firm{display:grid;gap:4px;padding:8px 0;border-bottom:1px solid #eef3f3}
+.kt-firm:last-of-type{border-bottom:0}
+.kt-firm .kb-fl{justify-self:start}
+#admin .kt-in,#admin .kt-firm input,#admin .kt-c input[type=date]{min-height:40px!important;margin:3px 0 0!important;padding:0 10px!important;font-size:14px!important;border-radius:10px!important}
+.kt-steps{margin:2px 0 10px;padding-left:20px;display:grid;gap:5px;font-size:12.5px;color:#35575b}
+.kt-det summary{cursor:pointer;font-size:12.5px;font-weight:800;color:#173438}
+.kt-vt{margin-top:8px}
+#admin .kt-c select,#admin .kt-det select{min-height:40px!important;font-size:14px!important;border-radius:10px!important}
+.kt-log{margin:8px 0 0;max-height:240px;overflow:auto;white-space:pre-wrap;font-size:11px;line-height:1.45;color:#44625f}
 </style>
 <script id="bi-v9-qr">
 /* ================= Small QR-code maker (byte mode, level L or M, versions 1-14) ================= */
@@ -6898,9 +6932,10 @@ const DEF={
   bill:{title:'',farmerLabel:'',showCompany:false,company:'',address:'',gst:'',phone:'',logo:'',upiId:'',upiName:'',payQr:false,linkQr:false,lang:'app',footer:''},
   perm:{staffRate:true},
   alert:{diffKg:100,push:true},
-  biz:{process:false,tiles:{ledger:true,expense:true,profit:true,batch:false,sale:false},alias:{},bankAlias:{},mannMaals:['Magfadi'],processMaals:['Magfadi'],
+  biz:{process:false,tiles:{ledger:true,expense:true,profit:true,batch:false,sale:false,tally:true},alias:{},bankAlias:{},mannMaals:['Magfadi'],processMaals:['Magfadi'],
     grades:[{k:'50/60',kernel:1},{k:'60/70',kernel:1},{k:'70/80',kernel:1},{k:'80/90',kernel:1},{k:'90/100',kernel:1},{k:'100/110',kernel:1},{k:'એડિબલ',kernel:1},{k:'ફાડિયા',kernel:1},{k:'ટકાલો',kernel:1},{k:'વેસ્ટેજ',kernel:0}],
-    cats:['દલાલી','મજૂરી','બારદાન','ગાડી ભાડું','લાઇટ બિલ','પ્રોસેસ ખર્ચ','GST','બીજા']}
+    cats:['દલાલી','મજૂરી','બારદાન','ગાડી ભાડું','લાઇટ બિલ','પ્રોસેસ ખર્ચ','GST','બીજા']},
+  tally:{firms:[{id:'patel',name:'Patel Enterprises',company:'PATEL ENTREPRISES'},{id:'shreenathji',name:'Shreenathji Enterprises',company:'SHREENATHJI ENTERPRISES'},{id:'balaji',name:'Balaji Industries',company:'BALAJI INDUSTRIES'}],from:'',auto:true,autoPay:true,payOk:false,vt:{},ignore:{},last:{}}
 };
 const clone=o=>JSON.parse(JSON.stringify(o));
 const merge=(a,b)=>{if(!b||typeof b!=='object')return a;Object.keys(b).forEach(k=>{if(a[k]&&typeof a[k]==='object'&&!Array.isArray(a[k])&&b[k]&&typeof b[k]==='object')merge(a[k],b[k]);else if(b[k]!==undefined)a[k]=b[k];});return a;};
@@ -7575,6 +7610,339 @@ g.BalajiBankMath={parseCSV,parseHTMLTable,readXlsx,unzip,parseDate,parseAmount,h
 if(typeof module!=='undefined'&&module.exports)module.exports=g.BalajiBankMath;
 })(typeof window!=='undefined'?window:globalThis);
 
+</script>
+<script id="bi-v9-tallymath">
+/* ================= Tally -> App (READ ONLY) : requests, XML / Day Book readers, voucher classes, farmer payment plan =================
+   Nothing here ever writes into Tally. We only ask Tally for reports (Export) and read what comes back. */
+(function(g){
+'use strict';
+const BK=(typeof require!=='undefined'&&typeof module!=='undefined'&&!g.BalajiBankMath)?require('./bankmath.js'):g.BalajiBankMath;
+const clean=s=>String(s==null?'':s).replace(/\s+/g,' ').trim();
+const r2=n=>Math.round(n*100)/100;
+const p2=n=>String(n).padStart(2,'0');
+const MON={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
+
+/* ---------------- tiny tolerant XML reader (works in the browser and in node) ---------------- */
+const ENT={amp:'&',lt:'<',gt:'>',quot:'"',apos:"'"};
+function decode(s){
+  if(s.indexOf('&')<0)return s;
+  return s.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi,(m,e)=>{
+    if(e[0]==='#'){const c=e[1]==='x'||e[1]==='X'?parseInt(e.slice(2),16):parseInt(e.slice(1),10);return (c<32&&c!==9&&c!==10&&c!==13)||!isFinite(c)?'':String.fromCodePoint(c);}
+    const v=ENT[e.toLowerCase()];return v===undefined?m:v;
+  });
+}
+const TOK=/<!--[\s\S]*?-->|<!\[CDATA\[([\s\S]*?)\]\]>|<\?[\s\S]*?\?>|<(\/?)([A-Za-z_][\w.\-:]*)((?:\s+[\w.\-:]+\s*=\s*(?:"[^"]*"|'[^']*'))*)\s*(\/?)>|([^<]+)/g;
+const ATT=/([\w.\-:]+)\s*=\s*(?:"([^"]*)"|'([^']*)')/g;
+function parseXML(text){
+  text=String(text||'').replace(/^﻿/,'').replace(/&#(?:[0-8]|1[1-2]|1[4-9]|2[0-9]|3[01]);/g,'').replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g,'');
+  const root={t:'#root',a:{},k:[],x:''},st=[root];let m;TOK.lastIndex=0;
+  while((m=TOK.exec(text))){
+    const cur=st[st.length-1];
+    if(m[1]!==undefined){cur.x+=m[1];continue;}
+    if(m[3]!==undefined){
+      if(m[2]){ /* closing tag */
+        let i=st.length-1;while(i>0&&st[i].t!==m[3])i--;
+        if(i>0)st.length=i;            /* tolerate stray tags */
+      }else{
+        const n={t:m[3],a:{},k:[],x:''};let a;ATT.lastIndex=0;
+        while((a=ATT.exec(m[4]||'')))n.a[a[1]]=decode(a[2]!==undefined?a[2]:a[3]);
+        cur.k.push(n);if(!m[5])st.push(n);
+      }
+    }else if(m[6]!==undefined&&!m[0].startsWith('<'))cur.x+=decode(m[6]);
+  }
+  return root;
+}
+const up=s=>String(s).toUpperCase();
+function all(n,tag,out){out=out||[];const T=up(tag);(function w(x){x.k.forEach(c=>{if(up(c.t)===T)out.push(c);w(c);});})(n);return out;}
+const kid=(n,tag)=>{const T=up(tag);return n.k.find(c=>up(c.t)===T)||null;};
+const kids=(n,tag)=>{const T=up(tag);return n.k.filter(c=>up(c.t)===T);};
+const val=(n,tag)=>{const c=n&&kid(n,tag);return c?clean(c.x):'';};
+const attr=(n,a)=>{const A=up(a);for(const k in n.a)if(up(k)===A)return n.a[k];return '';};
+
+/* ---------------- requests (all are "Export": they only ask Tally for a report) ---------------- */
+const xe=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/[^\x20-\x7e]/g,c=>'&#'+c.codePointAt(0)+';');
+const tDate=iso=>String(iso||'').replace(/-/g,'');
+const isoDate=t=>{const s=clean(t);return /^\d{8}$/.test(s)?s.slice(0,4)+'-'+s.slice(4,6)+'-'+s.slice(6,8):'';};
+function reqCollection(id,type,fetch,company,vars){
+  return '<ENVELOPE><HEADER><VERSION>1</VERSION><TALLYREQUEST>Export</TALLYREQUEST><TYPE>Collection</TYPE><ID>'+xe(id)+'</ID></HEADER><BODY><DESC><STATICVARIABLES><SVEXPORTFORMAT>$$SysName:XML</SVEXPORTFORMAT>'
+    +(company?'<SVCURRENTCOMPANY>'+xe(company)+'</SVCURRENTCOMPANY>':'')+(vars||'')
+    +'</STATICVARIABLES><TDL><TDLMESSAGE><COLLECTION NAME="'+xe(id)+'" ISMODIFY="No"><TYPE>'+xe(type)+'</TYPE><FETCH>'+xe(fetch)+'</FETCH></COLLECTION></TDLMESSAGE></TDL></DESC></BODY></ENVELOPE>';
+}
+const reqCompanies=()=>reqCollection('BalajiCompanies','Company','Name','');
+const reqVoucherTypes=co=>reqCollection('BalajiVchTypes','VoucherType','Name,Parent,ReservedName',co);
+const reqLedgers=(co,toIso)=>reqCollection('BalajiLedgers','Ledger','Name,Parent,ClosingBalance',co,toIso?'<SVTODATE>'+tDate(toIso)+'</SVTODATE>':'');
+function reqDayBook(co,fromIso,toIso){
+  return '<ENVELOPE><HEADER><VERSION>1</VERSION><TALLYREQUEST>Export</TALLYREQUEST><TYPE>Data</TYPE><ID>Day Book</ID></HEADER><BODY><DESC><STATICVARIABLES><SVEXPORTFORMAT>$$SysName:XML</SVEXPORTFORMAT>'
+    +'<SVCURRENTCOMPANY>'+xe(co)+'</SVCURRENTCOMPANY><SVFROMDATE>'+tDate(fromIso)+'</SVFROMDATE><SVTODATE>'+tDate(toIso)+'</SVTODATE></STATICVARIABLES></DESC></BODY></ENVELOPE>';
+}
+/* Tally answers an error as LINEERROR / "Unknown Request" / an empty RESPONSE */
+function tallyError(xml){
+  const t=String(xml||'');
+  let m=/<LINEERROR>([\s\S]*?)<\/LINEERROR>/i.exec(t);if(m)return clean(decode(m[1]));
+  m=/<RESPONSE>\s*(Unknown Request[\s\S]*?)<\/RESPONSE>/i.exec(t);if(m)return clean(m[1]);
+  return '';
+}
+
+/* ---------------- voucher kinds ---------------- */
+const RESERVED={payment:'payment',receipt:'receipt',contra:'contra',journal:'journal',sales:'sales',purchase:'purchase','credit note':'creditnote','debit note':'debitnote'};
+function guessBase(name){
+  const n=clean(name).toLowerCase();
+  if(RESERVED[n])return RESERVED[n];
+  if(/credit\s*note/.test(n))return 'creditnote';if(/debit\s*note/.test(n))return 'debitnote';
+  if(/(delivery|receipt)\s*note|order|memo|stock|physical|rejection|material/.test(n))return 'other';
+  if(/purch/.test(n))return 'purchase';
+  if(/sale|invoi|invois|bill\b/.test(n))return 'sales';
+  if(/pay/.test(n))return 'payment';
+  if(/recei|rcpt|receipt/.test(n))return 'receipt';
+  if(/contra/.test(n))return 'contra';
+  if(/journ/.test(n))return 'journal';
+  return 'other';
+}
+function parseVoucherTypes(xml){
+  const out=[];
+  all(parseXML(xml),'VOUCHERTYPE').forEach(n=>{
+    const name=clean(attr(n,'NAME'))||val(n,'NAME');if(!name)return;
+    out.push({name,reserved:clean(attr(n,'RESERVEDNAME'))||val(n,'RESERVEDNAME'),parent:val(n,'PARENT')});
+  });
+  return out;
+}
+function baseResolver(types,overrides){
+  const map=new Map((types||[]).map(t=>[t.name.toLowerCase(),t])),ov=overrides||{};
+  return function base(name){
+    const n=clean(name);if(ov[n])return ov[n];
+    let x=n.toLowerCase(),i=0;
+    while(x&&i++<6){
+      const t=map.get(x);if(!t)break;
+      const r=clean(t.reserved).toLowerCase();if(r&&RESERVED[r])return RESERVED[r];
+      if(!t.parent)break;x=clean(t.parent).toLowerCase();
+      if(RESERVED[x]&&!map.get(x))return RESERVED[x];
+    }
+    return guessBase(n);
+  };
+}
+
+/* ---------------- numbers ---------------- */
+function amt(s){
+  let t=clean(s).replace(/,/g,'');if(!t)return 0;
+  const dr=/\bdr\b/i.test(t),cr=/\bcr\b/i.test(t);
+  t=t.replace(/[^\d.\-+]/g,'');let n=parseFloat(t);if(!isFinite(n))return 0;
+  if(dr&&n>0)n=-n;                    /* Tally: debit = negative, credit = positive */
+  if(cr&&n<0)n=-n;
+  return n;
+}
+
+/* ---------------- ledgers (with closing balance) ---------------- */
+function parseLedgers(xml){
+  const out=[];
+  all(parseXML(xml),'LEDGER').forEach(n=>{
+    const name=clean(attr(n,'NAME'))||val(n,'NAME');if(!name)return;
+    out.push({name,parent:val(n,'PARENT'),closing:r2(amt(val(n,'CLOSINGBALANCE')))});
+  });
+  return out;
+}
+const groupKind=p=>{p=String(p||'').toLowerCase();return /creditor/.test(p)?'creditor':/debtor/.test(p)?'debtor':/bank/.test(p)?'bank':/cash/.test(p)?'cash':/expense/.test(p)?'expense':/income|sales/.test(p)?'income':/purchase/.test(p)?'purchase':'other';};
+function parseCompanies(xml){
+  const out=[];
+  all(parseXML(xml),'COMPANY').forEach(n=>{const name=clean(attr(n,'NAME'))||val(n,'NAME');if(name&&out.indexOf(name)<0)out.push(name);});
+  return out;
+}
+
+/* ---------------- vouchers from Tally XML ---------------- */
+function refFromNarr(n){
+  n=String(n||'');let r=BK?BK.extractRef(n,''):'';if(r)return r;
+  let m=/WIB\/(\d{6,})/i.exec(n)||/(?:UTR|REF(?:ERENCE)?(?:\s*NO)?)[\s.:#\-]*([A-Z0-9]{6,})/i.exec(n);
+  return m?m[1].toUpperCase():'';
+}
+const isBankish=n=>/cash|bank|^\d{6,}$/i.test(String(n||''));
+function modeOf(bankName,tt,narr){
+  const b=String(bankName||''),t=String(tt||''),n=String(narr||'');
+  if(/^\s*cash\b|cash-in-hand|petty/i.test(b))return 'cash';
+  if(/cheque|cheq|chq/i.test(t))return 'cheque';
+  if(/upi/i.test(t)||/\bUPI\b|UPI[\/\-]/i.test(n))return 'upi';
+  return 'bank';
+}
+function parseVouchers(xml,base){
+  base=base||baseResolver([]);
+  const out=[];
+  all(parseXML(xml),'VOUCHER').forEach(v=>{
+    const type=val(v,'VOUCHERTYPENAME')||attr(v,'VCHTYPE'),date=isoDate(val(v,'DATE'));
+    if(!type||!date)return;
+    const ents=[];
+    v.k.forEach(c=>{
+      if(!/LEDGERENTRIES\.LIST$/i.test(c.t))return;
+      const a=amt(val(c,'AMOUNT')),dp=val(c,'ISDEEMEDPOSITIVE');
+      const ba=all(c,'BANKALLOCATIONS.LIST')[0];
+      let utr='',tt='';
+      if(ba){utr=val(ba,'UNIQUEREFERENCENUMBER')||val(ba,'INSTRUMENTNUMBER');tt=val(ba,'TRANSACTIONTYPE');if(/^0*$/.test(utr))utr='';}
+      ents.push({ledger:val(c,'LEDGERNAME'),amount:r2(Math.abs(a)),dr:a<0||(a===0&&/yes/i.test(dp)),utr,tt});
+    });
+    const b=base(type),narr=clean(val(v,'NARRATION')),no=val(v,'VOUCHERNUMBER');
+    const drs=ents.filter(e=>e.dr),crs=ents.filter(e=>!e.dr);
+    const total=r2(drs.reduce((s,e)=>s+e.amount,0))||r2(crs.reduce((s,e)=>s+e.amount,0));
+    let partySide=[],moneySide=[];
+    if(b==='payment'||b==='sales'||b==='debitnote'){partySide=drs;moneySide=crs;}
+    else if(b==='receipt'||b==='purchase'||b==='creditnote'){partySide=crs;moneySide=drs;}
+    else{partySide=drs;moneySide=crs;}
+    if(b==='payment'||b==='receipt'){
+      const m2=moneySide.filter(e=>isBankish(e.ledger));if(m2.length)moneySide=m2;
+    }
+    const lines=partySide.map(e=>({ledger:e.ledger,amount:e.amount}));
+    const party=(b==='contra'||b==='journal')?'':(lines[0]&&lines[0].ledger)||val(v,'PARTYLEDGERNAME');
+    const bankE=(b==='payment'||b==='receipt')?(moneySide.find(e=>e.utr)||moneySide[0]):null;
+    const bank=bankE?bankE.ledger:'';
+    let utr=bankE&&bankE.utr||'';
+    if(!utr)utr=refFromNarr(narr);
+    out.push({vkey:type.toLowerCase()+'#'+no+'@'+date,guid:val(v,'GUID')||attr(v,'REMOTEID'),date,type,base:b,no,party,amount:total,narr,bank,mode:(b==='payment'||b==='receipt')?modeOf(bank,bankE&&bankE.tt,narr):'',utr,
+      cancelled:/yes/i.test(val(v,'ISCANCELLED')),optional:/yes/i.test(val(v,'ISOPTIONAL')),alter:parseInt(val(v,'ALTERID'),10)||0,lines,src:'xml'});
+  });
+  return out;
+}
+
+/* ---------------- Day Book printed from Tally (PDF items / Excel rows) ---------------- */
+function parseDayDate(s){
+  s=clean(s);let m=/^(\d{1,2})[-\/. ]([A-Za-z]{3})[A-Za-z]*[-\/. ](\d{2,4})$/.exec(s);
+  if(m){const mo=MON[m[2].toLowerCase()];let y=+m[3];if(y<100)y+=2000;return mo?y+'-'+p2(mo)+'-'+p2(+m[1]):'';}
+  m=/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})$/.exec(s);
+  if(m){let y=+m[3];if(y<100)y+=2000;return y+'-'+p2(+m[2])+'-'+p2(+m[1]);}
+  m=/^(\d{4})-(\d{2})-(\d{2})/.exec(s);return m?m[0].slice(0,10):'';
+}
+const DATE_CELL=/^\d{1,2}[-\/. ][A-Za-z]{3}[A-Za-z]*[-\/. ]\d{2,4}$/;
+const AMT_ONLY=/^[\d,]+\.\d{2}$/;
+/* pages: [ [{str,x,y,w,h}] ... ]  (pdf.js text items, y grows upward) */
+function parseDayBookItems(pages,opts){
+  opts=opts||{};const base=opts.base||baseResolver([],opts.overrides);
+  let company='',vouchers=[],cols=null;
+  (pages||[]).forEach(items=>{
+    const its=(items||[]).filter(t=>t&&typeof t.str==='string'&&t.str.trim()!==''&&isFinite(t.x)&&isFinite(t.y)).map(t=>({s:t.str.trim(),x:t.x,y:t.y,r:t.x+(t.w>0?t.w:t.str.length*4)}));
+    if(!its.length)return;
+    if(!company){const top=its.slice().sort((a,b)=>b.y-a.y||a.x-b.x)[0];if(top&&!/day\s*book/i.test(top.s))company=top.s;}
+    const H=s=>its.find(t=>t.s.toLowerCase()===s);
+    const hd=H('date'),hp=H('particulars'),hn=H('narration'),ht=its.find(t=>/^vch\s*type$|^voucher\s*type$/i.test(t.s)),hv=its.find(t=>/^vch\s*no\.?$|^voucher\s*no\.?$/i.test(t.s)),
+      hdr=its.find(t=>/^debit/i.test(t.s)),hcr=its.find(t=>/^credit/i.test(t.s));
+    if(hd&&hp&&hdr&&hcr&&ht)cols={d:hd.x,p:hp.x-15,n:(hn?hn.x:ht.x)-12,t:ht.x-12,v:(hv?hv.x:ht.x+80)-12,dr:hdr.r,cr:hcr.r};   /* the printed header sits a few points right of its column's data */
+    if(!cols)return;
+    const rowsY=its.filter(t=>DATE_CELL.test(t.s)&&t.x<cols.p).sort((a,b)=>b.y-a.y);
+    const rows=rowsY.map(d=>({y:d.y,date:parseDayDate(d.s),p:[],n:[],t:[],v:[],dr:0,cr:0,extra:[]}));
+    its.forEach(t=>{
+      if(DATE_CELL.test(t.s)&&t.x<cols.p)return;
+      if(t.y>(rowsY.length?rowsY[0].y+8:1e9))return;                 /* page header */
+      let best=-1,bd=1e9;rowsY.forEach((d,i)=>{const dd=Math.abs(d.y-t.y);if(dd<bd){bd=dd;best=i;}});
+      if(best<0)return;
+      let row=rows[best];
+      if(bd>5.5){                                                    /* continuation line: belongs to the row above it */
+        const above=rowsY.map((d,i)=>[d.y,i]).filter(x=>x[0]>t.y).sort((a,b)=>a[0]-b[0])[0];
+        if(!above)return;row=rows[above[1]];
+        if(t.x>=cols.n&&t.x<cols.t)row.extra.push(t.s);
+        return;
+      }
+      if(t.x<cols.p)return;
+      if(AMT_ONLY.test(t.s)&&t.r>cols.v+40){
+        const v=parseFloat(t.s.replace(/,/g,''));
+        if(Math.abs(t.r-cols.dr)<=Math.abs(t.r-cols.cr))row.dr+=v;else row.cr+=v;return;
+      }
+      if(t.x<cols.n)row.p.push(t);
+      else if(t.x<cols.t)row.n.push(t);
+      else if(t.x<cols.v)row.t.push(t);
+      else row.v.push(t);
+    });
+    rows.forEach(r=>{
+      const j=a=>clean(a.sort((x,y)=>x.x-y.x).map(z=>z.s).join(' '));
+      const type=j(r.t);if(!type||!r.date)return;
+      const amount=r2(r.dr||r.cr);if(!(amount>0))return;
+      const b=base(type),no=j(r.v),party=j(r.p),narr=clean(j(r.n)+' '+r.extra.join(' '));
+      const isParty=!(b==='contra'||b==='journal');
+      const utr=refFromNarr(narr);
+      vouchers.push({vkey:type.toLowerCase()+'#'+no+'@'+r.date,guid:'',date:r.date,type,base:b,no,party:isParty?party:'',amount,narr,bank:'',
+        mode:(b==='payment'||b==='receipt')?modeOf('',/cheque|chq/i.test(narr)?'cheque':'',narr):'',utr,cancelled:false,optional:false,alter:0,
+        lines:isParty?[{ledger:party,amount}]:[],src:'file',dir:r.dr?'dr':'cr',particulars:party});
+    });
+  });
+  return {company,vouchers};
+}
+/* Excel / CSV export of the Day Book: rows = array of arrays */
+function parseDayBookRows(rows,opts){
+  opts=opts||{};const base=opts.base||baseResolver([],opts.overrides);
+  let hi=-1,c=null;
+  for(let i=0;i<Math.min(rows.length,40);i++){
+    const r=(rows[i]||[]).map(x=>clean(x).toLowerCase());
+    const d=r.findIndex(x=>x==='date'),p=r.findIndex(x=>/^particulars?$/.test(x)),t=r.findIndex(x=>/^(vch|voucher)\s*type$/.test(x)),n=r.findIndex(x=>/^(vch|voucher)\s*(no|number)\.?$/.test(x)),
+      dr=r.findIndex(x=>/^debit/.test(x)),cr=r.findIndex(x=>/^credit/.test(x)),nr=r.findIndex(x=>/^narration$/.test(x));
+    if(d>=0&&p>=0&&t>=0&&(dr>=0||cr>=0)){hi=i;c={d,p,t,n,dr,cr,nr};break;}
+  }
+  if(hi<0)return {company:'',vouchers:[],ok:false};
+  let company='';for(let i=0;i<hi;i++){const s=clean((rows[i]||[]).find(x=>clean(x)!==''));if(s&&!/day\s*book|for\s|^\d|e-?mail|page/i.test(s)){company=s;break;}}
+  const num=v=>typeof v==='number'?v:parseFloat(String(v==null?'':v).replace(/,/g,''))||0;
+  const out=[];
+  for(let i=hi+1;i<rows.length;i++){
+    const r=rows[i]||[];let ds=r[c.d];
+    let date='';
+    if(typeof ds==='number'&&ds>30000&&ds<80000){const dt=new Date(Date.UTC(1899,11,30)+ds*864e5);date=dt.getUTCFullYear()+'-'+p2(dt.getUTCMonth()+1)+'-'+p2(dt.getUTCDate());}
+    else date=parseDayDate(ds);
+    const type=clean(r[c.t]);if(!date||!type)continue;
+    const dr=c.dr>=0?num(r[c.dr]):0,cr=c.cr>=0?num(r[c.cr]):0,amount=r2(Math.abs(dr)||Math.abs(cr));if(!(amount>0))continue;
+    const b=base(type),no=clean(c.n>=0?r[c.n]:''),party=clean(r[c.p]),narr=clean(c.nr>=0?r[c.nr]:'');
+    const isParty=!(b==='contra'||b==='journal');
+    out.push({vkey:type.toLowerCase()+'#'+no+'@'+date,guid:'',date,type,base:b,no,party:isParty?party:'',amount,narr,bank:'',mode:(b==='payment'||b==='receipt')?modeOf('','',narr):'',utr:refFromNarr(narr),
+      cancelled:false,optional:false,alter:0,lines:isParty?[{ledger:party,amount}]:[],src:'file',dir:dr?'dr':'cr',particulars:party});
+  }
+  return {company,vouchers:out,ok:true};
+}
+
+/* ---------------- which firm is this company? ---------------- */
+const nk=s=>clean(s).toLowerCase().replace(/[^a-z0-9]/g,'');
+function firmOfCompany(firms,company){
+  const k=nk(company);if(!k)return '';
+  let f=firms.find(x=>nk(x.company)===k);if(f)return f.id;
+  f=firms.find(x=>k.includes(nk(x.company))||nk(x.company).includes(k));if(f&&nk(f.company))return f.id;
+  /* spelling slips (ENTREPRISES / ENTERPRISES) */
+  let best=null,bs=0;firms.forEach(x=>{const a=nk(x.company);if(!a)return;const s=1-BK.lev(a,k)/Math.max(a.length,k.length);if(s>bs){bs=s;best=x;}});
+  return best&&bs>=0.85?best.id:'';
+}
+
+/* ---------------- Tally payments -> farmer khata plan ----------------
+   ctx = same as BalajiBankMath.matchTxn (farmers, chitNos, alias, utrs) + pays [{key,date,amount,tally_ref}] + done: Set of vkeys already planned
+   returns [{v, line, state: 'ready'|'review'|'dup'|'other', cand, cands}] one per payment line                             */
+function planPayments(vouchers,ctx,opts){
+  opts=opts||{};const out=[];
+  const refOf=opts.refOf||((v,i)=>v.vkey+'#'+i);
+  const resolve=ctx.resolveKey||(k=>k);
+  const doneRefs=new Set((ctx.pays||[]).map(p=>p.tally_ref).filter(Boolean));
+  const seen=new Set();
+  vouchers.forEach(v=>{
+    if(v.base!=='payment'||v.cancelled||v.optional)return;
+    (v.lines&&v.lines.length?v.lines:[{ledger:v.party,amount:v.amount}]).forEach((ln,i)=>{
+      if(!(ln.amount>0))return;
+      const item={v,line:i,ledger:ln.ledger,amount:ln.amount,state:'other',cand:null,cands:[],why:'',ref:refOf(v,i)};
+      out.push(item);
+      if(doneRefs.has(item.ref)){item.state='done';return;}
+      if(!ln.ledger||isBankish(ln.ledger))return;
+      const t={narr:ln.ledger,ref:v.utr,date:v.date};
+      const m=BK.matchTxn(t,ctx);
+      item.cands=m.cands;
+      const a=m.cands[0];
+      if(!a||a.score<0.6){return;}
+      item.cand=a;
+      const u=BK.normUtr(v.utr),single=v.lines.length<=1;
+      if(single&&u&&ctx.utrs&&ctx.utrs.has(u)){item.state='dup';item.why='utr';return;}
+      if((ctx.pays||[]).some(p=>resolve(p.key)===resolve(a.key)&&p.date===v.date&&Math.abs(p.amount-ln.amount)<0.5&&!p.tally_ref)){item.state='dup';item.why='same';return;}
+      const sig=resolve(a.key)+'|'+v.date+'|'+ln.amount;
+      if(seen.has(sig)&&!u){item.state='review';item.why='twice';return;}
+      seen.add(sig);
+      item.state=m.auto?'ready':'review';
+    });
+  });
+  return out;
+}
+
+const api={parseXML,all,kid,kids,val,attr,xe,tDate,isoDate,reqCompanies,reqVoucherTypes,reqLedgers,reqDayBook,reqCollection,tallyError,parseCompanies,parseVoucherTypes,parseLedgers,parseVouchers,baseResolver,guessBase,groupKind,
+  parseDayBookItems,parseDayBookRows,parseDayDate,firmOfCompany,planPayments,amt,modeOf,isBankish,refFromNarr};
+g.BalajiTallyMath=api;
+if(typeof module!=='undefined'&&module.exports)module.exports=api;
+})(typeof window!=='undefined'?window:globalThis);
+
+</script>
+<script id="bi-v9-tally_ps">
+window.BalajiTallyLinkPS="# ===================================================================\n#  BALAJI TALLY LINK  -  READ ONLY\n#  App  <-  Tally   (data only comes OUT of Tally; nothing is ever written into Tally)\n#  Listens on 127.0.0.1 only. Needs TallyPrime running with its\n#  XML server ON (F1 Help > Settings > Connectivity > Client/Server, port 9000).\n# ===================================================================\n$ErrorActionPreference = 'Continue'\n$ListenPort = __PORT__\n$TallyHost  = '127.0.0.1'\n$TallyPort  = __TALLYPORT__\n$Allowed    = @(__ORIGINS__)\n$Latin1     = [System.Text.Encoding]::GetEncoding(28591)\n\ntry { $Host.UI.RawUI.WindowTitle = 'Balaji Tally Link - chalu rakho (minimize karo, band na karo)' } catch { }\nfunction Log([string]$m) { Write-Host ('[' + (Get-Date).ToString('HH:mm:ss') + '] ' + $m) }\n\n# ---- optional: start with Windows ---------------------------------\ntry {\n  $self = $env:BALAJI_LINK_SELF\n  if ($self -and -not $env:BALAJI_LINK_NOASK) {\n    $lnk = Join-Path ([Environment]::GetFolderPath('Startup')) 'Balaji Tally Link.lnk'\n    if (-not (Test-Path -LiteralPath $lnk)) {\n      Write-Host ''\n      $a = Read-Host 'Computer chalu thay tyare aa Tally Link auto chalu thay? (Y = haa / N = na)'\n      if ($a -match '^[Yy]') {\n        $ws = New-Object -ComObject WScript.Shell\n        $s = $ws.CreateShortcut($lnk)\n        $s.TargetPath = $self\n        $s.WindowStyle = 7\n        $s.Save()\n        Log 'Auto-start set thai gayu.'\n      }\n    }\n  }\n} catch { Log ('Auto-start set na thayu: ' + $_.Exception.Message) }\n\n# ---- helpers --------------------------------------------------------\nfunction Test-Tally {\n  try {\n    $c = New-Object System.Net.Sockets.TcpClient\n    $iar = $c.BeginConnect($TallyHost, $TallyPort, $null, $null)\n    $ok = $iar.AsyncWaitHandle.WaitOne(800, $false)\n    if ($ok -and $c.Connected) { $c.Close(); return $true }\n    $c.Close(); return $false\n  } catch { return $false }\n}\n\nfunction Decode-Tally([byte[]]$b) {\n  if ($b.Length -ge 2 -and $b[0] -eq 0xFF -and $b[1] -eq 0xFE) { return [System.Text.Encoding]::Unicode.GetString($b, 2, $b.Length - 2) }\n  if ($b.Length -ge 2 -and $b[0] -eq 0xFE -and $b[1] -eq 0xFF) { return [System.Text.Encoding]::BigEndianUnicode.GetString($b, 2, $b.Length - 2) }\n  if ($b.Length -ge 3 -and $b[0] -eq 0xEF -and $b[1] -eq 0xBB -and $b[2] -eq 0xBF) { return [System.Text.Encoding]::UTF8.GetString($b, 3, $b.Length - 3) }\n  if ($b.Length -ge 4 -and $b[1] -eq 0 -and $b[3] -eq 0) { return [System.Text.Encoding]::Unicode.GetString($b) }\n  return [System.Text.Encoding]::UTF8.GetString($b)\n}\n\nfunction Clean-Xml([string]$t) {\n  # Tally sometimes writes control characters that are illegal in XML\n  $t = [regex]::Replace($t, '&#(?:[0-8]|1[1-2]|1[4-9]|2[0-9]|3[0-1]);', '')\n  $t = [regex]::Replace($t, '&#x(?:[0-8]|0?[bBcC]|0?[eEfF]|1[0-9a-fA-F]);', '')\n  $t = [regex]::Replace($t, '[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F]', '')\n  $t = [regex]::Replace($t, '^\\s*<\\?xml[^>]*\\?>', '<?xml version=\"1.0\" encoding=\"UTF-8\"?>')\n  return $t\n}\n\nfunction Is-ReadOnly([string]$x) {\n  if ($x -notmatch '(?is)<TALLYREQUEST>\\s*Export') { return $false }\n  if ($x -match '(?is)<TALLYREQUEST>\\s*Import|IMPORTDATA|<TALLYMESSAGE|ACTION\\s*=\\s*\"?\\s*(Create|Alter|Delete|Cancel)') { return $false }\n  return $true\n}\n\nfunction Call-Tally([byte[]]$body) {\n  $req = [System.Net.HttpWebRequest]::Create('http://' + $TallyHost + ':' + $TallyPort + '/')\n  $req.Method = 'POST'\n  $req.ContentType = 'text/xml; charset=utf-8'\n  $req.Timeout = 600000\n  $req.ReadWriteTimeout = 600000\n  $req.KeepAlive = $false\n  $req.Proxy = $null\n  $req.ContentLength = $body.Length\n  $rs = $req.GetRequestStream(); $rs.Write($body, 0, $body.Length); $rs.Close()\n  $resp = $req.GetResponse()\n  $st = $resp.GetResponseStream()\n  $ms = New-Object System.IO.MemoryStream\n  $buf = New-Object byte[] 65536\n  while (($n = $st.Read($buf, 0, $buf.Length)) -gt 0) { $ms.Write($buf, 0, $n) }\n  $resp.Close()\n  return ,$ms.ToArray()\n}\n\nfunction Send-Reply($stream, [int]$code, [string]$reason, [string]$ctype, [byte[]]$body, [string]$origin) {\n  $h = 'HTTP/1.1 ' + $code + ' ' + $reason + \"`r`n\"\n  $h += 'Content-Type: ' + $ctype + \"`r`n\"\n  $h += 'Content-Length: ' + $body.Length + \"`r`n\"\n  if ($origin) {\n    $h += 'Access-Control-Allow-Origin: ' + $origin + \"`r`n\"\n    $h += \"Access-Control-Allow-Methods: GET, POST, OPTIONS`r`n\"\n    $h += \"Access-Control-Allow-Headers: Content-Type`r`n\"\n    $h += \"Access-Control-Allow-Private-Network: true`r`n\"\n    $h += \"Access-Control-Max-Age: 600`r`n\"\n    $h += \"Vary: Origin`r`n\"\n  }\n  $h += \"Cache-Control: no-store`r`nConnection: close`r`n`r`n\"\n  $hb = $Latin1.GetBytes($h)\n  $stream.Write($hb, 0, $hb.Length)\n  if ($body.Length -gt 0) { $stream.Write($body, 0, $body.Length) }\n  $stream.Flush()\n}\nfunction Reply-Text($stream, [int]$code, [string]$reason, [string]$text, [string]$origin) {\n  Send-Reply $stream $code $reason 'text/plain; charset=utf-8' ([System.Text.Encoding]::UTF8.GetBytes($text)) $origin\n}\n\nfunction Handle-Client($client) {\n  $client.ReceiveTimeout = 20000\n  $stream = $client.GetStream()\n  $ms = New-Object System.IO.MemoryStream\n  $buf = New-Object byte[] 65536\n  $headEnd = -1\n  while ($headEnd -lt 0) {\n    $n = $stream.Read($buf, 0, $buf.Length)\n    if ($n -le 0) { return }\n    $ms.Write($buf, 0, $n)\n    $headEnd = $Latin1.GetString($ms.ToArray()).IndexOf(\"`r`n`r`n\")\n    if ($ms.Length -gt 65536 -and $headEnd -lt 0) { return }\n  }\n  $all = $ms.ToArray()\n  $head = $Latin1.GetString($all, 0, $headEnd)\n  $lines = $head -split \"`r`n\"\n  $rl = $lines[0] -split ' '\n  $method = $rl[0].ToUpper(); $path = $rl[1]\n  $origin = ''; $clen = 0\n  foreach ($ln in $lines | Select-Object -Skip 1) {\n    $i = $ln.IndexOf(':'); if ($i -lt 1) { continue }\n    $k = $ln.Substring(0, $i).Trim().ToLower(); $v = $ln.Substring($i + 1).Trim()\n    if ($k -eq 'origin') { $origin = $v }\n    if ($k -eq 'content-length') { $clen = [int]$v }\n  }\n  $allow = ''\n  if ($origin) {\n    if ($Allowed -contains $origin) { $allow = $origin }\n    else { Log ('BLOCKED origin: ' + $origin); Reply-Text $stream 403 'Forbidden' 'origin not allowed' ''; return }\n  }\n  if ($method -eq 'OPTIONS') { Send-Reply $stream 204 'No Content' 'text/plain' (New-Object byte[] 0) $allow; return }\n  if ($method -eq 'GET' -and $path -like '/ping*') {\n    $t = if (Test-Tally) { 'true' } else { 'false' }\n    Reply-Text $stream 200 'OK' ('{\"ok\":true,\"tally\":' + $t + ',\"readonly\":true,\"v\":1}') $allow\n    return\n  }\n  if ($method -eq 'POST' -and $path -like '/tally*') {\n    $start = $headEnd + 4\n    $body = New-Object System.IO.MemoryStream\n    if ($all.Length -gt $start) { $body.Write($all, $start, $all.Length - $start) }\n    if ($clen -gt 20971520) { Reply-Text $stream 413 'Too Large' 'too big' $allow; return }\n    while ($body.Length -lt $clen) {\n      $n = $stream.Read($buf, 0, $buf.Length)\n      if ($n -le 0) { break }\n      $body.Write($buf, 0, $n)\n    }\n    $bytes = $body.ToArray()\n    $txt = [System.Text.Encoding]::UTF8.GetString($bytes)\n    if (-not (Is-ReadOnly $txt)) {\n      Log 'BLOCKED: request would change Tally (only Export is allowed)'\n      Reply-Text $stream 403 'Forbidden' 'READ-ONLY link: only Export requests are allowed' $allow\n      return\n    }\n    try {\n      $raw = Call-Tally $bytes\n      $out = Clean-Xml (Decode-Tally $raw)\n      Send-Reply $stream 200 'OK' 'text/xml; charset=utf-8' ([System.Text.Encoding]::UTF8.GetBytes($out)) $allow\n      Log ('Tally -> app: ' + $out.Length + ' chars')\n    } catch {\n      Log ('Tally error: ' + $_.Exception.Message)\n      Reply-Text $stream 502 'Bad Gateway' ('Tally ne pahonchi shakyu nahi: ' + $_.Exception.Message) $allow\n    }\n    return\n  }\n  Reply-Text $stream 404 'Not Found' 'not found' $allow\n}\n\n# ---- run ------------------------------------------------------------\n$listener = New-Object System.Net.Sockets.TcpListener([System.Net.IPAddress]::Loopback, $ListenPort)\ntry { $listener.Start() } catch {\n  Write-Host ''\n  Write-Host 'Aa port ma Tally Link pehla thi chalu chhe (athva port busy). Biji window band karo.'\n  Start-Sleep -Seconds 8\n  exit 1\n}\nWrite-Host '=========================================================='\nWrite-Host ' BALAJI TALLY LINK  -  chalu chhe  (fakt vanchva mate)'\nWrite-Host ' Tally -> App.  App thi Tally ma kai jatu nathi.'\nWrite-Host ' Aa window minimize karo, band na karo.'\nWrite-Host '=========================================================='\nif (Test-Tally) { Log ('Tally mali gayu (port ' + $TallyPort + ').') } else { Log 'Tally hamna nathi mantu - Tally chalu karo ane XML server ON karo.' }\nwhile ($true) {\n  if (-not $listener.Pending()) { Start-Sleep -Milliseconds 80; continue }\n  $client = $listener.AcceptTcpClient()\n  try { Handle-Client $client } catch { Log ('error: ' + $_.Exception.Message) } finally { try { $client.Close() } catch { } }\n}\n";
 </script>
 <script id="bi-v9-core">
 /* ================= Balaji core: utilities, page painter, PDF + XLSX writers, delivery ================= */
@@ -10260,8 +10628,8 @@ function bindPer(body,S,again){
 const qaBtn=(id,ic,label,cls)=>'<button type="button" class="kb-qa'+(cls?' '+cls:'')+'" id="'+id+'"><span class="kb-qi" aria-hidden="true">'+ic+'</span><small>'+E(label)+'</small></button>';
 
 /* ================= settings: what to show on home + grades + categories ================= */
-const TILE_DEF=()=>[['ledger','📒',T('ખાતા (ખેડૂત / માલ / દલાલ)','Khata (farmer / item / broker)')],['expense','💸',T('ખર્ચ','Expenses')],['profit','📈',T('નફો','Profit')],['batch','🥜',T('ફોલાઈ (પ્રોસેસ) — હાલ જરૂર નથી','Folvani (process) — not needed now')],['sale','💰',T('વેચાણ — Tally માંથી આવશે','Sales — will come from Tally')]];
-const tileOn=k=>{const d={ledger:true,expense:true,profit:true,batch:false,sale:false};const v=SET.get('biz.tiles.'+k,undefined);return v===undefined?d[k]:!!v;};
+const TILE_DEF=()=>[['ledger','📒',T('ખાતા (ખેડૂત / માલ / દલાલ)','Khata (farmer / item / broker)')],['expense','💸',T('ખર્ચ','Expenses')],['profit','📈',T('નફો','Profit')],['batch','🥜',T('ફોલાઈ (પ્રોસેસ) — હાલ જરૂર નથી','Folvani (process) — not needed now')],['sale','💰',T('વેચાણ — Tally માંથી આવશે','Sales — will come from Tally')],['tally','🧾',T('Tally (Tally માંથી ડેટા)','Tally (data from Tally)')]];
+const tileOn=k=>{const d={ledger:true,expense:true,profit:true,batch:false,sale:false,tally:true};const v=SET.get('biz.tiles.'+k,undefined);return v===undefined?d[k]:!!v;};
 function applyTiles(){
   const grid=document.querySelector('#bi-home8 .bi-grid8');if(!grid)return;
   grid.querySelectorAll('[data-bz]').forEach(b=>{b.hidden=!(isAdmin()&&tileOn(b.dataset.bz));});
@@ -11523,18 +11891,690 @@ function installBank(C){
   C.paintBank=()=>{const B=C.bank;if(!B)pickScreen();else if(B.stage==='map')mapScreen();else reviewScreen();};
 }
 
+/* ================= Tally -> App (READ ONLY): link, Day Book, party balances, farmer payments ================= */
+const TM=window.BalajiTallyMath;
+const TT={v:'tally_vouchers',l:'tally_ledgers'};
+const nkey=s=>clean(s).toLowerCase().replace(/[^a-z0-9]/g,'');
+const TS=()=>SET.get('tally',null)||{};
+const FIRMS=()=>{const f=TS().firms;return Array.isArray(f)&&f.length?f:SET.defaults().tally.firms;};
+const firmName=id=>{const f=FIRMS().find(x=>x.id===id);return f?f.name:(id||'—');};
+const FIRM_IC=['🏪','🏬','🏭','🏢'];
+const firmIc=id=>FIRM_IC[Math.max(0,FIRMS().findIndex(x=>x.id===id))%FIRM_IC.length];
+const isTallyPC=()=>LS('bi-tally-pc','0')==='1';
+const RELAY=()=>LS('bi-tally-relay','http://127.0.0.1:9100');
+const lastLocal=()=>{try{return JSON.parse(LS('bi-tally-last','{}'))||{};}catch(_){return {};}};
+const tlog=m=>{try{const a=JSON.parse(LS('bi-tally-log','[]'));a.unshift(new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata',hour12:false})+'  '+m);LSset('bi-tally-log',JSON.stringify(a.slice(0,60)));}catch(_){}};
+const tallyFrom=()=>{const f=TS().from;return /^\d{4}-\d{2}-\d{2}$/.test(f||'')?f:TL.monthStart(today());};
+
+/* ---- the Tally Link program on the Tally computer (read only) ---- */
+async function fetchT(url,opt,ms){
+  const ac=typeof AbortController!=='undefined'?new AbortController():null,t=ac?setTimeout(()=>ac.abort(),ms):0;
+  try{return await fetch(url,Object.assign({},opt||{},ac?{signal:ac.signal}:{}));}finally{if(t)clearTimeout(t);}
+}
+async function relayPing(){
+  try{const r=await fetchT(RELAY()+'/ping',{cache:'no-store'},2500);if(!r.ok)return null;return await r.json();}catch(_){return null;}
+}
+async function tcall(xml){
+  let r;
+  try{r=await fetchT(RELAY()+'/tally',{method:'POST',headers:{'Content-Type':'text/plain'},body:xml,cache:'no-store'},600000);}
+  catch(_){throw new Error(T('Tally Link program chalu nathi (aa computer par).','Tally Link program is not running (on this computer).'));}
+  const t=await r.text();
+  if(r.status===403)throw new Error(T('Tally Link e request block kari.','Tally Link blocked the request.'));
+  if(!r.ok)throw new Error(T('Tally sudhi pahonchaayu nahi — Tally chalu chhe ane XML server ON chhe?','Could not reach Tally — is Tally open with the XML server ON?'));
+  const er=TM.tallyError(t);if(er)throw new Error(er);
+  return t;
+}
+
+/* ---- small data helpers ---- */
+async function qAll(name,filters){
+  const rows=[];
+  for(let o=0;;o+=1000){
+    let q=db.from(name).select('*');
+    (filters||[]).forEach(f=>{q=q[f[0]](f[1],f[2]);});
+    const r=await q.order('id',{ascending:true}).range(o,o+999);
+    if(r.error)throw r.error;
+    rows.push(...(r.data||[]));
+    if(!r.data||r.data.length<1000)return rows;
+  }
+}
+const tsqlHint=e=>{
+  const m=err(e);
+  return /does not exist|relation|schema cache|42P01|PGRST205|permission|policy|row-level|column/i.test(m)?T('Supabase માં supabase-tally.sql ચલાવો. ','Run supabase-tally.sql in Supabase. ')+m:m;
+};
+const rowToV=r=>({firm:r.firm,vkey:r.vkey,guid:r.guid||'',date:r.v_date,type:r.v_type,base:r.base_type,no:r.v_no||'',party:r.party||'',amount:n0(r.amount),narr:r.narration||'',bank:r.bank_ledger||'',mode:r.mode||'',utr:r.utr||'',
+  cancelled:!!r.cancelled,optional:false,alter:n0(r.alter_id),lines:Array.isArray(r.lines)?r.lines:[],src:r.src||'xml',id:r.id});
+const vToRow=(firm,v)=>({firm,vkey:v.vkey,guid:v.guid||null,v_date:v.date,v_type:v.type,base_type:v.base,v_no:v.no||null,party:v.party||null,amount:v.amount,narration:(v.narr||'').slice(0,400)||null,
+  bank_ledger:v.bank||null,mode:v.mode||null,utr:v.utr||null,cancelled:!!v.cancelled,lines:v.lines||[],src:v.src||'xml',alter_id:v.alter||null,synced_at:new Date().toISOString()});
+async function upsertChunks(table,rows,conflict){
+  for(let i=0;i<rows.length;i+=150){
+    const r=await db.from(table).upsert(rows.slice(i,i+150),{onConflict:conflict});
+    if(r&&r.error)throw r.error;
+  }
+}
+async function saveVouchers(firm,vs,from,to,opts){
+  opts=opts||{};
+  /* two vouchers with the same type + number + date would collide in one upsert: keep both, tag the later one */
+  const seenK=new Map();
+  vs.forEach(v=>{const n=(seenK.get(v.vkey)||0)+1;seenK.set(v.vkey,n);if(n>1)v.vkey=v.vkey+'~'+n;});
+  const ex=await qAll(TT.v,[['eq','firm',firm],['gte','v_date',from],['lte','v_date',to]]);
+  const have=new Map(ex.map(r=>[r.vkey,r]));
+  let add=0,upd=0;const rows=[];
+  vs.forEach(v=>{
+    const old=have.get(v.vkey);
+    if(opts.onlyNew&&old)return;
+    if(old&&old.src==='xml'&&v.src==='file')return;           /* a printed Day Book never overwrites what Tally sent directly */
+    if(old)upd++;else add++;
+    rows.push(vToRow(firm,v));
+  });
+  await upsertChunks(TT.v,rows,'firm,vkey');
+  let del=0;
+  if(opts.prune){
+    const fresh=new Set(vs.map(v=>v.vkey));
+    for(const r of ex){if(r.src==='xml'&&!fresh.has(r.vkey)){await db.from(TT.v).delete().eq('id',r.id);del++;}}
+  }
+  return {add,upd,del};
+}
+async function saveLedgers(firm,leds){
+  const ex=await qAll(TT.l,[['eq','firm',firm]]);
+  const now=new Date().toISOString(),rows=leds.map(l=>({firm,name:l.name,parent:l.parent||null,closing:l.closing,updated_at:now}));
+  await upsertChunks(TT.l,rows,'firm,name');
+  const keep=new Set(leds.map(l=>l.name));
+  for(const r of ex)if(!keep.has(r.name))await db.from(TT.l).delete().eq('id',r.id);
+}
+
+/* ---- sync one firm from Tally ---- */
+async function syncFirm(f,opt){
+  opt=opt||{};
+  const comps=TM.parseCompanies(await tcall(TM.reqCompanies()));
+  const real=comps.find(c=>nkey(c)===nkey(f.company));
+  if(!real)throw new Error(T('Tally ma "'+f.company+'" company khuli nathi. Khuli chhe: ','Company "'+f.company+'" is not open in Tally. Open: ')+(comps.join(', ')||'—'));
+  const types=TM.parseVoucherTypes(await tcall(TM.reqVoucherTypes(real)));
+  const base=TM.baseResolver(types,TS().vt||{});
+  let nl=0;
+  if(!opt.noLedgers){const leds=TM.parseLedgers(await tcall(TM.reqLedgers(real)));await saveLedgers(f.id,leds);nl=leds.length;}
+  const from=opt.from,to=opt.to,vs=[];
+  for(let a=from;a<=to;){
+    const b=TL.addDays(a,30)>to?to:TL.addDays(a,30);
+    const x=await tcall(TM.reqDayBook(real,a,b)),part=TM.parseVouchers(x,base);
+    if(!part.length&&x.length>400&&!/<VOUCHER[\s>]/i.test(x))throw new Error(T('Tally નો જવાબ સમજાયો નથી (Day Book).','Could not understand the answer from Tally (Day Book).'));
+    vs.push(...part);a=TL.addDays(b,1);
+  }
+  const r=await saveVouchers(f.id,vs,from,to,{prune:true});
+  return {n:vs.length,add:r.add,upd:r.upd,del:r.del,ledgers:nl};
+}
+
+/* ---- farmer payments from Tally vouchers -> khata ---- */
+const stmtM=m=>({upi:'upi',cheque:'cheque',cash:'cash'})[m]||'bank';
+const refOfV=(v,i)=>v.firm+'|'+v.vkey+'#'+i;
+async function loadPlanData(from){
+  const [hisab,pays,vrows,leds]=await Promise.all([getAll(TB.hisab),getAll(TB.pay),qAll(TT.v,[['gte','v_date',from||tallyFrom()]]),qAll(TT.l,[]).catch(()=>[])]);
+  let chits=[];try{const d=await TL.load();chits=(d&&d.chit)||[];}catch(_){}
+  const led=buildLedger(hisab,pays,chits);
+  const farmers=ledgerList(led).map(f=>({key:f.key,name:f.name,mobile:f.mobile,alts:[...f.alts.values()]}));
+  const chitKey=new Map();
+  led.forEach(f=>{f.pending.forEach(c=>chitKey.set(String(c.id),f.key));f.rows.forEach(r=>{if(r.t==='h')chitKey.set(String(r.entry),f.key);});});
+  const chitNos=new Map();
+  chits.forEach(c=>{const no=digits(c.chiththi_number).replace(/^0+(?=\d)/,'');if(!no)return;const key=chitKey.get(String(c.id));if(!key)return;const a=chitNos.get(no)||[];a.push({key,date:V().businessDay(c,'chit')||''});chitNos.set(no,a);});
+  const ign=TS().ignore||{};
+  const vouchers=vrows.map(rowToV);
+  return {hisab,pays,chits,led,leds,farmers,chitNos,vouchers,
+    ctx:{farmers,chitNos,alias:SET.get('biz.bankAlias',{})||{},utrs:new Set(pays.map(p=>BK.normUtr(p.utr)).filter(Boolean)),resolveKey,
+      pays:pays.map(p=>({key:p.farmer_key,date:p.pay_date,amount:n0(p.amount),tally_ref:p.tally_ref||''}))},
+    ign};
+}
+function makePlan(D){
+  const items=TM.planPayments(D.vouchers,D.ctx,{refOf:refOfV});
+  const lk=new Map();(D.leds||[]).forEach(l=>lk.set(l.firm+'|'+nkey(l.name),TM.groupKind(l.parent)));
+  items.forEach(it=>{
+    if(it.state==='done'||it.state==='dup')return;
+    if(D.ign[nkey(it.ledger)]){it.state='ignored';return;}
+    /* bank charges, expenses, our own other firms … can never be a farmer */
+    if(it.state==='other'){const k=lk.get(it.v.firm+'|'+nkey(it.ledger));if(['expense','income','bank','cash','purchase'].indexOf(k)>=0||TM.firmOfCompany(FIRMS(),it.ledger))it.state='nonparty';}
+  });
+  return items;
+}
+function payRowOf(it,farmer,key){
+  const v=it.v,single=(v.lines||[]).length<=1;
+  return {pay_date:v.date,farmer_key:key,farmer_name:farmer?farmer.name:it.ledger,farmer_mobile:(farmer&&farmer.mobile)||null,kind:'payment',mode:stmtM(v.mode),amount:it.amount,
+    utr:(single&&v.utr)?v.utr:null,note:('Tally '+v.type+' '+v.no+' • '+firmName(v.firm)).slice(0,120),firm:v.firm,tally_ref:it.ref,tally_synced_at:new Date().toISOString()};
+}
+async function importPlanItems(D,items){
+  const byKey=new Map(D.farmers.map(f=>[f.key,f]));let n=0;
+  const isDup=e=>/duplicate|unique|23505/i.test(err(e));
+  for(const it of items){
+    const key=it.pick||(it.cand&&it.cand.key);if(!key)continue;
+    const row=payRowOf(it,byKey.get(key),key);
+    try{await saveRow(TB.pay,row);n++;}
+    catch(e){
+      if(!isDup(e))throw e;
+      /* same UTR already used by another entry -> keep the payment, drop only the UTR; same Tally voucher already added by another device -> nothing to do */
+      if(row.utr&&/utr/i.test(err(e))){row.utr=null;try{await saveRow(TB.pay,row);n++;}catch(e2){if(!isDup(e2))throw e2;}}
+    }
+    D.ctx.pays.push({key,date:it.v.date,amount:it.amount,tally_ref:it.ref});
+    if(row.utr)D.ctx.utrs.add(BK.normUtr(it.v.utr));
+  }
+  return n;
+}
+/* a payment that came from Tally follows Tally: cancelled / deleted / changed there => changed here */
+async function mirrorPayments(D,ranges){
+  let ch=0;
+  const byRef=new Map();D.vouchers.forEach(v=>(v.lines&&v.lines.length?v.lines:[{ledger:v.party,amount:v.amount}]).forEach((ln,i)=>byRef.set(refOfV(v,i),{v,ln})));
+  for(const p of D.pays){
+    if(!p.tally_ref)continue;
+    const hit=byRef.get(p.tally_ref);
+    if(hit){
+      if(hit.v.cancelled){await delRow(TB.pay,p.id);ch++;tlog('Tally ma cancel → khata mathi kadhyu: '+p.farmer_name+' ₹'+p.amount);continue;}
+      if(Math.abs(n0(p.amount)-hit.ln.amount)>0.5||p.pay_date!==hit.v.date){await saveRow(TB.pay,{amount:hit.ln.amount,pay_date:hit.v.date},p.id);ch++;tlog('Tally ma badlyu → khata sudharyu: '+p.farmer_name);}
+    }else{
+      const fm=String(p.tally_ref).split('|')[0];
+      if((ranges||[]).some(r=>r.firm===fm&&r.n>0&&p.pay_date>=r.from&&p.pay_date<=r.to)){await delRow(TB.pay,p.id);ch++;tlog('Tally mathi kadhi nakhyu → khata mathi kadhyu: '+p.farmer_name+' ₹'+p.amount);}
+    }
+  }
+  return ch;
+}
+
+/* ---- one full cycle (only on the Tally computer) ---- */
+let tBusy=false;
+async function syncAll(opt){
+  opt=opt||{};
+  if(tBusy)return {busy:true};
+  tBusy=true;const res={ok:true,firms:{},msg:''};
+  try{
+    const ping=await relayPing();
+    if(!ping){res.ok=false;res.msg=T('Tally Link program chalu nathi','Tally Link is not running');return res;}
+    if(!ping.tally){res.ok=false;res.msg=T('Tally chalu nathi (athva XML server band chhe)','Tally is not running (or its XML server is off)');return res;}
+    const t=today(),floor=tallyFrom(),ranges=[];let sqlBad=false;
+    const from=opt.full?floor:(()=>{const w=TL.addDays(t,-14);return w<floor?floor:w;})();
+    for(const f of FIRMS()){
+      if(!clean(f.company))continue;
+      try{
+        const r=await syncFirm(f,{from,to:t});res.firms[f.id]=r;ranges.push({firm:f.id,from,to:t,n:r.n});tlog(f.name+': '+r.n+' voucher ('+r.add+' navi, '+r.upd+' jaana, '+r.del+' kadhya), '+r.ledgers+' khata');
+      }catch(e){
+        const h=tsqlHint(e);
+        if(/supabase-tally/.test(h)){res.ok=false;res.msg=h;tlog('✗ '+h);sqlBad=true;break;}
+        res.firms[f.id]={err:err(e)};res.ok=false;res.msg=(res.msg?res.msg+' • ':'')+f.name+': '+err(e);tlog(f.name+' ✗ '+err(e));
+      }
+    }
+    if(!sqlBad)try{
+      const D=await loadPlanData();
+      const ch=await mirrorPayments(D,ranges);
+      if(ch){const D2=await loadPlanData();Object.assign(D,D2);}
+      const items=makePlan(D),ready=items.filter(i=>i.state==='ready');
+      res.ready=ready.length;res.review=items.filter(i=>i.state==='review').length;
+      if(TS().autoPay!==false&&TS().payOk&&ready.length){res.imported=await importPlanItems(D,ready);tlog('Khedut payment auto khata ma: '+res.imported);}
+    }catch(e){res.ok=false;res.msg=(res.msg?res.msg+' • ':'')+tsqlHint(e);tlog('✗ '+tsqlHint(e));}
+  }catch(e){res.ok=false;res.msg=err(e);}
+  finally{
+    tBusy=false;
+    /* kept on this computer only: saving it in the shared settings every 5 minutes could overwrite a change made on another device */
+    LSset('bi-tally-last',JSON.stringify({at:new Date().toISOString(),ok:res.ok,msg:res.msg||'',n:Object.values(res.firms).reduce((s,x)=>s+(x.n||0),0),imp:res.imported||0}));
+  }
+  return res;
+}
+let tTimer=0;
+function tallyAuto(){
+  if(tTimer)return;
+  tTimer=setInterval(()=>{try{if(isAdmin()&&isTallyPC()&&TS().auto!==false)syncAll({});}catch(_){}},5*60*1000);
+  setTimeout(()=>{try{if(isAdmin()&&isTallyPC()&&TS().auto!==false)syncAll({});}catch(_){}},25000);
+}
+setTimeout(tallyAuto,3000);
+/* ================= Tally screen (READ ONLY: Tally -> app): Day Book / Parties / Farmer payments ================= */
+const BASE_IC={purchase:'🛒',sales:'🧾',payment:'💸',receipt:'📥',contra:'🔁',journal:'📝',creditnote:'↩️',debitnote:'↪️',other:'📄'};
+const BASE_LB=()=>({purchase:T('ખરીદી','Purchase'),sales:T('વેચાણ','Sales'),payment:T('ચૂકવણી','Payment'),receipt:T('આવક','Receipt'),contra:'Contra',journal:'Journal',creditnote:'Credit note',debitnote:'Debit note',other:T('બીજા','Other')});
+const BASE_ORDER=['purchase','sales','payment','receipt','journal','contra','creditnote','debitnote','other'];
+const vCls=b=>b==='payment'?'due':b==='receipt'?'zero':'';
+const agoTxt=iso=>{
+  if(!iso)return T('હજી નથી','not yet');const d=new Date(iso);if(isNaN(d))return '—';
+  const m=Math.round((Date.now()-d.getTime())/60000);
+  if(m<1)return T('હમણાં','just now');if(m<60)return m+' '+T('મિનિટ પહેલાં','min ago');
+  const h=Math.round(m/60);if(h<24)return h+' '+T('કલાક પહેલાં','h ago');return dmy(TL.istDay(d));
+};
+const LED_IC={creditor:'🧑‍💼',debtor:'🏪',bank:'🏦',cash:'💵',expense:'💸',income:'💰',purchase:'🛒',other:'📒'};
+
+/* farmer picker for one Tally payment line */
+async function tallyImportOne(S,it,key){
+  try{
+    it.pick=key;await importPlanItems(S.D,[it]);
+    const pk=BK.partyKey(it.ledger);
+    if(pk&&pk.length>=3){try{await SET.save({biz:{bankAlias:{[pk]:key}}});}catch(_){}}
+    toast(T('ખાતામાં ઉમેર્યું','Added to khata'));
+    await S.reloadPlan();S.repaint();
+  }catch(e){status(S.body,tsqlHint(e),true);}
+}
+function tallyPickFarmer(S,it){
+  const D=S.D;if(!D)return;
+  const m=V().dialog(T('ખેડૂત પસંદ કરો','Choose the farmer'),'<div class="kb-dlg"><p class="v9-note">'+E(it.ledger+' • ₹'+fmt(it.amount,0)+' • '+dmy(it.v.date))+'</p>'
+    +'<div class="kb-search"><input id="kt-fq" type="search" autocomplete="off" placeholder="🔍 '+E(T('નામ / મોબાઇલ','Name / mobile'))+'"></div><div class="kb-rows" id="kt-fl"></div></div>');
+  const sugg=new Set((it.cands||[]).map(c=>c.key));
+  const draw=()=>{
+    const qq=normName(m.querySelector('#kt-fq').value);
+    let list=D.farmers.filter(f=>!qq||normName(f.name+' '+(f.mobile||'')+' '+f.alts.join(' ')).includes(qq));
+    if(!qq)list=D.farmers.filter(f=>sugg.has(f.key)).concat(list.filter(f=>!sugg.has(f.key)));
+    list=list.slice(0,40);
+    const box=m.querySelector('#kt-fl');
+    box.innerHTML=list.length?list.map(f=>'<button type="button" class="kb-row" data-k="'+E(f.key)+'">'+avatar(f.name)+'<span class="kb-rt"><b>'+E(f.name)+(sugg.has(f.key)?' ⭐':'')+'</b><small>'+E(f.mobile||'')+'</small></span></button>').join(''):'<div class="kb-empty"><p>'+E(T('કોઈ ખેડૂત મળ્યો નથી.','No farmer found.'))+'</p></div>';
+    box.querySelectorAll('[data-k]').forEach(b=>b.addEventListener('click',()=>{V().closeModal();tallyImportOne(S,it,b.dataset.k);}));
+  };
+  m.querySelector('#kt-fq').addEventListener('input',draw);draw();
+}
+
+/* one voucher in detail */
+function tallyVoucherDlg(S,v){
+  const L=BASE_LB();
+  const kv=(k,val)=>val||val===0?'<div class="bz-kv"><span>'+E(k)+'</span><b>'+E(val)+'</b></div>':'';
+  const lines=(v.lines||[]).filter(l=>l&&l.ledger);
+  const m=V().dialog(BASE_IC[v.base]+' '+(v.type||L[v.base]),'<div class="kb-dlg">'
+    +'<div class="kb-card">'+kv(T('તારીખ','Date'),dmy(v.date))+kv(T('વાઉચર નં.','Voucher no.'),v.no)+kv(T('ફર્મ','Firm'),firmName(v.firm))+kv(T('પાર્ટી','Party'),v.party)
+      +'<div class="bz-kv big"><span>'+E(T('રકમ','Amount'))+'</span><b>'+E(money(v.amount))+'</b></div>'
+      +kv(T('બેંક / કેશ','Bank / cash'),v.bank)+kv(T('રીત','Mode'),v.mode?v.mode.toUpperCase():'')+kv('UTR',v.utr)+kv(T('નોંધ','Narration'),v.narr)
+      +(v.src==='file'?'<p class="v9-note">'+E(T('છાપેલી Day Book ફાઇલમાંથી','From a Day Book file'))+'</p>':'')+'</div>'
+    +(lines.length>1?'<div class="kb-ct"><span>'+E(T('બધી લાઇન','All lines'))+'</span></div><div class="kb-rows">'+lines.map(l=>'<div class="kb-row"><span class="kb-rt"><b>'+E(l.ledger)+'</b></span><span class="kb-ra"><b>'+E(money(Math.abs(l.amount)))+'</b></span></div>').join('')+'</div>':'')
+    +'</div>');
+  return m;
+}
+/* one Tally ledger: balance + its vouchers */
+function tallyPartyDlg(S,l){
+  const m=V().dialog(l.name,'<div class="kb-dlg"><div class="kb-card"><div class="bz-kv"><span>'+E(T('ફર્મ','Firm'))+'</span><b>'+E(firmName(l.firm))+'</b></div><div class="bz-kv"><span>'+E(T('ગ્રુપ','Group'))+'</span><b>'+E(l.parent||'—')+'</b></div>'
+    +'<div class="bz-kv big"><span>'+E(T('બાકી (Tally)','Balance (Tally)'))+'</span><b>'+E(money(Math.abs(l.closing))+(l.closing>0?' Cr':l.closing<0?' Dr':''))+'</b></div></div>'
+    +'<div id="kt-pv"><p class="v9-note">'+E(T('લોડ થાય છે…','Loading…'))+'</p></div></div>');
+  (async()=>{
+    let rows=[];
+    try{rows=(await qAll(TT.v,[['eq','firm',l.firm],['eq','party',l.name]])).map(rowToV);}catch(e){const b=m.querySelector('#kt-pv');if(b)b.innerHTML='<p class="v9-bad">'+E(tsqlHint(e))+'</p>';return;}
+    rows=rows.filter(v=>!v.cancelled).sort((a,b)=>String(b.date).localeCompare(String(a.date))).slice(0,40);
+    const b=m.querySelector('#kt-pv');if(!b)return;
+    b.innerHTML=rows.length?'<div class="kb-ct"><span>'+E(T('છેલ્લા વાઉચર','Latest vouchers'))+'</span></div><div class="kb-rows">'+rows.map(v=>'<div class="kb-row">'+avatar(v.type,BASE_IC[v.base])+'<span class="kb-rt"><b>'+E(v.type+(v.no?' '+v.no:''))+'</b><small>'+E(dmy(v.date)+(v.narr?' • '+v.narr:''))+'</small></span><span class="kb-ra '+vCls(v.base)+'"><b>'+E(money(v.amount))+'</b></span></div>').join('')+'</div>'
+      :'<p class="v9-note">'+E(T('આ ખાતાના વાઉચર મળ્યા નથી.','No vouchers found for this ledger.'))+'</p>';
+  })();
+}
+
+function openTally(opts){
+  if(!isAdmin())return;
+  TL.showPanel('🧾 Tally',async(body,live)=>{
+    const t0=today();
+    const S={tab:'day',view:(opts&&opts.view)||null,firm:'all',type:'all',per:'M'+TL.monthStart(t0),from:TL.monthStart(t0),to:t0,cfrom:'',cto:'',q:'',more:0,
+      vs:[],leds:[],D:null,items:[],pf:'review',lk:'creditor',lq:'',lzero:false,ping:undefined,comps:null,err:'',busy:false,fileR:null,live,body};
+    const q=s=>body.querySelector(s);
+    const keep=(sel,fn)=>{const n=body.querySelector(sel);if(!n)return;const pos=n.selectionStart;fn();const m=body.querySelector(sel);if(m){m.focus();try{m.setSelectionRange(pos,pos);}catch(_){}}};
+    S.reloadPlan=async()=>{S.D=await loadPlanData();S.items=makePlan(S.D);};
+    S.reload=async()=>{
+      S.err='';
+      try{
+        const fl=[];if(S.from)fl.push(['gte','v_date',S.from]);if(S.to)fl.push(['lte','v_date',S.to]);
+        S.vs=(await qAll(TT.v,fl)).map(rowToV);
+        S.leds=await qAll(TT.l,[]);
+        await S.reloadPlan();
+      }catch(e){S.err=tsqlHint(e);}
+      if(live())S.repaint();
+    };
+    S.repaint=()=>{if(!live())return;(S.view==='setup'?paintSetup:S.view==='file'?paintFile:paintMain)();};
+
+    /* ---------- main screen ---------- */
+    function paintMain(){
+      const L=BASE_LB(),pc=isTallyPC(),L0=lastLocal(),srv=S.leds.reduce((m,l)=>Math.max(m,Date.parse(l.updated_at)||0),0),loc=Date.parse(L0.at)||0;
+      const last={at:(Math.max(srv,loc)?new Date(Math.max(srv,loc)).toISOString():''),ok:pc&&loc>=srv?L0.ok:undefined,msg:pc?(L0.msg||''):''};
+      const inFirm=x=>S.firm==='all'||x.firm===S.firm;
+      const vsF=S.vs.filter(v=>inFirm(v)&&!v.cancelled);
+      const sums={},cnt={};vsF.forEach(v=>{sums[v.base]=(sums[v.base]||0)+v.amount;cnt[v.base]=(cnt[v.base]||0)+1;});
+      const nrev=S.items.filter(i=>i.state==='review'||(i.state==='ready'&&!(TS().autoPay!==false&&TS().payOk))).length;
+      const dot=last.at?(last.ok===false?'🟠':'🟢'):'⚪';
+      let head='<div class="kb-hero"><span>'+dot+' '+E(T('Tally છેલ્લું સિંક','Tally last sync'))+': '+E(agoTxt(last.at))+'</span><b>'+vsF.length+' '+E(T('વાઉચર','vouchers'))+'</b><small>'+E(['purchase','sales','payment','receipt'].filter(b=>sums[b]).map(b=>L[b]+' '+shortMoney(sums[b])).join(' • ')||T('આ સમયમાં કોઈ વાઉચર નથી','No vouchers in this period'))+'</small></div>'
+        +'<div class="kb-qas">'+qaBtn('kt-sync','🔄',pc?T('સિંક','Sync'):T('રિફ્રેશ','Refresh'))+qaBtn('kt-file','📂',T('ફાઇલ','File'))+qaBtn('kt-xl','⬇️','Excel')+gearBtn('kt-set')+'</div>'
+        +'<p class="bz-st'+((last.ok===false&&last.msg)||S.err?' warn':'')+'" id="bz-st" role="status">'+E(S.err||(last.ok===false?last.msg:''))+'</p>'
+        +seg('kt-tab',[['day','📒 '+T('ડે બુક','Day Book')],['par','👥 '+T('ખાતા','Parties')],['pay','💳 '+T('ખેડૂત ચૂકવણી','Farmer pay')+(nrev?' ('+nrev+')':'')]],S.tab,'kb-tabs');
+      const firmSeg=FIRMS().length>1?seg('kt-firm',[['all',T('બધી ફર્મ','All firms')]].concat(FIRMS().map(f=>[f.id,firmIc(f.id)+' '+f.name])),S.firm,'kb-sub'):'';
+      let main='';
+      if(S.tab==='day'){
+        const types=BASE_ORDER.filter(b=>cnt[b]);
+        let list=vsF.filter(v=>(S.type==='all'||v.base===S.type));
+        const qs=clean(S.q).toLowerCase();
+        if(qs)list=list.filter(v=>(v.party+' '+v.no+' '+v.utr+' '+v.narr+' '+v.type+' '+v.amount).toLowerCase().includes(qs));
+        list.sort((a,b)=>String(b.date).localeCompare(String(a.date))||String(b.no).localeCompare(String(a.no),undefined,{numeric:true}));
+        const lim=150+S.more*150,shown=list.slice(0,lim);
+        const days=[];let cur=null;
+        shown.forEach(v=>{if(!cur||cur.d!==v.date){cur={d:v.date,a:[]};days.push(cur);}cur.a.push(v);});
+        main=firmSeg+seg('kt-type',[['all',T('બધા','All')+' '+vsF.length]].concat(types.map(b=>[b,BASE_IC[b]+' '+L[b]+' '+cnt[b]])),S.type,'kb-sub')
+          +seg('kb-per',perItems(),S.per,'kb-months')+perCustomHtml(S)
+          +'<div class="kb-search"><input id="kt-q" type="search" autocomplete="off" placeholder="🔍 '+E(T('પાર્ટી / નંબર / UTR / નોંધ','Party / no. / UTR / note'))+'" value="'+E(S.q)+'"></div>'
+          +(S.type!=='all'?'<div class="kb-sumline"><span>'+E(L[S.type])+' ('+list.length+')</span><b>'+E(money(list.reduce((s,v)=>s+v.amount,0)))+'</b></div>':'<div class="kb-sumline"><span>'+list.length+' '+E(T('વાઉચર','vouchers'))+'</span><b></b></div>')
+          +(days.length?days.map(g=>'<div class="kb-day"><span>'+E(dayLabel(g.d))+'</span><b>'+g.a.length+'</b></div><div class="kb-rows">'+g.a.map(v=>
+            '<button type="button" class="kb-row" data-v="'+E(v.firm+'|'+v.vkey)+'">'+avatar(v.party||v.type,BASE_IC[v.base]||'📄')+'<span class="kb-rt"><b>'+E(v.party||v.type)+'</b><small>'+E([v.type+(v.no?' '+v.no:''),S.firm==='all'?firmName(v.firm):'',(v.base==='payment'||v.base==='receipt')&&v.mode?v.mode.toUpperCase():'',v.narr].filter(Boolean).join(' • '))+'</small></span><span class="kb-ra '+vCls(v.base)+'"><b>'+E(money(v.amount))+'</b></span></button>').join('')+'</div>').join('')
+            +(list.length>lim?'<button type="button" class="bz-add" id="kt-more">'+E(T('વધુ બતાવો','Show more'))+' ('+(list.length-lim)+')</button>':'')
+            :'<div class="kb-empty"><span aria-hidden="true">🧾</span><p>'+E(S.vs.length||S.err?T('આ ફિલ્ટરમાં કોઈ વાઉચર નથી.','No vouchers for this filter.'):(pc?T('હજી Tally માંથી ડેટા આવ્યો નથી — ઉપર “સિંક” દબાવો.','No data from Tally yet — press “Sync” above.'):T('હજી Tally માંથી ડેટા આવ્યો નથી. Tally વાળા કમ્પ્યુટર પર સેટઅપ કરો (⚙️).','No data from Tally yet. Set it up on the Tally computer (⚙️).')))+'</p></div>');
+      }else if(S.tab==='par'){
+        const kinds=[['creditor','🧑‍💼 '+T('દેવું (Creditors)','To pay (Creditors)')],['debtor','🏪 '+T('લેવાના (Debtors)','To get (Debtors)')],['bank','🏦 '+T('બેંક / કેશ','Bank / cash')],['all',T('બધા','All')]];
+        const kindOf=l=>{const k=TM.groupKind(l.parent);return k==='cash'?'bank':k;};
+        const qs=normName(S.lq);
+        let list=S.leds.filter(l=>(S.firm==='all'||l.firm===S.firm)&&(S.lk==='all'||kindOf(l)===S.lk)&&(S.lzero||Math.abs(n0(l.closing))>=0.5)&&(!qs||normName(l.name+' '+(l.parent||'')).includes(qs)));
+        list.sort((a,b)=>Math.abs(n0(b.closing))-Math.abs(n0(a.closing)));
+        const lim=100+S.more*100;
+        const owe=list.filter(l=>kindOf(l)==='creditor'&&l.closing>0).reduce((s,l)=>s+l.closing,0),get=list.filter(l=>kindOf(l)==='debtor'&&l.closing<0).reduce((s,l)=>s-l.closing,0);
+        const lab=l=>{const c=n0(l.closing),k=kindOf(l);
+          if(k==='creditor')return c>0?['due',T('દેવું','to pay')]:['over',T('એડવાન્સ','advance')];
+          if(k==='debtor')return c<0?['zero',T('લેવાના','to get')]:['over',T('એડવાન્સ','advance')];
+          return ['',c>0?'Cr':'Dr'];};
+        main=firmSeg+seg('kt-lk',kinds,S.lk,'kb-sub')
+          +'<div class="kb-search"><input id="kt-lq" type="search" autocomplete="off" placeholder="🔍 '+E(T('ખાતાનું નામ','Ledger name'))+'" value="'+E(S.lq)+'"></div>'
+          +(S.lk==='creditor'||S.lk==='all'?'<div class="kb-sumline"><span>'+E(T('કુલ દેવું','Total to pay'))+'</span><b>'+E(money(owe))+'</b></div>':'')
+          +(S.lk==='debtor'||S.lk==='all'?'<div class="kb-sumline"><span>'+E(T('કુલ લેવાના','Total to get'))+'</span><b>'+E(money(get))+'</b></div>':'')
+          +(list.length?'<div class="kb-rows">'+list.slice(0,lim).map((l,i)=>{const a=lab(l);return '<button type="button" class="kb-row" data-l="'+i+'">'+avatar(l.name,LED_IC[kindOf(l)]||'📒')+'<span class="kb-rt"><b>'+E(l.name)+'</b><small>'+E([l.parent,S.firm==='all'?firmName(l.firm):''].filter(Boolean).join(' • '))+'</small></span><span class="kb-ra '+a[0]+'"><b>'+E(money(Math.abs(n0(l.closing))))+'</b><small>'+E(a[1])+'</small></span></button>';}).join('')+'</div>'
+            +(list.length>lim?'<button type="button" class="bz-add" id="kt-more">'+E(T('વધુ બતાવો','Show more'))+' ('+(list.length-lim)+')</button>':'')
+            :'<div class="kb-empty"><span aria-hidden="true">👥</span><p>'+E(S.leds.length?T('કોઈ ખાતું મળ્યું નથી.','No ledger found.'):T('હજી Tally ના ખાતા આવ્યા નથી.','No ledgers from Tally yet.'))+'</p></div>')
+          +'<label class="kt-sw"><span>'+E(T('શૂન્ય બાકી પણ બતાવો','Show zero balances too'))+'</span><input type="checkbox" id="kt-lz"'+(S.lzero?' checked':'')+'><i></i></label>';
+        S._plist=list;
+      }else{
+        const st={review:[],ready:[],other:[],done:[],ign:[]};
+        S.items.forEach(i=>{if(i.state==='review')st.review.push(i);else if(i.state==='ready')st.ready.push(i);else if(i.state==='done'||i.state==='dup')st.done.push(i);else if(i.state==='ignored'||i.state==='nonparty')st.ign.push(i);else st.other.push(i);});
+        const payOk=!!TS().payOk,auto=TS().autoPay!==false;
+        const items=(st[S.pf]||[]).filter(i=>S.firm==='all'||i.v.firm===S.firm).sort((a,b)=>String(b.v.date).localeCompare(String(a.v.date)));
+        const lim=60+S.more*60;
+        const card=i=>{
+          const c=i.cand,sure=S.pf==='ready'||S.pf==='review';
+          let acts='';
+          if(S.pf==='ready'||S.pf==='review')acts='<button type="button" class="kt-b ok" data-ok="'+E(i.ref)+'">✔ '+E(T('આ ખેડૂત','Yes'))+': '+E(c?c.name:'')+'</button><button type="button" class="kt-b" data-pk="'+E(i.ref)+'">👨‍🌾 '+E(T('બીજો','Other'))+'</button><button type="button" class="kt-b no" data-ig="'+E(i.ref)+'">🚫 '+E(T('ખેડૂત નથી','Not farmer'))+'</button>';
+          else if(S.pf==='other')acts='<button type="button" class="kt-b ok" data-pk="'+E(i.ref)+'">👨‍🌾 '+E(T('ખેડૂત પસંદ કરો','Pick farmer'))+'</button><button type="button" class="kt-b no" data-ig="'+E(i.ref)+'">🚫 '+E(T('ખેડૂત નથી','Not farmer'))+'</button>';
+          else if(S.pf==='ign')acts=i.state==='nonparty'?'<button type="button" class="kt-b" data-pk="'+E(i.ref)+'">👨‍🌾 '+E(T('ખેડૂત પસંદ કરો','Pick farmer'))+'</button>':'<button type="button" class="kt-b" data-un="'+E(i.ref)+'">↩ '+E(T('પાછું લો','Undo'))+'</button>';
+          const flag=i.state==='dup'?'<span class="kb-fl dim">'+E(T('પહેલેથી ખાતામાં','already in khata'))+'</span>':i.state==='done'?'<span class="kb-fl ok">✔ '+E(T('ખાતામાં','in khata'))+'</span>':(i.why==='twice'?'<span class="kb-fl chk">'+E(T('બે વાર?','twice?'))+'</span>':'');
+          return '<div class="kt-it"><button type="button" class="kb-row" data-v="'+E(i.v.firm+'|'+i.v.vkey)+'">'+avatar(i.ledger,'💸')+'<span class="kb-rt"><b>'+E(i.ledger)+'</b><small>'+E(dmy(i.v.date)+' • '+i.v.type+(i.v.no?' '+i.v.no:'')+' • '+firmName(i.v.firm)+(i.v.mode?' • '+i.v.mode.toUpperCase():''))+'</small></span><span class="kb-ra due"><b>'+E(money(i.amount))+'</b></span></button>'
+            +(flag?'<div class="kb-fls">'+flag+'</div>':'')+(acts?'<div class="kt-acts">'+acts+'</div>':'')+'</div>';
+        };
+        const needOk=!payOk&&st.ready.length;
+        main=firmSeg+(needOk||(!auto&&st.ready.length)?'<div class="kt-go"><b>✔ '+st.ready.length+' '+E(T('ચૂકવણી ખેડૂત સાથે મળી ગઈ','payments matched a farmer'))+'</b><small>'+E(payOk?T('ઓટો બંધ છે — દબાવીને ખાતામાં નાખો.','Auto is off — tap to add to khata.'):T('પહેલી વાર: ચેક કરીને દબાવો. પછી નવી ચૂકવણી આપમેળે ખાતામાં આવશે.','First time: check, then tap. After that new payments go to khata automatically.'))+'</small><button type="button" class="bz-main" id="kt-all">'+E(T('બધી ખાતામાં નાખો','Add all to khata'))+'</button></div>':'')
+          +seg('kt-pf',[['review','⚠ '+T('ચકાસો','Check')+' '+st.review.length],['ready','✔ '+T('તૈયાર','Ready')+' '+st.ready.length],['other','❓ '+T('ખેડૂત મળ્યો નથી','No match')+' '+st.other.length],['done','💳 '+T('ખાતામાં','In khata')+' '+st.done.length],['ign','🚫 '+T('ખેડૂત નથી','Not farmer')+' '+st.ign.length]],S.pf,'kb-sub')
+          +'<p class="v9-note kb-hint">'+E(S.pf==='review'?T('નામ બરાબર ન મળ્યું — “આ ખેડૂત” દબાવશો તો ખાતામાં જશે અને આવતી વખતે આપમેળે ઓળખાશે.','Name was not an exact match — tap “Yes” to add; it will be recognised next time.'):S.pf==='other'?T('Tally ની ચૂકવણી જે કોઈ ખેડૂત સાથે મળી નથી (ભાડું, મજૂરી વગેરે પણ હોઈ શકે). ખેડૂત હોય તો પસંદ કરો, નહીંતર “ખેડૂત નથી”.','Tally payments that match no farmer (could be rent, labour…). Pick a farmer or mark “Not farmer”.'):S.pf==='ready'?T('આ ચૂકવણી ખેડૂત સાથે પાક્કી મળી ગઈ છે.','These are sure matches.'):S.pf==='done'?T('Tally ની આ ચૂકવણી ખેડૂતના ખાતામાં છે.','These Tally payments are in the farmer khata.'):T('આ નામની ચૂકવણી ખેડૂતમાં ગણાશે નહીં. (બેંક ચાર્જ, ખર્ચ, તમારી બીજી ફર્મ આપમેળે અહીં આવે છે.)','Payments to these names are not treated as farmer payments. (Bank charges, expenses and your own other firms land here automatically.)'))+'</p>'
+          +(items.length?items.slice(0,lim).map(card).join('')+(items.length>lim?'<button type="button" class="bz-add" id="kt-more">'+E(T('વધુ બતાવો','Show more'))+' ('+(items.length-lim)+')</button>':''):'<div class="kb-empty"><span aria-hidden="true">💳</span><p>'+E(T('અહીં કંઈ નથી.','Nothing here.'))+'</p></div>');
+        S._pitems=items;
+      }
+      body.innerHTML='<div class="kb">'+head+main+'</div>';
+
+      /* ---- events ---- */
+      q('#kt-set').addEventListener('click',()=>{S.view='setup';S.repaint();toTop();});
+      q('#kt-file').addEventListener('click',()=>{S.view='file';S.fileR=null;S.repaint();toTop();});
+      q('#kt-sync').addEventListener('click',async()=>{
+        if(!isTallyPC()){status(body,T('તાજું થાય છે…','Refreshing…'));await S.reload();status(body,T('સિંક ફક્ત Tally વાળા કમ્પ્યુટર પર થાય છે. બીજે અહીં ફક્ત જોવાનું છે.','Sync runs only on the Tally computer. Elsewhere this is view-only.'));return;}
+        const b=q('#kt-sync');if(b)b.disabled=true;
+        status(body,T('Tally માંથી ડેટા આવે છે…','Reading from Tally…'));
+        const r=await syncAll({});
+        if(r.busy){status(body,T('સિંક ચાલુ છે…','A sync is already running…'));return;}
+        await S.reload();
+        if(live())status(body,r.ok?T('✔ સિંક થયું','✔ Synced')+(r.imported?' • '+r.imported+' '+T('ચૂકવણી ખાતામાં','payments to khata'):''):(r.msg||T('સિંક ન થયું','Sync failed')),!r.ok);
+      });
+      q('#kt-xl').addEventListener('click',()=>{
+        const L2=BASE_LB(),rows=S.tab==='par'?(S._plist||[]).map(l=>[firmName(l.firm),l.name,l.parent||'',n0(l.closing)]):S.vs.filter(v=>inFirm(v)&&!v.cancelled&&(S.type==='all'||v.base===S.type)).sort((a,b)=>String(a.date).localeCompare(String(b.date))).map(v=>[dmy(v.date),firmName(v.firm),L2[v.base]||v.type,v.type,v.no,v.party,v.amount,v.mode||'',v.utr||'',v.narr||'']);
+        if(S.tab==='par')xl('Tally – '+T('ખાતા','Parties'),[{name:T('ખાતા','Parties'),title:T('ખાતા','Parties'),cols:[col(T('ફર્મ','Firm'),'s',18),col(T('ખાતું','Ledger'),'s',28),col(T('ગ્રુપ','Group'),'s',20),col(T('બાકી (Cr +, Dr −)','Balance (Cr +, Dr −)'),'n',16)],rows,nofoot:true}],'Tally','Tally-khata-'+today());
+        else xl('Tally – '+T('ડે બુક','Day Book'),[{name:'Day Book',title:'Day Book',cols:[col(T('તારીખ','Date'),'s',12),col(T('ફર્મ','Firm'),'s',18),col(T('પ્રકાર','Kind'),'s',12),col(T('વાઉચર પ્રકાર','Voucher type'),'s',16),col(T('નં.','No.'),'s',8),col(T('પાર્ટી','Party'),'s',28),col(T('રકમ ₹','Amount ₹'),'n',14),col(T('રીત','Mode'),'s',8),col('UTR','s',20),col(T('નોંધ','Narration'),'s',30)],rows,nofoot:true}],(S.from?dmy(S.from):T('શરૂઆત','Start'))+' → '+(S.to?dmy(S.to):T('આજ','today')),'Tally-daybook-'+(S.to||today()));
+      });
+      bindSeg(body,'kt-tab',v=>{S.tab=v;S.more=0;S.repaint();});
+      bindSeg(body,'kt-firm',v=>{S.firm=v;S.more=0;S.repaint();});
+      bindSeg(body,'kt-type',v=>{S.type=v;S.more=0;S.repaint();});
+      bindSeg(body,'kt-lk',v=>{S.lk=v;S.more=0;S.repaint();});
+      bindSeg(body,'kt-pf',v=>{S.pf=v;S.more=0;S.repaint();});
+      if(S.tab==='day')bindPer(body,S,()=>{S.more=0;S.reload();});
+      const qi=q('#kt-q');if(qi)qi.addEventListener('input',()=>{S.q=qi.value;S.more=0;keep('#kt-q',()=>S.repaint());});
+      const li=q('#kt-lq');if(li)li.addEventListener('input',()=>{S.lq=li.value;S.more=0;keep('#kt-lq',()=>S.repaint());});
+      const lz=q('#kt-lz');if(lz)lz.addEventListener('change',()=>{S.lzero=lz.checked;S.repaint();});
+      const mb=q('#kt-more');if(mb)mb.addEventListener('click',()=>{S.more++;S.repaint();});
+      body.querySelectorAll('[data-v]').forEach(b=>b.addEventListener('click',()=>{
+        const k=b.dataset.v,i=k.indexOf('|'),firm=k.slice(0,i),vk=k.slice(i+1);
+        const v=S.vs.find(x=>x.firm===firm&&x.vkey===vk)||(S.D&&S.D.vouchers.find(x=>x.firm===firm&&x.vkey===vk));
+        if(v)tallyVoucherDlg(S,v);
+      }));
+      body.querySelectorAll('[data-l]').forEach(b=>b.addEventListener('click',()=>{const l=(S._plist||[])[+b.dataset.l];if(l)tallyPartyDlg(S,l);}));
+      /* farmer payment actions */
+      const byRef=r=>S.items.find(i=>i.ref===r);
+      body.querySelectorAll('[data-ok]').forEach(b=>b.addEventListener('click',()=>{const it=byRef(b.dataset.ok);if(it&&it.cand){b.disabled=true;tallyImportOne(S,it,it.cand.key);}}));
+      body.querySelectorAll('[data-pk]').forEach(b=>b.addEventListener('click',()=>{const it=byRef(b.dataset.pk);if(it)tallyPickFarmer(S,it);}));
+      body.querySelectorAll('[data-ig]').forEach(b=>b.addEventListener('click',async()=>{
+        const it=byRef(b.dataset.ig);if(!it)return;
+        if(!(await ask(T('“'+it.ledger+'” ની ચૂકવણી ખેડૂતમાં ગણવી નહીં?','Do not treat payments to “'+it.ledger+'” as farmer payments?'),T('હા','Yes'))))return;
+        await SET.save({tally:{ignore:{[nkey(it.ledger)]:1}}});
+        if(S.D)S.D.ign=TS().ignore||{};S.items=makePlan(S.D);S.repaint();
+      }));
+      body.querySelectorAll('[data-un]').forEach(b=>b.addEventListener('click',async()=>{
+        const it=byRef(b.dataset.un);if(!it)return;
+        await SET.save({tally:{ignore:{[nkey(it.ledger)]:0}}});
+        if(S.D)S.D.ign=TS().ignore||{};S.items=makePlan(S.D);S.repaint();
+      }));
+      const all=q('#kt-all');if(all)all.addEventListener('click',async()=>{
+        all.disabled=true;status(body,T('ખાતામાં નાખે છે…','Adding to khata…'));
+        try{
+          const ready=S.items.filter(i=>i.state==='ready'),n=await importPlanItems(S.D,ready);
+          await SET.save({tally:{payOk:true}});
+          toast(n+' '+T('ચૂકવણી ખાતામાં ઉમેરી','payments added to khata'));
+          await S.reloadPlan();S.repaint();
+        }catch(e){all.disabled=false;status(body,tsqlHint(e),true);}
+      });
+    }
+    S.paintMain=paintMain;
+    const paintSetup=()=>tallySetupView(S),paintFile=()=>tallyFileView(S);
+    paintMain();
+    S.reload();
+  });
+}
+/* ================= Tally: setup screen, Day Book file import, Tally Link download ================= */
+const LINK_ORIGIN='https://balajiindustries654-lang.github.io';
+function linkScript(){
+  const ps=window.BalajiTallyLinkPS||'';
+  const origins=[];[location.origin,LINK_ORIGIN].forEach(o=>{if(/^https?:\/\/[^/]+$/.test(o)&&origins.indexOf(o)<0)origins.push(o);});
+  return ps.split('__PORT__').join('9100').split('__TALLYPORT__').join('9000').split('__ORIGINS__').join(origins.map(o=>"'"+o+"'").join(','));
+}
+/* a .bat that runs the PowerShell script stored below its own last line */
+function linkBat(){
+  const head=['@echo off','setlocal','set "BALAJI_LINK_SELF=%~f0"','title Balaji Tally Link',
+    'powershell -NoProfile -ExecutionPolicy Bypass -Command "iex ((Get-Content -Raw -LiteralPath $env:BALAJI_LINK_SELF).Split([string[]](\'#<\'+\'PS>\'),2,[StringSplitOptions]::None)[1])"',
+    'echo.','pause','exit /b','#<PS>'];
+  return head.join('\r\n')+'\r\n'+linkScript().replace(/\r?\n/g,'\r\n');
+}
+function dlFile(name,text){
+  const b=new Blob([text],{type:'application/octet-stream'}),a=document.createElement('a');
+  a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();
+  setTimeout(()=>{try{URL.revokeObjectURL(a.href);}catch(_){}a.remove();},4000);
+}
+
+async function readPdfPages(u8){
+  const L=await loadPdfJs();let doc;
+  doc=await L.getDocument({data:u8.slice()}).promise;
+  const pages=[];
+  try{
+    for(let p=1;p<=doc.numPages&&p<=300;p++){
+      const pg=await doc.getPage(p),tc=await pg.getTextContent();
+      pages.push(tc.items.map(t=>({str:t.str,x:t.transform[4],y:t.transform[5],w:t.width,h:t.height||Math.abs(t.transform[3])})));
+    }
+  }finally{try{doc.destroy();}catch(_){}}
+  return pages;
+}
+async function readDayBookFile(file,S){
+  if(file.size>25*1024*1024)throw new Error(T('ફાઇલ બહુ મોટી છે.','The file is too large.'));
+  const vt={};(S.vs||[]).forEach(v=>{if(v.type&&v.base)vt[v.type]=v.base;});Object.assign(vt,TS().vt||{});
+  const base=TM.baseResolver([],vt);
+  const buf=await file.arrayBuffer(),u8=new Uint8Array(buf);
+  let res;
+  if(u8[0]===0x25&&u8[1]===0x50&&u8[2]===0x44&&u8[3]===0x46){
+    const pages=await readPdfPages(u8);
+    if(!pages.some(p=>p.length))throw new Error(T('આ PDF માં લખાણ નથી (સ્કેન કરેલો ફોટો). Tally માંથી ફરી PDF / Excel કાઢો.','This PDF has no text (a scan). Export it again from Tally.'));
+    res=TM.parseDayBookItems(pages,{base});
+  }else{
+    const rd=await readStatement(file);
+    if(!Array.isArray(rd))throw new Error(T('ફાઇલ સમજાઈ નથી.','Could not read this file.'));
+    res=TM.parseDayBookRows(rd,{base});
+  }
+  if(!res||!res.vouchers||!res.vouchers.length)throw new Error(T('આ ફાઇલમાં Tally Day Book ના વાઉચર ઓળખાયા નથી.','No Day Book vouchers recognised in this file.'));
+  return res;
+}
+
+/* ---------- Day Book file screen ---------- */
+function tallyFileView(S){
+  const body=S.body,q=s=>body.querySelector(s),L=BASE_LB(),R=S.fileR;
+  const back='<div class="kb-back"><button type="button" id="kt-bk">← Tally</button><span>📂 '+E(T('Day Book ફાઇલ','Day Book file'))+'</span></div>';
+  const goBack=()=>{S.view=null;S.fileR=null;S.repaint();toTop();};
+  if(!R){
+    body.innerHTML='<div class="kb">'+back+'<div class="kb-card kb-pickcard"><div class="kb-bigic" aria-hidden="true">📂</div>'
+      +'<p>'+E(T('Tally માંથી કાઢેલી Day Book ની PDF / Excel / CSV પસંદ કરો. કંપનીનું નામ જોઈને ફર્મ આપમેળે ઓળખાશે. જે વાઉચર Tally માંથી સીધા આવી ગયા હોય તે બદલાશે નહીં.','Pick a Day Book exported from Tally (PDF / Excel / CSV). The firm is detected from the company name. Vouchers already read directly from Tally are never overwritten.'))+'</p>'
+      +'<label class="kb-pick">📂 '+E(T('ફાઇલ પસંદ કરો','Choose file'))+'<input id="kt-pf" type="file" accept=".pdf,.csv,.xlsx,.xls,.txt,.tsv,.html,.htm,application/pdf,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden></label>'
+      +'<p class="v9-note">'+E(T('Tally માં: Gateway → Display More Reports → Day Book → Alt+E (Export). Tally સીધું જોડેલું હોય તો આ ફાઇલ જરૂરી નથી.','In Tally: Day Book → Alt+E (Export). Not needed once Tally is connected directly.'))+'</p></div>'
+      +'<p class="bz-st" id="bz-st" role="status"></p></div>';
+    q('#kt-bk').addEventListener('click',goBack);
+    q('#kt-pf').addEventListener('change',async e=>{
+      const file=e.target.files&&e.target.files[0];e.target.value='';if(!file)return;
+      status(body,T('ફાઇલ વંચાય છે…','Reading the file…'));
+      try{
+        const res=await readDayBookFile(file,S);
+        S.fileR={name:file.name,company:res.company||'',vouchers:res.vouchers,firm:TM.firmOfCompany(FIRMS(),res.company||'')};
+        S.repaint();toTop();
+      }catch(er){status(body,String(er&&er.message||er),true);}
+    });
+    return;
+  }
+  const vs=R.vouchers,dates=vs.map(v=>v.date).filter(Boolean).sort(),d0=dates[0]||'',d1=dates[dates.length-1]||'';
+  const by={};vs.forEach(v=>{const o=by[v.base]||(by[v.base]={n:0,a:0});o.n++;o.a+=v.amount;});
+  body.innerHTML='<div class="kb">'+back
+    +'<div class="kb-hero"><span>'+E(R.name)+'</span><b>'+vs.length+' '+E(T('વાઉચર','vouchers'))+'</b><small>'+E(dmy(d0)+' → '+dmy(d1))+(R.company?' • '+E(R.company):'')+'</small></div>'
+    +'<div class="kb-card kt-c"><label class="bz-f"><span>'+E(T('કઈ ફર્મ?','Which firm?'))+(R.firm?'':' ⚠')+'</span><select id="kt-ff"><option value="">—</option>'+FIRMS().map(f=>'<option value="'+E(f.id)+'"'+(f.id===R.firm?' selected':'')+'>'+E(f.name)+'</option>').join('')+'</select></label>'
+    +(R.firm?'':'<p class="v9-note">'+E(T('કંપનીનું નામ ઓળખાયું નથી — ફર્મ પસંદ કરો.','Company name not recognised — choose the firm.'))+'</p>')+'</div>'
+    +'<div class="kb-rows">'+BASE_ORDER.filter(b=>by[b]).map(b=>'<div class="kb-row">'+avatar(L[b],BASE_IC[b])+'<span class="kb-rt"><b>'+E(L[b])+'</b><small>'+by[b].n+' '+E(T('વાઉચર','vouchers'))+'</small></span><span class="kb-ra '+vCls(b)+'"><b>'+E(money(by[b].a))+'</b></span></div>').join('')+'</div>'
+    +'<div class="ex-act"><button type="button" class="ex-xl" id="kt-save">💾 '+E(T('સેવ કરો','Save'))+'</button><button type="button" class="ex-pdf" id="kt-cancel">'+E(T('રદ','Cancel'))+'</button></div>'
+    +'<p class="bz-st" id="bz-st" role="status"></p></div>';
+  q('#kt-bk').addEventListener('click',goBack);q('#kt-cancel').addEventListener('click',goBack);
+  const ff=q('#kt-ff'),sv=q('#kt-save');
+  const upd=()=>{R.firm=ff.value;sv.disabled=!R.firm;};ff.addEventListener('change',upd);upd();
+  sv.addEventListener('click',async()=>{
+    if(!R.firm)return;
+    sv.disabled=true;status(body,T('સેવ થાય છે…','Saving…'));
+    try{
+      const r=await saveVouchers(R.firm,vs,d0,d1,{});
+      const ts=TS();
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(ts.from||'')||d0<ts.from)await SET.save({tally:{from:d0}});
+      tlog('File '+R.name+': '+vs.length+' voucher ('+r.add+' navi, '+r.upd+' jaana)');
+      await S.reloadPlan();
+      const ready=S.items.filter(i=>i.state==='ready').length;
+      let imp=0;
+      if(ready&&TS().autoPay!==false&&TS().payOk){imp=await importPlanItems(S.D,S.items.filter(i=>i.state==='ready'));await S.reloadPlan();}
+      S.view=null;S.fileR=null;S.tab='day';S.per='ALL';S.from='';S.to='';S.type='all';S.firm='all';S.more=0;
+      await S.reload();
+      toast('✔ '+r.add+' '+T('નવા વાઉચર સેવ થયા','new vouchers saved')+(imp?' • '+imp+' '+T('ચૂકવણી ખાતામાં','payments to khata'):''));
+      if(ready&&!imp)status(body,ready+' '+T('ખેડૂત ચૂકવણી તૈયાર છે — “ખેડૂત ચૂકવણી” ટૅબમાં જુઓ.','farmer payments are ready — see the “Farmer pay” tab.'));
+    }catch(e){sv.disabled=false;status(body,tsqlHint(e),true);}
+  });
+}
+
+/* ---------- Setup screen ---------- */
+function tallySetupView(S){
+  const body=S.body,q=s=>body.querySelector(s),ts=TS(),pc=isTallyPC();
+  const sw=(id,label,on,hint)=>'<label class="kt-sw"><span>'+E(label)+(hint?'<small>'+E(hint)+'</small>':'')+'</span><input type="checkbox" id="'+id+'"'+(on?' checked':'')+'><i></i></label>';
+  const pg=S.ping;
+  const linkLine=!pc?'<p class="v9-note">'+E(T('આ ફોન / કમ્પ્યુટર પર ફક્ત Tally નો ડેટા જોવાનો છે. સિંક Tally વાળા કમ્પ્યુટર પર થાય છે.','This device only views the Tally data. Syncing runs on the Tally computer.'))+'</p>'
+    :pg===undefined?'':!pg?'<p class="kt-msg bad">✗ '+E(T('Tally Link પ્રોગ્રામ ચાલુ નથી. નીચે મુજબ Tally-Link.bat ચલાવો.','Tally Link program is not running. Run Tally-Link.bat as shown below.'))+'</p>'
+      :!pg.tally?'<p class="kt-msg warn">⚠ '+E(T('Tally Link ચાલુ છે પણ Tally મળ્યું નથી — Tally ચાલુ છે અને XML server ON છે?','Tally Link is running but Tally was not found — is Tally open with the XML server ON?'))+'</p>'
+      :'<p class="kt-msg good">✔ '+E(T('Tally Link ચાલુ છે • Tally મળી ગયું','Tally Link is running • Tally found'))+'</p>';
+  const compOk=c=>S.comps?S.comps.some(x=>nkey(x)===nkey(c)):null;
+  const tmap=new Map();(S.vs||[]).forEach(v=>{if(v.type&&!tmap.has(v.type))tmap.set(v.type,v.base);});
+  const L=BASE_LB();
+  let log=[];try{log=JSON.parse(LS('bi-tally-log','[]'));}catch(_){}
+  body.innerHTML='<div class="kb"><div class="kb-back"><button type="button" id="kt-bk">← Tally</button><span>⚙️ '+E(T('Tally સેટઅપ','Tally setup'))+'</span></div>'
+    +'<div class="kb-card kt-c"><div class="kb-ct"><span>🖥 '+E(T('આ કમ્પ્યુટર','This computer'))+'</span></div>'
+    +sw('kt-pc',T('આ Tally વાળું કમ્પ્યુટર છે','This is the Tally computer'),pc,T('ફક્ત તે કમ્પ્યુટર પર ચાલુ કરો જ્યાં Tally ચાલે છે','Switch on only on the computer where Tally runs'))
+    +sw('kt-auto',T('દર 5 મિનિટે આપમેળે સિંક','Auto-sync every 5 minutes'),ts.auto!==false,T('આ કમ્પ્યુટર પર ઍપ ખુલ્લી રાખો (minimize ચાલે)','Keep the app open on this computer (minimised is fine)'))
+    +sw('kt-apay',T('ખેડૂતને ચૂકવણી આપમેળે ખાતામાં','Farmer payments go to khata automatically'),ts.autoPay!==false,T('નામ પાક્કું મળે તો જ; શંકા હોય તો તમને પૂછશે','Only when the name matches for sure; doubtful ones wait for you'))
+    +linkLine
+    +(pc?'<div class="kt-btns"><button type="button" class="kt-b" id="kt-chk">🔌 '+E(T('ચકાસો','Check'))+'</button><button type="button" class="kt-b ok" id="kt-now">🔄 '+E(T('હમણાં સિંક','Sync now'))+'</button><button type="button" class="kt-b" id="kt-full">⏮ '+E(T('શરૂઆતથી બધું','Everything from start date'))+'</button><button type="button" class="kt-b" id="kt-raw">🧪 '+E(T('Tally નો નમૂનો ફાઇલમાં','Save a Tally sample'))+'</button></div>':'')
+    +'<p class="bz-st" id="bz-st" role="status"></p></div>'
+    +'<div class="kb-card kt-c"><div class="kb-ct"><span>🏢 '+E(T('ફર્મ ↔ Tally કંપની','Firms ↔ Tally companies'))+'</span></div>'
+    +FIRMS().map((f,i)=>{const ok=compOk(f.company);return '<div class="kt-firm"><label class="bz-f"><span>'+firmIc(f.id)+' '+E(T('ફર્મનું નામ','Firm name'))+'</span><input class="kt-in" data-fn="'+i+'" value="'+E(f.name)+'"></label>'
+      +'<label class="bz-f"><span>'+E(T('Tally માં કંપનીનું નામ (બરાબર એવું જ)','Company name in Tally (exactly)'))+'</span><input class="kt-in" list="kt-comps" data-fc="'+i+'" value="'+E(f.company)+'"></label>'
+      +(ok===null?'':'<span class="kb-fl '+(ok?'ok':'warn')+'">'+E(ok?T('✔ Tally માં ખુલ્લી છે','✔ open in Tally'):T('✗ Tally માં ખુલ્લી નથી','✗ not open in Tally'))+'</span>')+'</div>';}).join('')
+    +'<datalist id="kt-comps">'+(S.comps||[]).map(c=>'<option value="'+E(c)+'"></option>').join('')+'</datalist></div>'
+    +'<div class="kb-card kt-c"><div class="kb-ct"><span>📅 '+E(T('ક્યારથી ડેટા લેવો','Take data from'))+'</span></div><label class="bz-f"><span>'+E(T('શરૂઆતની તારીખ','Start date'))+'</span><input type="date" id="kt-from" value="'+E(tallyFrom())+'"></label>'
+    +'<p class="v9-note">'+E(T('આ તારીખથી Tally નો ડેટા આવશે. ખાલી હોય તો આ મહિનાની 1 તારીખથી. ખેડૂતની જૂની ચૂકવણી ડબલ ન થાય તે માટે પહેલી વાર ખાતામાં નાખતાં પહેલાં તમને પૂછશે.','Tally data is taken from this date (default: 1st of this month). To avoid doubles, the first time you are asked before payments go to khata.'))+'</p></div>'
+    +'<div class="kb-card kt-c"><div class="kb-ct"><span>📥 '+E(T('Tally Link (Tally વાળા કમ્પ્યુટર પર, એક જ વાર)','Tally Link (on the Tally computer, once)'))+'</span></div>'
+    +'<ol class="kt-steps"><li>'+E(T('Tally માં: F1 (Help) → Settings → Connectivity → Client/Server → TallyPrime acts as: Both (અથવા Server), Port 9000.','In Tally: F1 (Help) → Settings → Connectivity → Client/Server → TallyPrime acts as: Both (or Server), Port 9000.'))+'</li>'
+    +'<li>'+E(T('ત્રણેય કંપની Tally માં ખુલ્લી રાખો.','Keep all three companies open in Tally.'))+'</li>'
+    +'<li>'+E(T('આ બટન Tally વાળા કમ્પ્યુટરના Chrome / Edge માં દબાવો અને ફાઇલ ડબલ-ક્લિક કરો (Windows પૂછે તો “Run anyway”).','Press this button in Chrome / Edge on the Tally computer, then double-click the file (if Windows asks, “Run anyway”).'))+'</li>'
+    +'<li>'+E(T('એ જ કમ્પ્યુટર પર આ ઍપ ખોલો, ઉપર “આ Tally વાળું કમ્પ્યુટર છે” ચાલુ કરો, ને બ્રાઉઝર પૂછે તો “Allow” દબાવો.','Open this app on that computer, switch on “This is the Tally computer” and press “Allow” if the browser asks.'))+'</li></ol>'
+    +'<button type="button" class="bz-main" id="kt-dl">⬇ Tally-Link.bat</button>'
+    +'<p class="v9-note">'+E(T('Tally Link ફક્ત વાંચે છે — ઍપ માંથી Tally માં કંઈ જતું નથી, અને તે લખવાની કોઈ પણ વિનંતી રોકી દે છે.','Tally Link is read-only — nothing goes from the app into Tally, and it blocks any request that would write.'))+'</p></div>'
+    +(tmap.size?'<details class="kb-card kt-det"><summary>🏷 '+E(T('વાઉચરના પ્રકાર (જો ખોટા ઓળખાયા હોય)','Voucher types (if recognised wrongly)'))+'</summary>'
+      +[...tmap.entries()].map(([t,b],i)=>'<label class="bz-f kt-vt"><span>'+E(t)+'</span><select data-vt="'+i+'">'+BASE_ORDER.map(k=>'<option value="'+k+'"'+(k===b?' selected':'')+'>'+E(L[k])+'</option>').join('')+'</select></label>').join('')+'</details>':'')
+    +'<details class="kb-card kt-det"><summary>📜 '+E(T('લોગ','Log'))+' ('+log.length+')</summary><pre class="kt-log">'+E(log.join('\n')||'—')+'</pre></details></div>';
+  const back=()=>{S.view=null;S.repaint();toTop();};
+  q('#kt-bk').addEventListener('click',back);
+  q('#kt-pc').addEventListener('change',async e=>{
+    LSset('bi-tally-pc',e.target.checked?'1':'0');S.ping=undefined;S.comps=null;S.repaint();
+  });
+  q('#kt-auto').addEventListener('change',e=>{SET.save({tally:{auto:e.target.checked}});});
+  q('#kt-apay').addEventListener('change',e=>{SET.save({tally:{autoPay:e.target.checked}});});
+  q('#kt-from').addEventListener('change',e=>{if(/^\d{4}-\d{2}-\d{2}$/.test(e.target.value))SET.save({tally:{from:e.target.value}});});
+  const saveFirms=()=>{
+    const arr=FIRMS().map(f=>Object.assign({},f));
+    body.querySelectorAll('[data-fn]').forEach(i=>{arr[+i.dataset.fn].name=clean(i.value)||arr[+i.dataset.fn].name;});
+    body.querySelectorAll('[data-fc]').forEach(i=>{arr[+i.dataset.fc].company=clean(i.value);});
+    SET.save({tally:{firms:arr}});
+  };
+  body.querySelectorAll('.kt-in').forEach(i=>i.addEventListener('change',()=>{
+    saveFirms();
+    /* update the little "open in Tally" badges in place (no re-draw while a field is being left) */
+    body.querySelectorAll('.kt-firm').forEach((box,k)=>{
+      const f=FIRMS()[k],b=box.querySelector('.kb-fl');if(!f||!b||!S.comps)return;
+      const ok=S.comps.some(x=>nkey(x)===nkey(f.company));
+      b.className='kb-fl '+(ok?'ok':'warn');b.textContent=ok?T('✔ Tally માં ખુલ્લી છે','✔ open in Tally'):T('✗ Tally માં ખુલ્લી નથી','✗ not open in Tally');
+    });
+  }));
+  q('#kt-dl').addEventListener('click',()=>{
+    if(!window.BalajiTallyLinkPS){status(body,T('પ્રોગ્રામ તૈયાર નથી — ઍપ ફરી ખોલો.','Program not ready — reopen the app.'),true);return;}
+    dlFile('Tally-Link.bat',linkBat());status(body,T('Tally-Link.bat ડાઉનલોડ થયું. Tally વાળા કમ્પ્યુટર પર ડબલ-ક્લિક કરો.','Tally-Link.bat downloaded. Double-click it on the Tally computer.'));
+  });
+  body.querySelectorAll('[data-vt]').forEach(sel=>sel.addEventListener('change',async()=>{
+    const t=[...tmap.keys()][+sel.dataset.vt],b=sel.value;
+    try{
+      await SET.save({tally:{vt:{[t]:b}}});
+      const r=await db.from(TT.v).update({base_type:b}).eq('v_type',t);if(r&&r.error)throw r.error;
+      toast(T('સુધાર્યું','Updated'));await S.reload();
+    }catch(e){status(body,tsqlHint(e),true);}
+  }));
+  async function check(){
+    status(body,T('ચકાસે છે…','Checking…'));
+    S.ping=await relayPing();S.comps=null;
+    if(S.ping&&S.ping.tally){try{S.comps=TM.parseCompanies(await tcall(TM.reqCompanies()));}catch(e){status(body,err(e),true);}}
+    S.repaint();
+  }
+  const bc=q('#kt-chk');if(bc)bc.addEventListener('click',check);
+  const run=async full=>{
+    status(body,T('Tally માંથી ડેટા આવે છે… (પહેલી વાર વધુ સમય લાગે)','Reading from Tally… (the first time takes longer)'));
+    q('#kt-now').disabled=true;q('#kt-full').disabled=true;
+    const r=await syncAll({full});
+    if(r.busy){status(body,T('સિંક ચાલુ છે…','A sync is already running…'));return;}
+    await S.reload();
+    S.ping=await relayPing();
+    if(S.view==='setup'){S.repaint();status(body,r.ok?'✔ '+T('સિંક થયું','Synced')+' • '+Object.values(r.firms).reduce((s,x)=>s+(x.n||0),0)+' '+T('વાઉચર','vouchers')+(r.review?' • '+r.review+' '+T('ચૂકવણી ચકાસવાની','payments to check'):''):(r.msg||T('સિંક ન થયું','Sync failed')),!r.ok);}
+  };
+  /* support helper: saves what Tally really answers (read-only requests) so a mismatch can be fixed quickly */
+  const br=q('#kt-raw');if(br)br.addEventListener('click',async()=>{
+    status(body,T('Tally નો જવાબ ભેગો થાય છે…','Collecting Tally replies…'));
+    try{
+      const out=[],comps=await tcall(TM.reqCompanies());out.push('### companies\n'+comps);
+      const f=FIRMS().find(x=>clean(x.company))||FIRMS()[0],real=TM.parseCompanies(comps).find(c=>nkey(c)===nkey(f.company))||f.company;
+      out.push('### voucher types ('+real+')\n'+(await tcall(TM.reqVoucherTypes(real))));
+      out.push('### ledgers (first 60000 chars)\n'+(await tcall(TM.reqLedgers(real))).slice(0,60000));
+      const t=today();out.push('### day book '+TL.addDays(t,-3)+' .. '+t+'\n'+(await tcall(TM.reqDayBook(real,TL.addDays(t,-3),t))).slice(0,400000));
+      dlFile('tally-reply-sample.txt',out.join('\n\n'));
+      status(body,T('✔ tally-reply-sample.txt સેવ થઈ. આ ફાઇલ મોકલો (તેમાં તમારો Tally ડેટા છે).','✔ tally-reply-sample.txt saved. Send this file (it contains your Tally data).'));
+    }catch(e){status(body,err(e),true);}
+  });
+  const bn=q('#kt-now');if(bn)bn.addEventListener('click',()=>run(false));
+  const bf=q('#kt-full');if(bf)bf.addEventListener('click',()=>run(true));
+  if(pc&&pg===undefined)check();
+}
 /* ---------- tiles on the admin home (each can be switched on/off in the settings) ---------- */
 TL.extra.push(
   {key:'ledger',ic:'📒',label:()=>T('ખાતા','Khata'),fn:()=>openLedger()},
   {key:'batch',ic:'🥜',label:()=>T('ફોલાઈ','Folvani'),fn:openBatch},
   {key:'expense',ic:'💸',label:()=>T('ખર્ચ','Expenses'),fn:openExp},
   {key:'sale',ic:'💰',label:()=>T('વેચાણ','Sales'),fn:openSale},
-  {key:'profit',ic:'📈',label:()=>T('નફો','Profit'),fn:openProfit}
+  {key:'profit',ic:'📈',label:()=>T('નફો','Profit'),fn:openProfit},
+  {key:'tally',ic:'🧾',label:()=>'Tally',fn:()=>openTally()}
 );
 TL.afterTiles=applyTiles;
 SET.onChange(()=>{try{applyTiles();}catch(_){}});
 let _t=0;const _iv=setInterval(()=>{_t++;try{applyTiles();}catch(_){}if(_t>60)clearInterval(_iv);},1000);
-window.BalajiBiz={openLedger,buildLedger,fKey,matchFarmers,receiptText,statementText,openBatch,openExp,openSale,openProfit,openBizSettings,scopes,scopeLabel,saleText,loadAll,applyTiles,buildPR};
+window.BalajiBiz={openLedger,buildLedger,fKey,matchFarmers,receiptText,statementText,openBatch,openExp,openSale,openProfit,openBizSettings,openTally,syncTally:syncAll,scopes,scopeLabel,saleText,loadAll,applyTiles,buildPR};
 })();
 
 </script>
