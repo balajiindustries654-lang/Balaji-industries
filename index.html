@@ -16333,6 +16333,77 @@ setInterval(sync,700);
 })();
 
 </script>
+<script>
+/* Matrix CSV review and deliberate import. No serial commands are sent. */
+(function(){
+'use strict';
+function parseCSV(text){
+ const rows=[];let row=[],cell='',quoted=false;
+ text=String(text).replace(/^\uFEFF/,'');
+ for(let i=0;i<text.length;i++){const c=text[i];if(c==='"'){if(quoted&&text[i+1]==='"'){cell+='"';i++;}else if(quoted||cell==='')quoted=!quoted;else cell+=c;}else if(c===','&&!quoted){row.push(cell);cell='';}else if((c==='\n'||c==='\r')&&!quoted){if(c==='\r'&&text[i+1]==='\n')i++;row.push(cell);if(row.some(x=>x.trim()))rows.push(row);row=[];cell='';}else cell+=c;}
+ if(cell||row.length){row.push(cell);rows.push(row);}return rows;
+}
+const clean=s=>String(s||'').trim();
+const optional=s=>/[\p{L}\p{N}]/u.test(clean(s))?clean(s):'';
+function number(s){s=clean(s);return /^\d+(?:\.\d+)?$/.test(s)?Number(s):null;}
+function date(s){const m=clean(s).match(/^(\d{2})\/(\d{2})\/(\d{4})$/);if(!m)return '';const d=new Date(Date.UTC(+m[3],+m[2]-1,+m[1]));return d.getUTCFullYear()===+m[3]&&d.getUTCMonth()===+m[2]-1&&d.getUTCDate()===+m[1]?m[3]+'-'+m[2]+'-'+m[1]:'';}
+function decode(text){
+ const out=[];const seen=new Set();
+ parseCSV(text).forEach((raw,i)=>{
+  if(/^Total/i.test(clean(raw[0])))return;
+  const r={line:i+1,raw,rst:'',day:'',vehicle:'',name:'',mobile:'',material:'',city:'',gross:null,tare:null,net:null,charge:null,state:'review',reason:'કપાયેલી / અજાણી પંક્તિ — Save નહીં થાય',saved:false};
+  if(raw.length===13&&/^\d+$/.test(clean(raw[0]))&&/^\d+$/.test(clean(raw[1]))){
+   r.rst=String(Number(clean(raw[1])));r.day=date(raw[2]);r.vehicle=clean(raw[3]).toUpperCase().replace(/\s+/g,'');r.mobile=/^\d{10}$/.test(clean(raw[4]))?clean(raw[4]):'';r.name=optional(raw[5]);r.material=optional(raw[6]);r.city=optional(raw[7]);[r.gross,r.tare,r.net,r.charge]=raw.slice(8,12).map(number);
+   if(!r.day||!r.vehicle||!/^\d+$/.test(r.rst)||+r.rst<1){r.reason='તારીખ / RST / ગાડી તપાસો';}
+   else if([r.gross,r.tare,r.net].some(x=>x===null)){r.reason='વજન ખાલી અથવા અયોગ્ય છે';}
+   else if(r.tare===0){r.state='pending';r.reason='Tare 0 છે — બીજું વજન / manual tare તપાસો; અંતિમ Net તરીકે Save નહીં થાય';}
+   else if(r.gross<r.tare||Math.abs(r.gross-r.tare-r.net)>0.01){r.reason='Gross − Tare અને Net મેળ ખાતાં નથી';}
+   else if(r.net<=0){r.reason='Net 0 છે — તપાસ જરૂરી';}
+   else{r.state='ready';r.reason='વજન પૂરું; પસંદ કરીને Save કરી શકો';}
+   if(seen.has(r.rst)){r.state='review';r.reason='આ જ ફાઇલમાં duplicate RST';}seen.add(r.rst);
+  }
+  out.push(r);
+ });return out;
+}
+window.BalajiMatrixCSV={parseCSV,decode};
+if(typeof document==='undefined')return;
+const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let rows=[],busy=false,box;
+function mount(){
+ if(document.getElementById('matrix-csv-panel'))return;
+ const style=document.createElement('style');style.textContent='#matrix-csv-panel{position:fixed;inset:0;z-index:2147480000;background:#eff6f6;overflow:auto;padding:16px;color:#163a3a}#matrix-csv-panel[hidden]{display:none!important}#matrix-csv-panel .mx-inner{max-width:1050px;margin:auto}#matrix-csv-panel button{min-height:46px;padding:10px 16px;margin:5px;border:1px solid #9ccaca;border-radius:10px;background:#087e82;color:white}#matrix-csv-panel article{background:white;border:1px solid #bfd6d6;border-radius:12px;padding:14px;margin:10px 0}#matrix-csv-panel input[type=checkbox]{width:23px;height:23px;display:inline-block;margin-right:12px}#matrix-csv-panel pre{white-space:pre-wrap;word-break:break-word}#matrix-csv-panel .mx-note{background:#fff6d9;padding:12px;border-radius:10px}#matrix-csv-panel button:disabled{opacity:.5}';document.head.append(style);
+ box=document.createElement('section');box.id='matrix-csv-panel';box.hidden=true;box.innerHTML='<div class="mx-inner"><button id="mx-close" type="button">બંધ કરો</button><h2>કાંટાની CSV Import — ટેસ્ટ</h2><p>પહેલાં Preview કરો. પસંદ કર્યા વગર કોઈ entry Save થતી નથી.</p><input id="mx-file" type="file" accept=".csv,text/csv"><p class="mx-note">Online Saveમાં RST, ગાડી, Gross (કુલ વજન), Net અને CSVની તારીખ જશે. મૂળ સમય ફાઇલમાં નથી: તારીખની શરૂઆત (00:00 IST) વપરાશે. નામ, મોબાઇલ, માલ, શહેર અને ચાર્જ Previewમાં છે; આ ટેસ્ટમાં તે online Save નહીં થાય. મૂળ CSV સાચવી રાખો. Tare 0 અથવા ખોટા વજનની entry અંતિમ તરીકે Save નહીં થાય.</p><button id="mx-all" type="button">પૂરી entries પસંદ કરો</button><button id="mx-save" type="button">પસંદ કરેલી Online Save કરો</button><p id="mx-status" role="status"></p><div id="mx-rows"></div></div>';document.body.append(box);
+ document.getElementById('mx-close').onclick=()=>{if(!busy)box.hidden=true;};
+ document.getElementById('mx-file').onchange=async e=>{const f=e.target.files[0];if(!f)return;if(f.size>5*1024*1024){status('5 MBથી નાની CSV પસંદ કરો.');return;}try{rows=decode(await f.text());render();status(rows.length?'Preview તૈયાર. હજી કંઈ Save થયું નથી.':'ફાઇલ ખાલી છે; કોઈ entry નથી.');}catch(err){status('ફાઇલ વાંચી નથી શકાઈ: '+err.message);}};
+ document.getElementById('mx-all').onclick=()=>{box.querySelectorAll('input.mx-select:not(:disabled)').forEach(x=>x.checked=true);};
+ document.getElementById('mx-save').onclick=save;
+ for(const id of ['waybridge','admin']){const host=document.getElementById(id);if(host){const b=document.createElement('button');b.type='button';b.textContent='કાંટાની CSV Import (ટેસ્ટ)';b.onclick=()=>{box.hidden=false;};host.insertBefore(b,host.firstChild);}}
+}
+function status(s){document.getElementById('mx-status').textContent=s;}
+function render(){document.getElementById('mx-rows').innerHTML=rows.map((r,i)=>'<article><label><input class="mx-select" type="checkbox" data-index="'+i+'" '+(r.state==='ready'&&!r.saved?'':'disabled')+'><strong>RST '+E(r.rst||'—')+' · '+E(r.vehicle||'પંક્તિ '+r.line)+'</strong></label><p>'+E(r.day)+' · '+E(r.name||'નામ ખાલી')+(r.mobile?' · '+E(r.mobile):'')+'</p><p>Gross: '+E(r.gross??'—')+' | Tare: '+E(r.tare??'—')+' | Net: '+E(r.net??'—')+' KG</p><p>માલ: '+E(r.material||'—')+' · શહેર: '+E(r.city||'—')+' · ચાર્જ: '+E(r.charge??'—')+'</p><strong>'+E(r.saved?'Save થયું':r.reason)+'</strong><details><summary>મૂળ પંક્તિ</summary><pre>'+E(r.raw.join(' | '))+'</pre></details></article>').join('');}
+async function save(){
+ if(busy)return;const chosen=[...box.querySelectorAll('.mx-select:checked')].map(x=>rows[+x.dataset.index]).filter(r=>r.state==='ready'&&!r.saved);if(!chosen.length){status('પહેલાં પૂરી entry પસંદ કરો.');return;}
+ if(navigator.onLine===false){status('આ ટેસ્ટ માટે ઇન્ટરનેટ ચાલુ કરો.');return;}
+ busy=true;box.querySelectorAll('button,input').forEach(x=>x.disabled=true);let count=0,dups=0;
+ try{
+  const auth=await db.auth.getUser();if(auth.error||!auth.data.user)throw Error('ફરી Login કરો.');
+  const p=await db.from('user_profiles').select('role,approved').eq('id',auth.data.user.id).single();if(p.error)throw p.error;if(!p.data?.approved||!['admin','worker','waybridge','maal_entry'].includes(p.data.role))throw Error('મંજૂર Staff / Adminથી Login કરો.');
+  for(const r of chosen){
+   status('RST '+r.rst+' તપાસી રહ્યા છીએ…');
+   const q=await db.from('waybridge_entries').select('id').eq('rst_no',r.rst).limit(1);if(q.error)throw q.error;
+   if(q.data?.length){r.state='duplicate';r.reason='આ RST પહેલેથી છે — ફેરફાર કર્યો નથી';dups++;continue;}
+   const result=await db.from('waybridge_entries').insert({rst_no:r.rst,vehicle_number:r.vehicle,total_weight_kg:r.gross,net_weight_kg:r.net,slip_url:null,created_by:auth.data.user.id,created_at:new Date(r.day+'T00:00:00+05:30').toISOString()});
+   if(result.error){if(result.error.code==='23505'){r.state='duplicate';r.reason='Duplicate RST — Save નથી કર્યું';dups++;continue;}throw result.error;}
+   if(result.queued){r.state='review';r.reason='નેટ કપાયું: offline queueમાં છે; ફરી Import કરતાં પહેલાં queue તપાસો';throw Error(r.reason);}
+   r.saved=true;count++;
+  }
+  status(count+' entry Save થઈ. '+dups+' duplicate છોડ્યાં. બાકી અધૂરી entries Save નથી થઈ.');
+ }catch(e){status(count+' Save થઈ; આગળ અટક્યું: '+(e.message||e));}
+ finally{busy=false;box.querySelectorAll('button,input').forEach(x=>x.disabled=false);render();}
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount);else mount();
+})();
+
+</script>
 </body>
 </html>
-
