@@ -2,6 +2,7 @@
 <html lang="gu"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Balaji Industries</title>
 <link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0a9297"><link rel="apple-touch-icon" href="icon-192.png"><link rel="icon" type="image/png" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Gujarati:wght@400;500;600;700;800&display=swap">
 <script>window.__BI_BUILD="20261010-2039";</script>
 <style>
 :root {
@@ -10044,7 +10045,7 @@ function press(k){
   }
   else if(isOp(k)){
     fresh=false;
-    if(!expr){if(k==='−')expr='−';}
+    if(!expr){if(k==='−')expr='���';}
     else if(isOp(expr.slice(-1))){if(expr.length>1||k==='−')expr=expr.slice(0,-1)+k;}
     else expr+=k;
   }
@@ -10474,7 +10475,7 @@ function build(last){
       cols:[{h:T('તારીખ','Date'),t:'d',w:12,p:.13},{h:T('ગાડી નં.','Vehicle'),t:'s',w:16,p:.15},{h:T('ચિઠ્ઠી','Chits'),t:'i',w:9,p:.07,sum:1},{h:T('ચિઠ્ઠી મૂળ KG','Chit gross KG'),t:'n',w:15,p:.14,sum:1},{h:T('ચિઠ્ઠી ચોખ્ખું KG','Chit net KG'),t:'n',w:15,p:.14,sum:1},{h:T('કાંટો KG','Kanta KG'),t:'n',w:13,p:.12,sum:1},{h:T('ફરક KG','Diff KG'),t:'n',w:12,p:.1},{h:T('સ્થિતિ','Status'),t:'s',w:12,p:.1},{h:T('બેગ','Bags'),t:'i',w:9,p:.07,sum:1}],rows,type:'veh'};
   };
   sets.farmers=()=>{
-    const map=new Map();last.c.forEach(x=>{const k=x.farmer_mobile||clean(x.farmer_name)||'—';(map.get(k)||map.set(k,[]).get(k)).push(x);});
+    const map=new Map();last.c.forEach(x=>{const k=x.farmer_mobile||clean(x.farmer_name)||'��';(map.get(k)||map.set(k,[]).get(k)).push(x);});
     const rows=[...map.values()].map(r=>[clean(r[0].farmer_name)||'—',clean(r[0].farmer_mobile),r.length,sum(r,'gross_weight_kg'),sum(r,'weight_kg'),mann(sum(r,'weight_kg'))]).sort((a,b)=>b[4]-a[4]);
     return {name:T('ખેડૂત પ્રમાણે','By farmer'),title:T('ખેડૂત પ્રમાણે રિપોર્ટ','Farmer-wise report'),
       cols:[{h:T('ખેડૂત','Farmer'),t:'s',w:26,p:.3},{h:T('મોબાઇલ','Mobile'),t:'s',w:15,p:.16},{h:T('ચિઠ્ઠી','Chits'),t:'i',w:9,p:.08,sum:1},{h:T('મૂળ KG','Gross KG'),t:'n',w:14,p:.15,sum:1},{h:T('ચોખ્ખું KG','Net KG'),t:'n',w:14,p:.17,sum:1},{h:T('મણ ('+unit+')','Mann ('+unit+')'),t:'n',w:12,p:.14,sum:1}],rows,type:'far'};
@@ -11368,7 +11369,7 @@ function openOpening(s,done){
     const o={};m.querySelectorAll('input[data-m]').forEach(i=>{const n=Number(String(i.value).replace(/[૦-૯]/g,c=>String(c.charCodeAt(0)-0xAE6)).replace(/,/g,''));o[i.dataset.m]=Number.isFinite(n)?n:0;});
     const st=m.querySelector('#v9-os-st');st.textContent=T('સેવ થાય છે…','Saving…');
     const r=await SET.save({stock:{opening:o}});
-    st.textContent=r.error?T('આ ફોનમાં સેવ થયું, સર્વર પર નહીં (SQL ચલાવ્યું છે?)','Saved on this phone only (did you run the SQL?)'):T('✔ સેવ થયું','✔ Saved');
+    st.textContent=r.error?T('આ ફોનમાં સેવ થયું, સર્��ર પર નહીં (SQL ચલાવ્યું છે?)','Saved on this phone only (did you run the SQL?)'):T('✔ સેવ થયું','✔ Saved');
     done();
   });
 }
@@ -11586,7 +11587,7 @@ function openBackup(){
       +'<div class="v9-btns"><button type="button" id="v9-bk">💾 '+E(T('હમણાં બેકઅપ લો','Take a backup now'))+'</button></div><p id="v9-bk-st" class="v9-note" role="status"></p></div>';
     const st=body.querySelector('#v9-bk-st'),btn=body.querySelector('#v9-bk');
     btn.addEventListener('click',async()=>{
-      btn.disabled=true;st.textContent=T('ડેટા લાવાય છે…','Fetching the data…');
+      btn.disabled=true;st.textContent=T('ડેટ��� લાવાય છે…','Fetching the data…');
       try{
         await V().profiles();
         const [c,w,m]=await Promise.all([fetchAll(TBL.chit),fetchAll(TBL.wb),fetchAll(TBL.maal)]);
@@ -13471,7 +13472,7 @@ async function tallyImportOne(S,it,key){
 function tallyPickFarmer(S,it){
   const D=S.D;if(!D)return;
   const m=V().dialog(T('ખેડૂત પસંદ કરો','Choose the farmer'),'<div class="kb-dlg"><p class="v9-note">'+E(it.ledger+' • ₹'+fmt(it.amount,0)+' • '+dmy(it.v.date))+'</p>'
-    +'<div class="kb-search"><input id="kt-fq" type="search" autocomplete="off" placeholder="🔍 '+E(T('નામ / મોબાઇલ','Name / mobile'))+'"></div><div class="kb-rows" id="kt-fl"></div></div>');
+    +'<div class="kb-search"><input id="kt-fq" type="search" autocomplete="off" placeholder="�� '+E(T('નામ / મોબાઇલ','Name / mobile'))+'"></div><div class="kb-rows" id="kt-fl"></div></div>');
   const sugg=new Set((it.cands||[]).map(c=>c.key));
   const draw=()=>{
     const qq=normName(m.querySelector('#kt-fq').value);
@@ -13600,7 +13601,7 @@ function openTally(opts){
           +(days.length?days.map(g=>'<div class="kb-day"><span>'+E(dayLabel(g.d))+'</span><b>'+g.a.length+'</b></div><div class="kb-rows">'+g.a.map(v=>
             '<button type="button" class="kb-row" data-v="'+E(v.firm+'|'+v.vkey)+'">'+avatar(v.party||v.type,BASE_IC[v.base]||'📄')+'<span class="kb-rt"><b>'+E(v.party||v.type)+'</b><small>'+E([v.type+(v.no?' '+v.no:''),S.firm==='all'?firmName(v.firm):'',(v.base==='payment'||v.base==='receipt')&&v.mode?v.mode.toUpperCase():'',v.narr].filter(Boolean).join(' • '))+'</small></span><span class="kb-ra '+vCls(v.base)+'"><b>'+E(money(v.amount))+'</b></span></button>').join('')+'</div>').join('')
             +(list.length>lim?'<button type="button" class="bz-add" id="kt-more">'+E(T('વધુ બતાવો','Show more'))+' ('+(list.length-lim)+')</button>':'')
-            :'<div class="kb-empty"><span aria-hidden="true">🧾</span><p>'+E(S.vs.length||S.err?T('આ ફિલ્ટરમાં કોઈ વાઉચર નથી.','No vouchers for this filter.'):(pc?T('હજી Tally માંથી ડેટા આવ્યો નથી — ઉપર “સિંક” દબાવો.','No data from Tally yet — press “Sync” above.'):T('હજી Tally માંથી ડેટા આવ્યો નથી. Tally વાળા કમ્પ્યુટર પર સેટઅપ કરો (⚙️).','No data from Tally yet. Set it up on the Tally computer (⚙️).')))+'</p></div>');
+            :'<div class="kb-empty"><span aria-hidden="true">🧾</span><p>'+E(S.vs.length||S.err?T('આ ફિલ્ટરમાં કોઈ વાઉચર નથી.','No vouchers for this filter.'):(pc?T('હજી Tally માંથી ડેટા આવ્યો નથી — ઉપર “સ���ંક” દબાવો.','No data from Tally yet — press “Sync” above.'):T('હજી Tally માંથી ડેટા આવ્યો નથી. Tally વાળા કમ્પ્યુટર પર સેટઅપ કરો (⚙️).','No data from Tally yet. Set it up on the Tally computer (⚙️).')))+'</p></div>');
       }else if(S.tab==='cash'){
         main=tallyCashHtml(S,inFirm,firmSeg);
       }else if(S.tab==='mel'){
@@ -13948,7 +13949,7 @@ function tallySetupView(S){
     +'<li>'+E(T('બસ. હવે Chrome / ઍપ ખુલ્લી રાખવાની જરૂર નથી — Agent કોઈ વિન્ડો વગર છુપાઈને ચાલે છે, Windows ચાલુ થતાં પોતે ચાલુ થાય છે અને કોઈ બંધ કરી દે તો 5 મિનિટમાં પાછો ચાલુ થઈ જાય છે. ચાલુ છે કે નહીં તે અહીં (ઉપર) અને ફોનમાં દેખાય છે.','That is all. The app / Chrome no longer needs to stay open — the Agent runs hidden without any window, starts with Windows and comes back within 5 minutes if somebody stops it. Whether it is running shows above and on the phone.'))+'</li></ol>'
     +'<button type="button" class="bz-main" id="kt-dl">⬇ Balaji-Tally-Agent.bat</button>'
     +'<p class="v9-note">'+E(T('Agent ફક્ત વાંચે છે — ઍપ માંથી Tally માં કંઈ જતું નથી, અને તે લખવાની કોઈ પણ વિનંતી રોકી દે છે. PC ના Desktop પર “Balaji Tally Status” શૉર્ટકટ બને છે (ચાલુ/બંધ જોવા).','The Agent is read-only — nothing goes from the app into Tally and it blocks any request that would write. A “Balaji Tally Status” shortcut appears on the PC desktop (to see running / stopped).'))+'</p></div>'
-    +'<details class="kb-card kt-det"><summary>💡 '+E(T('સૂચનો (ભૂલ વગર ચલાવવા)','Tips (to keep it running smoothly)'))+'</summary><ul class="kt-tips">'
+    +'<details class="kb-card kt-det"><summary>💡 '+E(T('સૂચનો (ભ���લ વગર ચલાવવા)','Tips (to keep it running smoothly)'))+'</summary><ul class="kt-tips">'
       +[T('Tally વાળા કમ્પ્યુટરને Sleep માં ન જવા દો: Windows Settings → System → Power → Screen and sleep → “Never” (plugged in).','Do not let the Tally computer sleep: Windows Settings → System → Power → Screen and sleep → “Never” (plugged in).'),
         T('Chrome માં આ ઍપ ખુલ્લી રાખો (minimize ચાલે) અને કાળી “Balaji Tally Link” વિન્ડો બંધ ન કરો.','Keep this app open in Chrome (minimised is fine) and do not close the black “Balaji Tally Link” window.'),
         T('Tally માં ત્રણેય કંપની ખુલ્લી (Select Company) રાખો. Tally બંધ હોય તો સિંક થોભી જાય છે અને Tally ચાલુ થતાં પોતે ચાલુ થશે.','Keep all three companies loaded in Tally. If Tally is closed, the sync waits and continues by itself when Tally is back.'),
@@ -14710,7 +14711,7 @@ const TOOLS_UI={
       +'<div class="kb-card"><div class="kb-ct"><span>🌾 '+E(T('ખરીદી (ઍપ હિસાબ)','Purchases (app hisab)'))+'</span></div>'+kvRow(T('ચિઠ્ઠી','Chits'),String(a.n))+kvRow(T('ખેડૂત','Farmers'),String(a.farmers))+kvRow('KG',fmt(a.kg,0))+kvRow(T('રકમ','Amount'),money(a.amt),true)+kvRow(T('સરેરાશ ₹/KG','Avg ₹/KG'),fmt(a.avg,2))+'</div>'
       +'<div class="kb-card"><div class="kb-ct"><span>💳 '+E(T('ચૂકવણી અને ખર્ચ','Payments and expenses'))+'</span></div>'+kvRow(T('ખેડૂતને ચૂકવ્યું (ખાતું)','Paid to farmers (khata)'),money(paid))+kvRow(T('ઍપ ખર્ચ','App expenses'),money(appExp))+kvRow(T('Tally ખર્ચ','Tally expenses'),money(tex))+'</div>'
       +(fm.length?fm.map(f=>{const x=f.months[0]||{};return '<div class="kb-card"><div class="kb-ct"><span>'+firmIc(f.firm)+' '+E(firmName(f.firm))+' (Tally)</span></div>'+['sales','purchase','receipt','payment'].map(k=>kvRow((BASE_IC[k]||'')+' '+L[k],money(x[k]||0))).join('')+'</div>';}).join(''):'')
-      +'<div class="kb-card"><div class="kb-ct"><span>🏦 '+E(T('અત્યારની સ્થિતિ','Position now'))+'</span></div>'+kvRow(T('રોકડ + બેંક','Cash + bank'),money(pos.total.cash+pos.total.bank))+kvRow(T('લેવાના','To get'),money(pos.total.recv))+kvRow(T('ખેડૂતને બાકી','Farmers due'),money(pos.farmerDue))+'</div>';
+      +'<div class="kb-card"><div class="kb-ct"><span>🏦 '+E(T('અત્યારની સ્થિતિ','Position now'))+'</span></div>'+kvRow(T('રોકડ + બેંક','Cash + bank'),money(pos.total.cash+pos.total.bank))+kvRow(T('લેવા��ા','To get'),money(pos.total.recv))+kvRow(T('ખેડૂતને બાકી','Farmers due'),money(pos.farmerDue))+'</div>';
     const lines=['📑 *'+T('મહિનાનું ક્લોઝિંગ','Month closing')+'* • '+m.label,'🌾 '+a.n+' '+T('ચિઠ્ઠી','chits')+' • '+fmt(a.kg,0)+' KG • '+money(a.amt)+' (₹'+fmt(a.avg,2)+'/KG)','💳 '+T('ખેડૂતને ચૂકવ્યું','Paid to farmers')+': '+money(paid),'💸 '+T('ખર્ચ','Expenses')+': '+T('ઍપ ','app ')+money(appExp)+' • Tally '+money(tex)]
       .concat(fm.map(f=>{const x=f.months[0]||{};return firmIc(f.firm)+' '+firmName(f.firm)+': '+['sales','purchase','receipt','payment'].filter(k=>x[k]).map(k=>L[k]+' '+shortMoney(x[k])).join(' • ');}))
       .concat(['🏦 '+T('રોકડ+બેંક','Cash+bank')+': '+money(pos.total.cash+pos.total.bank)+' • '+T('લેવાના','to get')+' '+money(pos.total.recv),'👨‍🌾 '+T('ખેડૂતને બાકી','Farmers due')+': '+money(pos.farmerDue)]);
@@ -14736,7 +14737,7 @@ const TOOLS_UI={
       +(X.D.vouchers&&X.D.vouchers.some(v=>v.base==='payment')?'':'<p class="v9-bad">'+E(T('Tally ની ચૂકવણી હજી આવી નથી — પહેલા Tally સિંક કરો, નહીંતર બધી “ખૂટે છે” દેખાશે.','No Tally payments yet — sync Tally first, otherwise everything shows as missing.'))+'</p>')
       +'<div class="kb-card">'+kvRow('✔ '+T('Tally માં મળી','Found in Tally'),String(r.matched))+kvRow('🔗 '+T('Tally માંથી આવેલી','Came from Tally'),String(r.viaRef))+kvRow('⚠ '+T('Tally માં નથી','Not in Tally'),r.appOnly.length+' • '+money(tot),true)+'</div>'
       +(sorted.length?'<div class="kb-rows">'+sorted.slice(0,lim).map(p=>kbRow(avatar(nameOf(p),'💳'),nameOf(p),dmy(p.pay_date)+' • '+(MODES()[p.mode]||p.mode||'')+(p.note?' • '+p.note:''),money(n0(p.amount)),'','due')).join('')+'</div>'
-        +(sorted.length>lim?'<button type="button" class="bz-add" id="in-more">'+E(T('વધુ બતાવો','Show more'))+'</button>':'')+'<p class="v9-note">'+E(T('ખાતામાં લખેલી ચૂકવણી જે Tally માં (સરખી તારીખ ±2 દિવસ, સરખી રકમ) દેખાતી નથી. કાચા હિસાબમાં એન્ટ્રી કરવાની બાકી હોઈ શકે.','Khata payments with no Tally payment (same date ±2 days, same amount). They may still need to be booked in Tally.'))+'</p>':emptyBox('✅',T('બધી ચૂકવણી Tally સાથે મળે છે.','All payments match Tally.')));
+        +(sorted.length>lim?'<button type="button" class="bz-add" id="in-more">'+E(T('વધુ બતાવો','Show more'))+'</button>':'')+'<p class="v9-note">'+E(T('ખાતામાં લખેલી ચૂકવણી જે Tally માં (સરખી તારીખ ±2 દિવસ, સરખી રકમ) દેખાતી નથી. કાચા હિસાબમાં એન્ટ્રી કરવાની બાકી હોઈ શકે.','Khata payments with no Tally payment (same date ±2 days, same amount). They may still need to be booked in Tally.'))+'</p>':emptyBox('✅',T('બધી ચૂકવણી Tally ���ાથે મળે છે.','All payments match Tally.')));
     return {html,segs:{'in-rn':v=>{X.rn=+v;}},
       wa:()=>['🔁 *'+T('ચૂકવણી મેળ — Tally માં નથી','Payments missing in Tally')+'* • '+T('છેલ્લા ','last ')+X.rn+' '+T('દિવસ','days')].concat(sorted.slice(0,30).map(p=>dmy(p.pay_date)+' — '+nameOf(p)+' — '+money(n0(p.amount)))).concat(['*'+T('કુલ','Total')+': '+money(tot)+'*']).join('\n'),
       xl:()=>xl(T('ચૂકવણી મેળ','Payments check'),[{name:T('Tally માં નથી','Not in Tally'),title:T('Tally માં નથી','Not in Tally'),cols:[col(T('તારીખ','Date'),'s',12),col(T('ખેડૂત','Farmer'),'s',28),col(T('રીત','Mode'),'s',10),col(T('રકમ ₹','Amount ₹'),'n',14),col(T('નોંધ','Note'),'s',30)],rows:sorted.map(p=>[dmy(p.pay_date),nameOf(p),MODES()[p.mode]||p.mode||'',n0(p.amount),p.note||'']),nofoot:true}],'','chukvani-mel-'+today())};
@@ -14990,7 +14991,7 @@ function tallyStockHtml(S,firmSeg){
       +'<div class="kt-btns"><button type="button" class="kt-b ok" id="ks-save">'+E(T('સાચવો','Save'))+'</button></div></div>'
       +(c.openDate?'<div class="kb-card">'+kvRow(T('શરૂઆતનો સ્ટોક','Opening stock'),kgTxt(e.open))+kvRow('➕ '+T('ઍપની ખરીદી','App purchases'),kgTxt(e.bought))+kvRow('➖ '+T('Tally વેચાણ','Tally sales'),kgTxt(e.sold))+kvRow('± '+T('સુધારો','Adjustment'),kgTxt(e.adj))
         +'<div class="bz-kv big"><span>'+E(T('અંદાજ સ્ટોક','Book stock'))+'</span><b class="'+(e.est<0?'v9-bad':'')+'">'+E(kgTxt(e.est))+'</b></div>'
-        +(e.phys!==null?kvRow(T('ખરેખર (ગણેલો)','Real count'),kgTxt(e.phys))+'<div class="bz-kv"><span>'+E(e.diff<0?'⚠ '+T('ઘટ','Shortage'):e.diff>0?T('વધ','Surplus'):'✔ '+T('બરાબર','Matches'))+'</span><b class="'+(e.diff<0?'v9-bad':'')+'">'+E(kgTxt(Math.abs(e.diff)))+'</b></div>':'')
+        +(e.phys!==null?kvRow(T('ખરેખર (ગણેલો)','Real count'),kgTxt(e.phys))+'<div class="bz-kv"><span>'+E(e.diff<0?'⚠ '+T('ઘટ','Shortage'):e.diff>0?T('વધ','Surplus'):'✔ '+T('��રાબર','Matches'))+'</span><b class="'+(e.diff<0?'v9-bad':'')+'">'+E(kgTxt(Math.abs(e.diff)))+'</b></div>':'')
         +(n.tal.kg?kvRow('Tally '+T('સ્ટોક','stock'),kgTxt(n.tal.kg)):'')
         +(n.soldNoKg?'<p class="v9-note">'+E(T(n.soldNoKg+' વેચાણ બિલમાં વજન નથી — તે ગણાયા નથી.',n.soldNoKg+' sales bills have no weight — not counted.'))+'</p>':'')+'</div>'
         :'<p class="v9-note">'+E(T('શરૂઆતનો સ્ટોક અને તારીખ લખો — પછી અંદાજ દેખાશે.','Enter the opening stock and date — then the estimate shows.'))+'</p>');
@@ -15242,7 +15243,7 @@ Object.assign(TOOLS_UI,{
       +'<div class="kb-sumline"><span>'+rows.length+' '+E(T('દલાલ','brokers'))+' • '+E(T('ચૂકવ્યું','paid'))+' '+E(money(tot.paid))+'</span><b>'+E(money(tot.due))+'</b></div>'
       +(rows.length?rows.map(r=>'<div class="kb-card"><div class="bz-kv"><span><b>'+E(r.name)+'</b></span><b>'+E(money(r.due))+'</b></div>'
         +'<div class="bz-kv"><span>'+E(fmt(r.kg,0)+' KG • '+r.n+' '+T('ચિઠ્ઠી','chits')+' • '+r.farmers+' '+T('ખેડૂત','farmers'))+'</span><b></b></div>'
-        +'<div class="bz-g2"><label class="bz-f"><span>'+E(T('દર','Rate'))+' ('+E(ul)+')</span><input type="text" inputmode="decimal" autocomplete="off" data-dr="'+E(r.key)+'" value="'+(cfg.rates[r.key]!==undefined&&cfg.rates[r.key]!==''?E(String(cfg.rates[r.key])):'')+'" placeholder="'+E(String(cfg.def||0))+'"></label>'
+        +'<div class="bz-g2"><label class="bz-f"><span>'+E(T('દ��','Rate'))+' ('+E(ul)+')</span><input type="text" inputmode="decimal" autocomplete="off" data-dr="'+E(r.key)+'" value="'+(cfg.rates[r.key]!==undefined&&cfg.rates[r.key]!==''?E(String(cfg.rates[r.key])):'')+'" placeholder="'+E(String(cfg.def||0))+'"></label>'
         +'<div class="bz-f"><span>'+E(T('બાકી','Balance'))+'</span><b class="'+(r.left>0.5?'v9-bad':'')+'">'+E(money(r.left))+'</b></div></div>'
         +'<div class="kt-acts"><button type="button" class="kt-b ok" data-dp="'+E(r.key)+'">💸 '+E(T('ચૂકવ્યું','Paid'))+'</button><button type="button" class="kt-b" data-dw="'+E(r.key)+'">💬 '+E(T('દલાલને મોકલો','Send'))+'</button></div></div>').join(''):emptyBox('🤝',T('આ સમયમાં દલાલ વાળી ચિઠ્ઠી નથી.','No broker chits in this period.')))
       +'<p class="v9-note">'+E(T('દલાલી ફક્ત ગણતરી માટે છે — ઍપ કે Tally માં કોઈ એન્ટ્રી થતી નથી. “ચૂકવ્યું” દબાવો તો ફક્ત અહીં નોંધ રહેશે.','Commission is a calculation only — no entry is made in the app or Tally. “Paid” just keeps a note here.'))+'</p>';
@@ -15289,7 +15290,7 @@ Object.assign(TOOLS_UI,{
     const B=billsOf(vs,{base:'sales',from,to}),ps=psOf(X),pl=partyCtx(ps).list.filter(p=>Math.abs(p.net)>=0.5);
     const tex=IM.expenseSplit(vs,X.kind,from,to),tr=LM.moneyTrend(X.D.vouchers||[],X.D.leds||[],X.kind,today(),30),sn=stockNums({D:X.D,stock:X.D.stock||[]});
     const farmers=[...X.D.led.values()];
-    const counts=[['🌾',T('ખરીદી (ચિઠ્ઠી)','Purchases (chits)'),PRp.length],['👨‍🌾',T('ખેડૂત ખાતા','Farmer khata'),farmers.length],['💳',T('ચૂકવણી','Payments'),pays.length],['💸',T('ખર્ચ','Expenses'),exps.length+tex.ledgers.length],['🧾',T('Tally વેચાણ બિલ','Tally sales bills'),B.length],['👥',T('Tally ખાતા (નામ મુજબ)','Tally parties (by name)'),pl.length],['📦',T('સ્ટોક','Stock'),(X.D.stock||[]).length+1],['🌊',T('રોકડ ટ્રેન્ડ','Cash trend'),tr.rows.length]];
+    const counts=[['🌾',T('ખરીદી (ચિઠ્ઠી)','Purchases (chits)'),PRp.length],['👨‍🌾',T('ખેડૂત ખાતા','Farmer khata'),farmers.length],['💳',T('ચૂકવણી','Payments'),pays.length],['💸',T('ખર્ચ','Expenses'),exps.length+tex.ledgers.length],['🧾',T('Tally વેચાણ બિલ','Tally sales bills'),B.length],['👥',T('Tally ખાતા (નામ મુજબ)','Tally parties (by name)'),pl.length],['📦',T('સ્ટોક','Stock'),(X.D.stock||[]).length+1],['🌊',T('���ોકડ ટ્રેન્ડ','Cash trend'),tr.rows.length]];
     const html=periodBlock(X)+'<p class="v9-note">'+E(T('આ સમયનો બધો હિસાબ એક Excel ફાઇલમાં — અલગ અલગ શીટ. ખેડૂત ખાતા અને Tally ખાતા અત્યારના બાકી છે.','All records of this period in one Excel file — a sheet each. Farmer khata and Tally parties are current balances.'))+'</p>'
       +'<div class="kb-card">'+counts.map(c=>kvRow(c[0]+' '+c[1],String(c[2]))).join('')+'</div>'
       +'<div class="kt-btns"><button type="button" class="kt-b ok" id="xa-go">⬇️ '+E(T('Excel બનાવો','Make Excel'))+'</button></div>';
@@ -15358,7 +15359,7 @@ async function agentRunCmd(c,from,id){
   try{
     if(c==='reload'){location.reload();return;}
     if(c==='sync'||c==='full'){
-      tlog('📲 '+(from==='phone'?T('ફોન પરથી સિંકની વિનંતી','Sync asked from the phone'):T('PC પરથી સિંકની વિનંતી','Sync asked from the PC'))+(c==='full'?' ('+T('શરૂઆતથી','full')+')':''));
+      tlog('���� '+(from==='phone'?T('ફોન પરથી સિંકની વિનંતી','Sync asked from the phone'):T('PC પરથી સિંકની વિનંતી','Sync asked from the PC'))+(c==='full'?' ('+T('શરૂઆતથી','full')+')':''));
       const r=await syncAll(c==='full'?{full:true}:{noFull:true});
       if(r&&r.busy){setTimeout(()=>agentRunCmd(c,from,id),20000);return;}
       if(id)AG.cmdDone={id,ok:!!(r&&r.ok),at:new Date().toISOString(),msg:(r&&r.msg)||''};
@@ -16405,5 +16406,122 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 })();
 
 </script>
+<style id="bi-pro-style">
+/* ===== Professional design layer: unified type, buttons, inputs, cards, nav, dialogs ===== */
+:root{
+  --teal:#0a868b;--dark:#06676b;--ink:#0f2a2d;--muted:#5c7175;--line:#e1e9ea;--soft:#eef6f6;--bg:#f3f6f7;--bi-line:#e1e9ea;
+  --pro-ring:0 0 0 3px rgba(10,134,139,.22);
+  --pro-sh-sm:0 1px 2px rgba(15,42,45,.05),0 1px 1px rgba(15,42,45,.03);
+  --pro-sh:0 1px 3px rgba(15,42,45,.05),0 10px 28px -14px rgba(15,42,45,.16);
+  --pro-sh-lg:0 28px 70px -18px rgba(9,30,33,.38);
+}
+html{-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent;scroll-behavior:smooth}
+body{
+  font-family:"Inter","Noto Sans Gujarati",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;
+  background:radial-gradient(1200px 420px at 50% -180px,#dff0f0 0%,rgba(223,240,240,0) 70%),var(--bg);
+  background-attachment:fixed;color:var(--ink);
+}
+button,input,select,textarea{font-family:inherit}
+::selection{background:#bfe4e5;color:#0f2a2d}
+h1,h2,h3{color:var(--ink);letter-spacing:-.01em}
+h2{font-weight:750}
+h3{font-weight:700}
+hr{border-top-color:var(--line)}
+a{color:var(--dark)}
+.muted{color:var(--muted)}
+label{color:#2f4a4e;font-weight:600}
+
+/* ---- buttons ---- */
+button{
+  border-radius:12px;font-weight:650;letter-spacing:.005em;touch-action:manipulation;
+  transition:background-color .16s ease,border-color .16s ease,color .16s ease,box-shadow .16s ease,transform .08s ease,opacity .16s ease;
+}
+button:not([class]){box-shadow:0 1px 2px rgba(6,103,107,.22),inset 0 1px 0 rgba(255,255,255,.14)}
+button:not([class]):hover{box-shadow:0 4px 14px -4px rgba(6,103,107,.38),inset 0 1px 0 rgba(255,255,255,.14)}
+button[onclick*="forgotPassword"],button[onclick*="Refresh"],button[onclick*="loadMy"],button[onclick*=".click()"],button[onclick*="logout"]{box-shadow:var(--pro-sh-sm)!important}
+button[onclick*="forgotPassword"]:hover,button[onclick*="Refresh"]:hover,button[onclick*="loadMy"]:hover,button[onclick*=".click()"]:hover{background:#e3f1f1!important;border-color:#a9d0d2!important}
+button:active:not(:disabled){transform:translateY(1px) scale(.995)}
+button:focus-visible{outline:2px solid var(--teal)!important;outline-offset:2px!important}
+button:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+/* ---- form controls ---- */
+input,select,textarea{border-color:#d3dfe1;border-radius:12px;transition:border-color .16s ease,box-shadow .16s ease,background-color .16s ease}
+input:hover:not([readonly]):not(:focus),select:hover:not(:focus),textarea:hover:not(:focus){border-color:#b6cacd}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal);box-shadow:var(--pro-ring)}
+input::placeholder,textarea::placeholder{color:#8a9da0}
+input[type=checkbox],input[type=radio]{accent-color:var(--teal);box-shadow:none}
+input[readonly]{background:#f1f8f8;border-color:#cfe4e5}
+select:not([multiple]){
+  -webkit-appearance:none;appearance:none;cursor:pointer;padding-right:38px!important;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235c7175' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")!important;
+  background-repeat:no-repeat!important;background-position:right 12px center!important;background-size:16px!important;
+}
+
+/* ---- surfaces ---- */
+.card{border-color:var(--line);border-radius:18px;box-shadow:var(--pro-sh)}
+#auth{box-shadow:var(--pro-sh)}
+#auth > h2{font-size:24px;letter-spacing:-.02em}
+details > summary{cursor:pointer}
+.bi-brand{border-color:var(--line)!important;box-shadow:var(--pro-sh-sm)}
+.bi-brand h1{font-weight:800;letter-spacing:-.02em;color:var(--ink)}
+.bi-brand img{background:#fff;border:1px solid var(--line)}
+#app>.card:first-child{background:rgba(255,255,255,.9);-webkit-backdrop-filter:saturate(180%) blur(12px);backdrop-filter:saturate(180%) blur(12px);border-color:var(--line);box-shadow:0 1px 0 var(--line),0 10px 26px -18px rgba(15,42,45,.35)}
+#who{font-weight:700;color:var(--ink)}
+.dash-welcome{border-color:#d5eaea!important;background:linear-gradient(135deg,#eef7f7,#f8fbfb)!important}
+
+/* ---- stats + tiles ---- */
+.stat-glass{border-color:var(--line);box-shadow:var(--pro-sh-sm);transition:border-color .16s ease,box-shadow .16s ease,transform .16s ease}
+.stat-glass:hover{border-color:#bcdcdd;box-shadow:var(--pro-sh)}
+.stat-value{letter-spacing:-.015em}
+.stat-label{font-weight:600}
+#admin .bi-tile8{transition:background-color .16s ease,transform .12s ease!important}
+#admin .bi-tile8:active{transform:scale(.97)}
+#admin .bi-tile8 svg,#admin .bi-tile8 .v9-ic{box-shadow:inset 0 0 0 1px rgba(10,134,139,.12)}
+#admin .in-tile,.v9-item,.kb-card,.kb-rows,#admin .kb-tx{box-shadow:var(--pro-sh-sm)}
+
+/* ---- bottom navigation (phones) ---- */
+@media (max-width:1023px){
+  #admin .bi-nav8{background:rgba(255,255,255,.92)!important;-webkit-backdrop-filter:saturate(180%) blur(14px);backdrop-filter:saturate(180%) blur(14px);border-color:var(--line)!important;box-shadow:0 -10px 30px -14px rgba(15,42,45,.22)!important}
+  #admin .bi-navbtn8{position:relative;font-weight:600;box-shadow:none!important;background:transparent!important;color:var(--muted)!important}
+  #admin .bi-navbtn8:hover{background:#f3f8f8!important;color:var(--dark)!important}
+  #admin .bi-navbtn8.active{font-weight:750;background:var(--soft)!important;color:var(--teal)!important}
+  #admin .bi-navbtn8.active::before{content:'';position:absolute;top:3px;left:50%;width:22px;height:3px;border-radius:3px;background:var(--teal);transform:translateX(-50%)}
+}
+@media (min-width:1024px){
+  #admin .bi-navbtn8.active{box-shadow:inset 3px 0 0 var(--teal)}
+}
+
+/* ---- tables ---- */
+table{font-variant-numeric:tabular-nums}
+th{font-weight:700;font-size:12px;letter-spacing:.02em;color:#24585c}
+tbody tr{transition:background-color .12s ease}
+tbody tr:hover{background:#eef6f6}
+
+/* ---- dialogs ---- */
+.bi-v2-modal{background:rgba(9,30,33,.52);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+.bi-v2-modal>section{border-radius:20px;box-shadow:var(--pro-sh-lg);animation:biProPop .18s ease-out}
+.bi-calc .bc-backdrop{-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+@keyframes biProPop{from{opacity:0;transform:translateY(8px) scale(.985)}to{opacity:1;transform:none}}
+
+/* ---- splash ---- */
+#splashScreen{background:radial-gradient(800px 400px at 50% 0,#dff0f0,rgba(223,240,240,0) 70%),var(--bg)}
+.splash-box{box-shadow:var(--pro-sh);border-color:var(--line)}
+.splash-logo{font-size:0;width:84px;height:84px;margin:0 auto;border-radius:22px;background:#fff url("balaji-logo.png") center/78% no-repeat;border:1px solid var(--line);box-shadow:var(--pro-sh-sm)}
+.splash-title{letter-spacing:.06em;color:var(--dark)}
+.splash-loader{border-color:#d6ecec;border-top-color:var(--teal)}
+
+/* ---- scrollbars (desktop) ---- */
+@media (hover:hover){
+  *{scrollbar-width:thin;scrollbar-color:#c3d4d6 transparent}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:#c3d4d6;border-radius:10px;border:2px solid transparent;background-clip:padding-box}
+  ::-webkit-scrollbar-track{background:transparent}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .bi-v2-modal>section{animation:none}
+}
+</style>
 </body>
 </html>
